@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1200" fill="none">
+  <defs>
+    <filter id="blurHeavy" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="90" />
+    </filter>
+    <filter id="blurSoft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="35" />
+    </filter>
+    <linearGradient id="panelWash" x1="0" y1="0" x2="0" y2="1200">
+      <stop offset="0%" stop-color="#e6e3d1" />
+      <stop offset="42%" stop-color="#bebf9b" stop-opacity="0.78" />
+      <stop offset="100%" stop-color="#e6e3d1" />
+    </linearGradient>
+  </defs>
+  <rect width="900" height="1200" fill="url(#panelWash)" />
+  <rect width="900" height="1200" fill="#ffffff" opacity="0.08" />
+  <ellipse cx="245" cy="170" rx="290" ry="190" fill="#bebf9b" opacity="0.52" filter="url(#blurHeavy)" />
+  <ellipse cx="710" cy="870" rx="250" ry="225" fill="#96ad88" opacity="0.224" filter="url(#blurHeavy)" />
+  <ellipse cx="175" cy="1040" rx="250" ry="150" fill="#e8e6c5" opacity="0.288" filter="url(#blurSoft)" />
+  <circle cx="628" cy="244" r="145" fill="#e8e6c5" opacity="0.416" filter="url(#blurSoft)" />
+  <path d="M460 249 C560 169 705 169 790 249" fill="none" stroke="#4b4a36" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" opacity="0.256" />
+  <path d="M500 309 C590 239 685 239 755 309" fill="none" stroke="#96ad88" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" opacity="0.224" />
+  <path d="M60 932 C250 847 470 1022 690 947 C800 909 860 942 920 992" fill="none" stroke="#bbc6a4" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" opacity="0.256" />
+  <path d="M110 1002 C330 907 540 1072 790 997" fill="none" stroke="#96ad88" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" opacity="0.192" />
+</svg>

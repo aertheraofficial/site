@@ -1,0 +1,223 @@
+{
+  "siteInfo": {
+    "name": "Aerthera",
+    "collection": "Lemongrass Malaya",
+    "company": "Aerthera Sdn Bhd (1476867-D)",
+    "email": "hello@aerthera.com",
+    "phone": "+447344156393",
+    "address": "Level 23, Exchange 106, Lingkaran TRX, Tun Razak Exchange, 55188 Kuala Lumpur, Federal Territory of Kuala Lumpur",
+    "socials": [
+      {
+        "label": "Facebook",
+        "href": "https://www.facebook.com/aerthera.official",
+        "icon": "/assets/social/facebook.png"
+      },
+      {
+        "label": "Instagram",
+        "href": "https://www.instagram.com/aerthera.official",
+        "icon": "/assets/social/instagram.png"
+      },
+      {
+        "label": "X",
+        "href": "https://x.com/aerthera",
+        "icon": "/assets/social/x.png"
+      },
+      {
+        "label": "TikTok",
+        "href": "https://www.tiktok.com/@aerthera.official",
+        "icon": "/assets/social/tiktok.png"
+      }
+    ],
+    "primaryLinks": [
+      { "label": "Welcome", "href": "/#welcome" },
+      { "label": "Collection", "href": "/#shop" },
+      { "label": "Our Mission", "href": "/#about" },
+      { "label": "Our Solutions", "href": "/#services" },
+      { "label": "Store Hours", "href": "/#opening-hours" },
+      { "label": "All Products", "href": "/category/all-products" }
+    ],
+    "footerLinks": [
+      { "label": "All Products", "href": "/category/all-products" },
+      { "label": "Lemongrass Collection", "href": "/category/lemongrass-collection" },
+      { "label": "Privacy Policy", "href": "/blank" },
+      { "label": "Accessibility Statement", "href": "/blank-1" }
+    ]
+  },
+  "homeContent": {
+    "hero": {
+      "title": "SUSTAINABLE\nWELLNESS\nAROMA\nTHERAPY",
+      "buttonLabel": "Start Now"
+    },
+    "collection": {
+      "title": "Explore the Collection",
+      "description": "An expanded aromatherapy catalog spanning Lemongrass Malaya, Pineapple Tropical, mood-led blends, and everyday ritual formats.\nDesigned for body, fabric, room, and personal care.",
+      "buttonLabel": "Shop Now"
+    },
+    "handmade": {
+      "title": "HANDMADE\nWITH LOVE",
+      "description": "FOR A NEW WORLD AND FUTURE GENERATIONS"
+    },
+    "vision": {
+      "title": "Vision",
+      "subtitle": "Our Mission",
+      "description": "At Aerthera, we believe that true wellness is achieved through a harmonious relationship with nature. Our commitment drives us to create high-quality essential oils and aromatherapy solutions that enhance life's most beautiful moments.",
+      "body": "Operating under sustainable principles, our products reflect a careful balance of ethical sourcing and community development. Our aim is to nurture both body and mind while fostering environmental stewardship and inclusivity.",
+      "buttonLabel": "Learn More"
+    },
+    "services": {
+      "title": "Wellness Offerings",
+      "subtitle": "Our Solutions",
+      "description": "Explore our curated range of aromatherapy offerings, meticulously designed to support your journey to holistic wellness. Each product is thoughtfully crafted to ensure quality and effectiveness.",
+      "offerings": [
+        {
+          "title": "Oils",
+          "subtitle": "Pure Essential Pleasure"
+        },
+        {
+          "title": "Fragrances",
+          "subtitle": "Functional Aromatic Blends"
+        },
+        {
+          "title": "Experiences",
+          "subtitle": "Engaging Wellness Journeys"
+        }
+      ],
+      "workshopTitle": "Workshops",
+      "workshopSubtitle": "Learning and Discovery",
+      "workshopButtonLabel": "Discover Workshops"
+    },
+    "hoursTitle": "Store Hours",
+    "hours": [
+      { "label": "Monday - Friday", "value": "10 AM - 6 PM" },
+      { "label": "Saturday - Sunday", "value": "11 AM - 4 PM" },
+      { "label": "Holidays", "value": "Closed" }
+    ],
+    "feature": {
+      "title": "Why Choose Us?",
+      "description": "Aerthera stands apart through our commitment to sustainability and wellness, offering products that honor both your health and the environment.",
+      "cards": [
+        {
+          "title": "Quality",
+          "subtitle": "Exceptional Sourcing",
+          "description": "Our essential oils are sourced from organic farms, ensuring purity and safety. We prioritize transparency in our supply chain to guarantee the best products for our customers."
+        },
+        {
+          "title": "Innovation",
+          "subtitle": "Forward-Thinking Solutions",
+          "description": "With a focus on continuous improvement, we explore new methods and techniques to enhance our products, ensuring they meet modern wellness needs and expectations."
+        },
+        {
+          "title": "Community",
+          "subtitle": "Building Connections",
+          "description": "By supporting local communities, we invest in sustainable practices and create opportunities for all. Together, we are cultivating a healthier planet while enriching lives."
+        },
+        {
+          "title": "Sustainability",
+          "subtitle": "A Commitment to Change",
+          "description": "Sustainability is at the heart of Aerthera. We engage in responsible sourcing, ethical production, and community-focused initiatives to foster long-lasting positive impacts.",
+          "buttonLabel": "Shop the Collection"
+        }
+      ]
+    },
+    "contactTiles": [
+      {
+        "title": "Phone",
+        "value": "+447344156393"
+      },
+      {
+        "title": "Email",
+        "value": "hello@aerthera.com"
+      },
+      {
+        "title": "Address",
+        "value": "Level 23, Exchange 106, Lingkaran TRX, Tun Razak Exchange, 55188 Kuala Lumpur, Federal Territory of Kuala Lumpur"
+      }
+    ]
+  },
+  "privacySections": [
+    {
+      "title": "Scope and responsibility",
+      "body": [
+        "This Privacy Policy explains how Aerthera collects, uses, stores, and discloses personal data when you browse this website, add products to your cart, contact us, or complete a guest checkout.",
+        "Aerthera is a Malaysia-based business operating in connection with commercial transactions. We handle personal data in line with the Personal Data Protection Act 2010 (Act 709), including the principles relating to notice, security, retention, data integrity, and access."
+      ]
+    },
+    {
+      "title": "Information we collect",
+      "body": [
+        "We may collect contact details such as your name, email address, telephone number, billing address, shipping address, and company details where relevant.",
+        "When you place an order, we collect order-related information such as purchased items, quantities, pricing, delivery details, and payment status. Card details are handled directly by Stripe and are not stored on this website.",
+        "We also collect limited technical and usage information such as device/browser data, approximate location inferred from network requests, and on-site activity needed for performance, fraud prevention, and checkout reliability.",
+        "Your cart contents are stored in your browser using local storage so that your selections can persist between visits on the same device."
+      ]
+    },
+    {
+      "title": "How we use personal data",
+      "body": [
+        "We use personal data to operate the storefront, process and fulfill orders, arrange delivery, respond to enquiries, provide customer support, and send transaction-related communications.",
+        "We may also use personal data to detect abuse, prevent fraud, maintain the security of the website, comply with legal or accounting obligations, and improve the usability and performance of the storefront."
+      ]
+    },
+    {
+      "title": "Sharing and third-party services",
+      "body": [
+        "We share personal data only where necessary to run the business and complete your transaction. This can include payment processors, hosting providers, email providers, logistics or delivery partners, and professional advisers where required.",
+        "Payments are processed through Stripe Checkout. When you enter payment or billing details during checkout, that information is collected and processed by Stripe in accordance with Stripe's own terms, security controls, and privacy documentation.",
+        "We may also disclose personal data when required to comply with applicable law, lawful requests, regulatory obligations, or to establish, exercise, or defend legal claims."
+      ]
+    },
+    {
+      "title": "Retention, security, and transfers",
+      "body": [
+        "We retain personal data only for as long as reasonably necessary for the purpose for which it was collected, and for any longer period required to satisfy legal, tax, accounting, dispute-resolution, or fraud-prevention obligations.",
+        "We use reasonable technical and organisational measures to protect personal data against accidental loss, unauthorised access, disclosure, alteration, and misuse. No internet-based service can guarantee absolute security, but access is limited to people and providers who need the data for legitimate business purposes.",
+        "Some service providers may process data outside Malaysia. Where this happens, we expect those providers to apply appropriate contractual, technical, and organisational safeguards."
+      ]
+    },
+    {
+      "title": "Your choices and rights",
+      "body": [
+        "Subject to applicable law, you may request access to personal data we hold about you and ask that inaccurate, incomplete, misleading, or outdated data be corrected.",
+        "Where processing is based on consent, you may also withdraw that consent for future processing, although this will not affect processing already carried out or any processing required to complete a transaction or comply with law.",
+        "To make a privacy request or ask a question about this policy, contact hello@aerthera.com. We may need to verify your identity before responding."
+      ]
+    }
+  ],
+  "accessibilitySections": [
+    {
+      "title": "Accessibility commitment",
+      "body": [
+        "This statement was last updated on April 16, 2026.",
+        "Aerthera is committed to making this website usable by as many people as possible, including people who rely on assistive technologies, keyboard navigation, zoom, and other accessibility features."
+      ]
+    },
+    {
+      "title": "Accessibility standard",
+      "body": [
+        "Our goal is to align the storefront with the Web Content Accessibility Guidelines (WCAG) 2.2 Level AA as an ongoing standard for design, content, and front-end implementation.",
+        "We review the site with accessibility in mind during layout changes, interaction work, and content updates so the experience remains perceivable, operable, understandable, and robust across modern browsers and devices."
+      ]
+    },
+    {
+      "title": "Measures currently in place",
+      "body": [
+        "Current measures include semantic page structure, keyboard-focusable controls, visible focus states, text alternatives for meaningful imagery, responsive layouts, readable color contrast, and button/link behaviors that are clearly interactive.",
+        "Product browsing, cart interactions, and key navigation links are designed to remain usable on both desktop and mobile viewports, and checkout is handed off to Stripe Checkout for secure payment collection."
+      ]
+    },
+    {
+      "title": "Known limitations",
+      "body": [
+        "Some parts of the end-to-end purchase journey rely on third-party services, especially Stripe-hosted checkout and external social media platforms. Those services are outside Aerthera's direct codebase and may present their own accessibility characteristics.",
+        "If you encounter a barrier on this website, we want to hear about it so we can review the issue and improve the experience where we control it."
+      ]
+    },
+    {
+      "title": "Feedback and assistance",
+      "body": [
+        "If you need assistance using the site, would like to request content in an alternative format, or want to report an accessibility issue, contact us at hello@aerthera.com or +447344156393.",
+        "You can also write to Aerthera at Level 23, Exchange 106, Lingkaran TRX, Tun Razak Exchange, 55188 Kuala Lumpur, Federal Territory of Kuala Lumpur. Please include the page you were using and a short description of the issue so we can investigate."
+      ]
+    }
+  ]
+}

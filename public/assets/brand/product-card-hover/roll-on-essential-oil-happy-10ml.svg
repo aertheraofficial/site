@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1200" fill="none">
+  <defs>
+    <filter id="blurHeavy" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="90" />
+    </filter>
+    <filter id="blurSoft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="35" />
+    </filter>
+    <linearGradient id="panelWash" x1="0" y1="0" x2="0" y2="1200">
+      <stop offset="0%" stop-color="#f5e5cb" />
+      <stop offset="42%" stop-color="#e9c68a" stop-opacity="0.78" />
+      <stop offset="100%" stop-color="#f5e5cb" />
+    </linearGradient>
+  </defs>
+  <rect width="900" height="1200" fill="url(#panelWash)" />
+  <rect width="900" height="1200" fill="#ffffff" opacity="0.08" />
+  <ellipse cx="216" cy="170" rx="290" ry="190" fill="#e9c68a" opacity="0.52" filter="url(#blurHeavy)" />
+  <ellipse cx="694" cy="870" rx="250" ry="225" fill="#eabb68" opacity="0.224" filter="url(#blurHeavy)" />
+  <ellipse cx="186" cy="1040" rx="250" ry="150" fill="#fae9be" opacity="0.288" filter="url(#blurSoft)" />
+  <path d="M549 70 L609 246" fill="none" stroke="#fff8d0" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.32" />
+  <path d="M579 70 L639 246" fill="none" stroke="#fff8d0" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.32" />
+  <path d="M609 70 L669 246" fill="none" stroke="#fff8d0" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.32" />
+  <path d="M639 70 L699 246" fill="none" stroke="#fff8d0" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.32" />
+  <path d="M669 70 L729 246" fill="none" stroke="#fff8d0" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.32" />
+  <path d="M699 70 L759 246" fill="none" stroke="#fff8d0" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.32" />
+  <path d="M729 70 L789 246" fill="none" stroke="#fff8d0" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.32" />
+  <path d="M759 70 L819 246" fill="none" stroke="#fff8d0" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.32" />
+  <path d="M789 70 L849 246" fill="none" stroke="#fff8d0" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.32" />
+  <circle cx="669" cy="246" r="88" fill="#fae9be" opacity="0.52" />
+  <path d="M60 962 C250 877 470 1052 690 977 C800 939 860 972 920 1022" fill="none" stroke="#f2ce8f" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" opacity="0.256" />
+  <path d="M110 1032 C330 937 540 1102 790 1027" fill="none" stroke="#eabb68" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" opacity="0.192" />
+</svg>

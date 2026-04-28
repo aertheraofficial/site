@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1200" fill="none">
+  <defs>
+    <filter id="blurHeavy" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="90" />
+    </filter>
+    <filter id="blurSoft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="35" />
+    </filter>
+    <linearGradient id="panelWash" x1="0" y1="0" x2="0" y2="1200">
+      <stop offset="0%" stop-color="#f1e2cd" />
+      <stop offset="42%" stop-color="#dfbc90" stop-opacity="0.78" />
+      <stop offset="100%" stop-color="#f1e2cd" />
+    </linearGradient>
+  </defs>
+  <rect width="900" height="1200" fill="url(#panelWash)" />
+  <rect width="900" height="1200" fill="#ffffff" opacity="0.08" />
+  <ellipse cx="228" cy="170" rx="290" ry="190" fill="#dfbc90" opacity="0.52" filter="url(#blurHeavy)" />
+  <ellipse cx="687" cy="870" rx="250" ry="225" fill="#d6a774" opacity="0.224" filter="url(#blurHeavy)" />
+  <ellipse cx="178" cy="1040" rx="250" ry="150" fill="#f6e5c1" opacity="0.288" filter="url(#blurSoft)" />
+  <path d="M450 167 C620 167 710 222 710 362 C710 522 580 622 450 737 C320 622 190 522 190 362 C190 222 280 167 450 167" fill="#f6e5c1" stroke="#d6a774" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" opacity="0.24" />
+  <path d="M450 237 C560 237 620 282 620 367 C620 472 535 562 450 657 C365 562 280 472 280 367 C280 282 340 237 450 237" fill="none" stroke="#60482f" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" opacity="0.288" />
+  <path d="M60 969 C250 884 470 1059 690 984 C800 946 860 979 920 1029" fill="none" stroke="#e5c296" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" opacity="0.256" />
+  <path d="M110 1039 C330 944 540 1109 790 1034" fill="none" stroke="#d6a774" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" opacity="0.192" />
+</svg>

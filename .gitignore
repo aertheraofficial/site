@@ -1,0 +1,62 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+/.cache/
+.DS_Store
+*.pem
+.tmp/
+.cursor/
+
+# python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env (secrets; keep .env.example tracked)
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.test
+!.env.example
+
+# vercel build output / link metadata (re-link with `vercel link`)
+.vercel/
+
+# supabase
+supabase/.temp/
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# local data (PII / runtime state; app creates empty files if missing)
+/data/orders.json
+/data/social-content.json

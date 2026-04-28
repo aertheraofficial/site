@@ -1,0 +1,2180 @@
+{
+  "products": [
+    {
+      "id": "body-cleanse-shower-gel-lemongrass-malaya-230ml",
+      "slug": "body-cleanse-shower-gel-lemongrass-malaya-230ml",
+      "name": "Body Cleanse Shower Gel Lemongrass Malaya 230ml",
+      "shortName": "Body Cleanse Shower Gel",
+      "categoryLabel": "Body Cleanse Shower Gel",
+      "categorySlugs": [
+        "all-products",
+        "personal-care",
+        "lemongrass-collection"
+      ],
+      "size": "230ml",
+      "price": 116,
+      "availability": "Pre-order",
+      "leadTime": "7-14 working days",
+      "excerpt": "Lemongrass Malaya in 230ml as a cleansing gel format for everyday use.",
+      "description": "This product brings the Lemongrass Malaya scent profile into a cleansing gel format for everyday use. It is listed in the latest product draft under Personal Care, with a 230ml fill size. The current stock note indicates a smaller or made-to-order run.",
+      "scentNotes": [
+        "lemongrass",
+        "green citrus",
+        "sunlit stem"
+      ],
+      "ritual": [
+        "Use as the opening step in the shower to bring the scent collection onto skin.",
+        "Rinse fully and layer with a body or home format from the same scent family.",
+        "Keep it near the sink or bath for the most direct daily-use ritual."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Personal Care"
+        },
+        {
+          "label": "Collection",
+          "value": "Lemongrass Malaya"
+        },
+        {
+          "label": "Size",
+          "value": "230ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "SAMPLE QUANTITY"
+        },
+        {
+          "label": "Status",
+          "value": "Pre-order"
+        },
+        {
+          "label": "Lead time",
+          "value": "7-14 working days"
+        },
+        {
+          "label": "Crafted for",
+          "value": "Daily shower ritual"
+        }
+      ],
+      "image": "/assets/products/catalog/body-cleanse-shower-gel-lemongrass-malaya-230ml.png",
+      "gallery": [
+        "/assets/products/catalog/body-cleanse-shower-gel-lemongrass-malaya-230ml.png"
+      ],
+      "accent": "#c4b062",
+      "relatedSlugs": [
+        "body-cleanse-shower-oil-lemongrass-malaya-230ml",
+        "calm-mousseline-lemongrass-malaya-60ml",
+        "calm-mousseline-lemongrass-malaya-10ml"
+      ]
+    },
+    {
+      "id": "body-cleanse-shower-oil-lemongrass-malaya-230ml",
+      "slug": "body-cleanse-shower-oil-lemongrass-malaya-230ml",
+      "name": "Body Cleanse Shower Oil Lemongrass Malaya 230ml",
+      "shortName": "Body Cleanse Shower Oil",
+      "categoryLabel": "Body Cleanse Shower Oil",
+      "categorySlugs": [
+        "all-products",
+        "personal-care",
+        "lemongrass-collection"
+      ],
+      "size": "230ml",
+      "price": 116,
+      "availability": "Pre-order",
+      "leadTime": "7-14 working days",
+      "excerpt": "Lemongrass Malaya in 230ml as a richer shower oil format for a softer cleanse.",
+      "description": "This product brings the Lemongrass Malaya scent profile into a richer shower oil format for a softer cleanse. It is listed in the latest product draft under Personal Care, with a 230ml fill size. The current stock note indicates a smaller or made-to-order run.",
+      "scentNotes": [
+        "lemongrass",
+        "green citrus",
+        "sunlit stem"
+      ],
+      "ritual": [
+        "Massage onto damp skin when you want a softer, more conditioning cleanse.",
+        "Rinse lightly so the scent remains closer to the body after the shower.",
+        "Pair it with the matching body oil or diffuser to extend the ritual."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Personal Care"
+        },
+        {
+          "label": "Collection",
+          "value": "Lemongrass Malaya"
+        },
+        {
+          "label": "Size",
+          "value": "230ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "SAMPLE QUANTITY"
+        },
+        {
+          "label": "Status",
+          "value": "Pre-order"
+        },
+        {
+          "label": "Lead time",
+          "value": "7-14 working days"
+        },
+        {
+          "label": "Crafted for",
+          "value": "Nourishing shower ritual"
+        }
+      ],
+      "image": "/assets/products/catalog/body-cleanse-shower-oil-lemongrass-malaya-230ml.png",
+      "gallery": [
+        "/assets/products/catalog/body-cleanse-shower-oil-lemongrass-malaya-230ml.png"
+      ],
+      "accent": "#c4b062",
+      "relatedSlugs": [
+        "body-cleanse-shower-gel-lemongrass-malaya-230ml",
+        "calm-mousseline-lemongrass-malaya-60ml",
+        "calm-mousseline-lemongrass-malaya-10ml"
+      ]
+    },
+    {
+      "id": "calm-mousseline-lemongrass-malaya-60ml",
+      "slug": "calm-mousseline-lemongrass-malaya-60ml",
+      "name": "Calm Mousseline Lemongrass Malaya 60ml",
+      "shortName": "Calm Mousseline",
+      "categoryLabel": "Calm Mousseline",
+      "categorySlugs": [
+        "all-products",
+        "aromatherapy",
+        "lemongrass-collection"
+      ],
+      "size": "60ml",
+      "price": 62,
+      "availability": "Pre-order",
+      "leadTime": "7-14 working days",
+      "excerpt": "Lemongrass Malaya in 60ml as a soft mist format for linens, fabric, and air.",
+      "description": "This product brings the Lemongrass Malaya scent profile into a soft mist format for linens, fabric, and air. It is listed in the latest product draft under Aromatherapy, with a 60ml fill size. The current stock note indicates a smaller or made-to-order run.",
+      "scentNotes": [
+        "lemongrass",
+        "green citrus",
+        "sunlit stem"
+      ],
+      "ritual": [
+        "Mist onto linens, curtains, or fabric surfaces from a short distance.",
+        "Let the scent settle for a moment before the textile is in direct contact with skin.",
+        "Use between deeper room-scent rituals when you want a lighter refresh."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Aromatherapy"
+        },
+        {
+          "label": "Collection",
+          "value": "Lemongrass Malaya"
+        },
+        {
+          "label": "Size",
+          "value": "60ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "SAMPLE QUANTITY"
+        },
+        {
+          "label": "Status",
+          "value": "Pre-order"
+        },
+        {
+          "label": "Lead time",
+          "value": "7-14 working days"
+        },
+        {
+          "label": "Crafted for",
+          "value": "Fabric and room refresh"
+        }
+      ],
+      "image": "/assets/products/catalog/calm-mousseline-lemongrass-malaya-60ml.png",
+      "gallery": [
+        "/assets/products/catalog/calm-mousseline-lemongrass-malaya-60ml.png"
+      ],
+      "accent": "#c4b062",
+      "relatedSlugs": [
+        "body-cleanse-shower-gel-lemongrass-malaya-230ml",
+        "body-cleanse-shower-oil-lemongrass-malaya-230ml",
+        "calm-mousseline-lemongrass-malaya-10ml"
+      ]
+    },
+    {
+      "id": "calm-mousseline-lemongrass-malaya-10ml",
+      "slug": "calm-mousseline-lemongrass-malaya-10ml",
+      "name": "Calm Mousseline Lemongrass Malaya 10ml",
+      "shortName": "Calm Mousseline",
+      "categoryLabel": "Calm Mousseline",
+      "categorySlugs": [
+        "all-products",
+        "aromatherapy",
+        "lemongrass-collection"
+      ],
+      "size": "10ml",
+      "price": 26,
+      "availability": "In stock",
+      "excerpt": "Lemongrass Malaya in 10ml as a soft mist format for linens, fabric, and air.",
+      "description": "This product brings the Lemongrass Malaya scent profile into a soft mist format for linens, fabric, and air. It is listed in the latest product draft under Aromatherapy, with a 10ml fill size. The current stock note indicates ready inventory.",
+      "scentNotes": [
+        "lemongrass",
+        "green citrus",
+        "sunlit stem"
+      ],
+      "ritual": [
+        "Mist onto linens, curtains, or fabric surfaces from a short distance.",
+        "Let the scent settle for a moment before the textile is in direct contact with skin.",
+        "Use between deeper room-scent rituals when you want a lighter refresh."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Aromatherapy"
+        },
+        {
+          "label": "Collection",
+          "value": "Lemongrass Malaya"
+        },
+        {
+          "label": "Size",
+          "value": "10ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "50 PCS"
+        },
+        {
+          "label": "Status",
+          "value": "In stock"
+        },
+        {
+          "label": "Crafted for",
+          "value": "Fabric and room refresh"
+        }
+      ],
+      "image": "/assets/products/catalog/calm-mousseline-lemongrass-malaya-10ml.png",
+      "gallery": [
+        "/assets/products/catalog/calm-mousseline-lemongrass-malaya-10ml.png"
+      ],
+      "accent": "#c4b062",
+      "relatedSlugs": [
+        "body-cleanse-shower-gel-lemongrass-malaya-230ml",
+        "body-cleanse-shower-oil-lemongrass-malaya-230ml",
+        "calm-mousseline-lemongrass-malaya-60ml"
+      ]
+    },
+    {
+      "id": "body-oil-lemongrass-malaya-50ml",
+      "slug": "body-oil-lemongrass-malaya-50ml",
+      "name": "Body Oil Lemongrass Malaya 50ml",
+      "shortName": "Body Oil",
+      "categoryLabel": "Body Oil",
+      "categorySlugs": [
+        "all-products",
+        "personal-care",
+        "lemongrass-collection"
+      ],
+      "size": "50ml",
+      "price": 107,
+      "availability": "In stock",
+      "leadTime": "7-14 working days",
+      "excerpt": "Lemongrass Malaya in 50ml as a nourishing body oil for post-shower care.",
+      "description": "This product brings the Lemongrass Malaya scent profile into a nourishing body oil for post-shower care. It is listed in the latest product draft under Personal Care, with a 50ml fill size. The current stock note indicates ready inventory.",
+      "scentNotes": [
+        "lemongrass",
+        "green citrus",
+        "sunlit stem"
+      ],
+      "ritual": [
+        "Apply to towel-dried skin after bathing while the body is still slightly warm.",
+        "Work it over arms, shoulders, and collarbone so the scent develops gently.",
+        "Use a smaller amount when layering with another product from the same collection."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Personal Care"
+        },
+        {
+          "label": "Collection",
+          "value": "Lemongrass Malaya"
+        },
+        {
+          "label": "Size",
+          "value": "50ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "10 pcs"
+        },
+        {
+          "label": "Status",
+          "value": "In stock"
+        },
+        {
+          "label": "Lead time",
+          "value": "7-14 working days"
+        },
+        {
+          "label": "Crafted for",
+          "value": "After-shower body care"
+        }
+      ],
+      "image": "/assets/products/catalog/body-oil-lemongrass-malaya-50ml.png",
+      "gallery": [
+        "/assets/products/catalog/body-oil-lemongrass-malaya-50ml.png"
+      ],
+      "accent": "#c4b062",
+      "relatedSlugs": [
+        "body-cleanse-shower-gel-lemongrass-malaya-230ml",
+        "body-cleanse-shower-oil-lemongrass-malaya-230ml",
+        "calm-mousseline-lemongrass-malaya-60ml"
+      ]
+    },
+    {
+      "id": "hair-root-serum-lemongrass-malaya-50ml",
+      "slug": "hair-root-serum-lemongrass-malaya-50ml",
+      "name": "Hair Root Serum Lemongrass Malaya 50ml",
+      "shortName": "Hair Root Serum",
+      "categoryLabel": "Hair Root Serum",
+      "categorySlugs": [
+        "all-products",
+        "personal-care",
+        "lemongrass-collection"
+      ],
+      "size": "50ml",
+      "price": 107,
+      "availability": "In stock",
+      "leadTime": "7-14 working days",
+      "excerpt": "Lemongrass Malaya in 50ml as a focused serum format designed for scalp care.",
+      "description": "This product brings the Lemongrass Malaya scent profile into a focused serum format designed for scalp care. It is listed in the latest product draft under Personal Care, with a 50ml fill size. The current stock note indicates ready inventory.",
+      "scentNotes": [
+        "lemongrass",
+        "green citrus",
+        "sunlit stem"
+      ],
+      "ritual": [
+        "Apply directly to the scalp or root area with a light hand.",
+        "Massage in slowly to turn the treatment into a calm, focused ritual.",
+        "Use between wash days or before rest depending on your routine."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Personal Care"
+        },
+        {
+          "label": "Collection",
+          "value": "Lemongrass Malaya"
+        },
+        {
+          "label": "Size",
+          "value": "50ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "10 pcs"
+        },
+        {
+          "label": "Status",
+          "value": "In stock"
+        },
+        {
+          "label": "Lead time",
+          "value": "7-14 working days"
+        },
+        {
+          "label": "Crafted for",
+          "value": "Scalp and root treatment"
+        }
+      ],
+      "image": "/assets/products/catalog/hair-root-serum-lemongrass-malaya-50ml.png",
+      "gallery": [
+        "/assets/products/catalog/hair-root-serum-lemongrass-malaya-50ml.png"
+      ],
+      "accent": "#c4b062",
+      "relatedSlugs": [
+        "body-cleanse-shower-gel-lemongrass-malaya-230ml",
+        "body-cleanse-shower-oil-lemongrass-malaya-230ml",
+        "calm-mousseline-lemongrass-malaya-60ml"
+      ]
+    },
+    {
+      "id": "body-cleanse-shower-gel-pineapple-tropical-230ml",
+      "slug": "body-cleanse-shower-gel-pineapple-tropical-230ml",
+      "name": "Body Cleanse Shower Gel Pineapple Tropical 230ml",
+      "shortName": "Body Cleanse Shower Gel",
+      "categoryLabel": "Body Cleanse Shower Gel",
+      "categorySlugs": [
+        "all-products",
+        "personal-care",
+        "pineapple-collection"
+      ],
+      "size": "230ml",
+      "price": 116,
+      "availability": "Pre-order",
+      "leadTime": "7-14 working days",
+      "excerpt": "Pineapple Tropical in 230ml as a cleansing gel format for everyday use.",
+      "description": "This product brings the Pineapple Tropical scent profile into a cleansing gel format for everyday use. It is listed in the latest product draft under Personal Care, with a 230ml fill size. The current stock note indicates a smaller or made-to-order run.",
+      "scentNotes": [
+        "pineapple rind",
+        "bright fruit",
+        "soft green sugar"
+      ],
+      "ritual": [
+        "Use as the opening step in the shower to bring the scent collection onto skin.",
+        "Rinse fully and layer with a body or home format from the same scent family.",
+        "Keep it near the sink or bath for the most direct daily-use ritual."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Personal Care"
+        },
+        {
+          "label": "Collection",
+          "value": "Pineapple Tropical"
+        },
+        {
+          "label": "Size",
+          "value": "230ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "SAMPLE QUANTITY"
+        },
+        {
+          "label": "Status",
+          "value": "Pre-order"
+        },
+        {
+          "label": "Lead time",
+          "value": "7-14 working days"
+        },
+        {
+          "label": "Crafted for",
+          "value": "Daily shower ritual"
+        }
+      ],
+      "image": "/assets/products/catalog/body-cleanse-shower-gel-pineapple-tropical-230ml.png",
+      "gallery": [
+        "/assets/products/catalog/body-cleanse-shower-gel-pineapple-tropical-230ml.png"
+      ],
+      "accent": "#e0ab55",
+      "relatedSlugs": [
+        "body-cleanse-shower-oil-pineapple-tropical-230ml",
+        "calm-mousseline-pineapple-tropical-60ml",
+        "calm-mousseline-pineapple-tropical-10ml"
+      ]
+    },
+    {
+      "id": "body-cleanse-shower-oil-pineapple-tropical-230ml",
+      "slug": "body-cleanse-shower-oil-pineapple-tropical-230ml",
+      "name": "Body Cleanse Shower Oil Pineapple Tropical 230ml",
+      "shortName": "Body Cleanse Shower Oil",
+      "categoryLabel": "Body Cleanse Shower Oil",
+      "categorySlugs": [
+        "all-products",
+        "personal-care",
+        "pineapple-collection"
+      ],
+      "size": "230ml",
+      "price": 116,
+      "availability": "Pre-order",
+      "leadTime": "7-14 working days",
+      "excerpt": "Pineapple Tropical in 230ml as a richer shower oil format for a softer cleanse.",
+      "description": "This product brings the Pineapple Tropical scent profile into a richer shower oil format for a softer cleanse. It is listed in the latest product draft under Personal Care, with a 230ml fill size. The current stock note indicates a smaller or made-to-order run.",
+      "scentNotes": [
+        "pineapple rind",
+        "bright fruit",
+        "soft green sugar"
+      ],
+      "ritual": [
+        "Massage onto damp skin when you want a softer, more conditioning cleanse.",
+        "Rinse lightly so the scent remains closer to the body after the shower.",
+        "Pair it with the matching body oil or diffuser to extend the ritual."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Personal Care"
+        },
+        {
+          "label": "Collection",
+          "value": "Pineapple Tropical"
+        },
+        {
+          "label": "Size",
+          "value": "230ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "SAMPLE QUANTITY"
+        },
+        {
+          "label": "Status",
+          "value": "Pre-order"
+        },
+        {
+          "label": "Lead time",
+          "value": "7-14 working days"
+        },
+        {
+          "label": "Crafted for",
+          "value": "Nourishing shower ritual"
+        }
+      ],
+      "image": "/assets/products/catalog/body-cleanse-shower-oil-pineapple-tropical-230ml.png",
+      "gallery": [
+        "/assets/products/catalog/body-cleanse-shower-oil-pineapple-tropical-230ml.png"
+      ],
+      "accent": "#e0ab55",
+      "relatedSlugs": [
+        "body-cleanse-shower-gel-pineapple-tropical-230ml",
+        "calm-mousseline-pineapple-tropical-60ml",
+        "calm-mousseline-pineapple-tropical-10ml"
+      ]
+    },
+    {
+      "id": "calm-mousseline-pineapple-tropical-60ml",
+      "slug": "calm-mousseline-pineapple-tropical-60ml",
+      "name": "Calm Mousseline Pineapple Tropical 60ml",
+      "shortName": "Calm Mousseline",
+      "categoryLabel": "Calm Mousseline",
+      "categorySlugs": [
+        "all-products",
+        "aromatherapy",
+        "pineapple-collection"
+      ],
+      "size": "60ml",
+      "price": 62,
+      "availability": "Pre-order",
+      "leadTime": "7-14 working days",
+      "excerpt": "Pineapple Tropical in 60ml as a soft mist format for linens, fabric, and air.",
+      "description": "This product brings the Pineapple Tropical scent profile into a soft mist format for linens, fabric, and air. It is listed in the latest product draft under Aromatherapy, with a 60ml fill size. The current stock note indicates a smaller or made-to-order run.",
+      "scentNotes": [
+        "pineapple rind",
+        "bright fruit",
+        "soft green sugar"
+      ],
+      "ritual": [
+        "Mist onto linens, curtains, or fabric surfaces from a short distance.",
+        "Let the scent settle for a moment before the textile is in direct contact with skin.",
+        "Use between deeper room-scent rituals when you want a lighter refresh."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Aromatherapy"
+        },
+        {
+          "label": "Collection",
+          "value": "Pineapple Tropical"
+        },
+        {
+          "label": "Size",
+          "value": "60ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "SAMPLE QUANTITY"
+        },
+        {
+          "label": "Status",
+          "value": "Pre-order"
+        },
+        {
+          "label": "Lead time",
+          "value": "7-14 working days"
+        },
+        {
+          "label": "Crafted for",
+          "value": "Fabric and room refresh"
+        }
+      ],
+      "image": "/assets/products/catalog/calm-mousseline-pineapple-tropical-60ml.png",
+      "gallery": [
+        "/assets/products/catalog/calm-mousseline-pineapple-tropical-60ml.png"
+      ],
+      "accent": "#e0ab55",
+      "relatedSlugs": [
+        "body-cleanse-shower-gel-pineapple-tropical-230ml",
+        "body-cleanse-shower-oil-pineapple-tropical-230ml",
+        "calm-mousseline-pineapple-tropical-10ml"
+      ]
+    },
+    {
+      "id": "calm-mousseline-pineapple-tropical-10ml",
+      "slug": "calm-mousseline-pineapple-tropical-10ml",
+      "name": "Calm Mousseline Pineapple Tropical 10ml",
+      "shortName": "Calm Mousseline",
+      "categoryLabel": "Calm Mousseline",
+      "categorySlugs": [
+        "all-products",
+        "aromatherapy",
+        "pineapple-collection"
+      ],
+      "size": "10ml",
+      "price": 26,
+      "availability": "In stock",
+      "excerpt": "Pineapple Tropical in 10ml as a soft mist format for linens, fabric, and air.",
+      "description": "This product brings the Pineapple Tropical scent profile into a soft mist format for linens, fabric, and air. It is listed in the latest product draft under Aromatherapy, with a 10ml fill size. The current stock note indicates ready inventory.",
+      "scentNotes": [
+        "pineapple rind",
+        "bright fruit",
+        "soft green sugar"
+      ],
+      "ritual": [
+        "Mist onto linens, curtains, or fabric surfaces from a short distance.",
+        "Let the scent settle for a moment before the textile is in direct contact with skin.",
+        "Use between deeper room-scent rituals when you want a lighter refresh."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Aromatherapy"
+        },
+        {
+          "label": "Collection",
+          "value": "Pineapple Tropical"
+        },
+        {
+          "label": "Size",
+          "value": "10ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "50 PCS"
+        },
+        {
+          "label": "Status",
+          "value": "In stock"
+        },
+        {
+          "label": "Crafted for",
+          "value": "Fabric and room refresh"
+        }
+      ],
+      "image": "/assets/products/catalog/calm-mousseline-pineapple-tropical-10ml.png",
+      "gallery": [
+        "/assets/products/catalog/calm-mousseline-pineapple-tropical-10ml.png"
+      ],
+      "accent": "#e0ab55",
+      "relatedSlugs": [
+        "body-cleanse-shower-gel-pineapple-tropical-230ml",
+        "body-cleanse-shower-oil-pineapple-tropical-230ml",
+        "calm-mousseline-pineapple-tropical-60ml"
+      ]
+    },
+    {
+      "id": "body-oil-pineapple-tropical-50ml",
+      "slug": "body-oil-pineapple-tropical-50ml",
+      "name": "Body Oil Pineapple Tropical 50ml",
+      "shortName": "Body Oil",
+      "categoryLabel": "Body Oil",
+      "categorySlugs": [
+        "all-products",
+        "personal-care",
+        "pineapple-collection"
+      ],
+      "size": "50ml",
+      "price": 107,
+      "availability": "In stock",
+      "leadTime": "7-14 working days",
+      "excerpt": "Pineapple Tropical in 50ml as a nourishing body oil for post-shower care.",
+      "description": "This product brings the Pineapple Tropical scent profile into a nourishing body oil for post-shower care. It is listed in the latest product draft under Personal Care, with a 50ml fill size. The current stock note indicates ready inventory.",
+      "scentNotes": [
+        "pineapple rind",
+        "bright fruit",
+        "soft green sugar"
+      ],
+      "ritual": [
+        "Apply to towel-dried skin after bathing while the body is still slightly warm.",
+        "Work it over arms, shoulders, and collarbone so the scent develops gently.",
+        "Use a smaller amount when layering with another product from the same collection."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Personal Care"
+        },
+        {
+          "label": "Collection",
+          "value": "Pineapple Tropical"
+        },
+        {
+          "label": "Size",
+          "value": "50ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "10 pcs"
+        },
+        {
+          "label": "Status",
+          "value": "In stock"
+        },
+        {
+          "label": "Lead time",
+          "value": "7-14 working days"
+        },
+        {
+          "label": "Crafted for",
+          "value": "After-shower body care"
+        }
+      ],
+      "image": "/assets/products/catalog/body-oil-pineapple-tropical-50ml.png",
+      "gallery": [
+        "/assets/products/catalog/body-oil-pineapple-tropical-50ml.png"
+      ],
+      "accent": "#e0ab55",
+      "relatedSlugs": [
+        "body-cleanse-shower-gel-pineapple-tropical-230ml",
+        "body-cleanse-shower-oil-pineapple-tropical-230ml",
+        "calm-mousseline-pineapple-tropical-60ml"
+      ]
+    },
+    {
+      "id": "hair-root-serum-pineapple-tropical-50ml",
+      "slug": "hair-root-serum-pineapple-tropical-50ml",
+      "name": "Hair Root Serum Pineapple Tropical 50ml",
+      "shortName": "Hair Root Serum",
+      "categoryLabel": "Hair Root Serum",
+      "categorySlugs": [
+        "all-products",
+        "personal-care",
+        "pineapple-collection"
+      ],
+      "size": "50ml",
+      "price": 107,
+      "availability": "In stock",
+      "leadTime": "7-14 working days",
+      "excerpt": "Pineapple Tropical in 50ml as a focused serum format designed for scalp care.",
+      "description": "This product brings the Pineapple Tropical scent profile into a focused serum format designed for scalp care. It is listed in the latest product draft under Personal Care, with a 50ml fill size. The current stock note indicates ready inventory.",
+      "scentNotes": [
+        "pineapple rind",
+        "bright fruit",
+        "soft green sugar"
+      ],
+      "ritual": [
+        "Apply directly to the scalp or root area with a light hand.",
+        "Massage in slowly to turn the treatment into a calm, focused ritual.",
+        "Use between wash days or before rest depending on your routine."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Personal Care"
+        },
+        {
+          "label": "Collection",
+          "value": "Pineapple Tropical"
+        },
+        {
+          "label": "Size",
+          "value": "50ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "10 pcs"
+        },
+        {
+          "label": "Status",
+          "value": "In stock"
+        },
+        {
+          "label": "Lead time",
+          "value": "7-14 working days"
+        },
+        {
+          "label": "Crafted for",
+          "value": "Scalp and root treatment"
+        }
+      ],
+      "image": "/assets/products/catalog/hair-root-serum-pineapple-tropical-50ml.png",
+      "gallery": [
+        "/assets/products/catalog/hair-root-serum-pineapple-tropical-50ml.png"
+      ],
+      "accent": "#e0ab55",
+      "relatedSlugs": [
+        "body-cleanse-shower-gel-pineapple-tropical-230ml",
+        "body-cleanse-shower-oil-pineapple-tropical-230ml",
+        "calm-mousseline-pineapple-tropical-60ml"
+      ]
+    },
+    {
+      "id": "reed-diffuser-lemongrass-malaya-230ml",
+      "slug": "reed-diffuser-lemongrass-malaya-230ml",
+      "name": "Reed Diffuser Lemongrass Malaya 230ml",
+      "shortName": "Reed Diffuser",
+      "categoryLabel": "Reed Diffuser",
+      "categorySlugs": [
+        "all-products",
+        "lifestyle",
+        "lemongrass-collection"
+      ],
+      "size": "230ml",
+      "price": 199,
+      "availability": "In stock",
+      "leadTime": "7-14 working days",
+      "excerpt": "Lemongrass Malaya in 230ml as a long-form home fragrance object.",
+      "description": "This product brings the Lemongrass Malaya scent profile into a long-form home fragrance object. It is listed in the latest product draft under Lifestyle, with a 230ml fill size. The current stock note indicates ready inventory.",
+      "scentNotes": [
+        "lemongrass",
+        "green citrus",
+        "sunlit stem"
+      ],
+      "ritual": [
+        "Place it where air moves naturally so the scent can carry through the room.",
+        "Turn the reeds periodically when you want a fresher lift in the space.",
+        "Use it as the anchor object, then layer with sprays or oils as needed."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Lifestyle"
+        },
+        {
+          "label": "Collection",
+          "value": "Lemongrass Malaya"
+        },
+        {
+          "label": "Size",
+          "value": "230ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "5pcs"
+        },
+        {
+          "label": "Status",
+          "value": "In stock"
+        },
+        {
+          "label": "Lead time",
+          "value": "7-14 working days"
+        },
+        {
+          "label": "Crafted for",
+          "value": "All-day room scent"
+        }
+      ],
+      "image": "/assets/products/catalog/reed-diffuser-lemongrass-malaya-230ml.png",
+      "gallery": [
+        "/assets/products/catalog/reed-diffuser-lemongrass-malaya-230ml.png"
+      ],
+      "accent": "#c4b062",
+      "relatedSlugs": [
+        "body-cleanse-shower-gel-lemongrass-malaya-230ml",
+        "body-cleanse-shower-oil-lemongrass-malaya-230ml",
+        "calm-mousseline-lemongrass-malaya-60ml"
+      ]
+    },
+    {
+      "id": "reed-diffuser-pineapple-tropical-230ml",
+      "slug": "reed-diffuser-pineapple-tropical-230ml",
+      "name": "Reed Diffuser Pineapple Tropical 230ml",
+      "shortName": "Reed Diffuser",
+      "categoryLabel": "Reed Diffuser",
+      "categorySlugs": [
+        "all-products",
+        "lifestyle",
+        "pineapple-collection"
+      ],
+      "size": "230ml",
+      "price": 199,
+      "availability": "In stock",
+      "leadTime": "7-14 working days",
+      "excerpt": "Pineapple Tropical in 230ml as a long-form home fragrance object.",
+      "description": "This product brings the Pineapple Tropical scent profile into a long-form home fragrance object. It is listed in the latest product draft under Lifestyle, with a 230ml fill size. The current stock note indicates ready inventory.",
+      "scentNotes": [
+        "pineapple rind",
+        "bright fruit",
+        "soft green sugar"
+      ],
+      "ritual": [
+        "Place it where air moves naturally so the scent can carry through the room.",
+        "Turn the reeds periodically when you want a fresher lift in the space.",
+        "Use it as the anchor object, then layer with sprays or oils as needed."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Lifestyle"
+        },
+        {
+          "label": "Collection",
+          "value": "Pineapple Tropical"
+        },
+        {
+          "label": "Size",
+          "value": "230ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "5pcs"
+        },
+        {
+          "label": "Status",
+          "value": "In stock"
+        },
+        {
+          "label": "Lead time",
+          "value": "7-14 working days"
+        },
+        {
+          "label": "Crafted for",
+          "value": "All-day room scent"
+        }
+      ],
+      "image": "/assets/products/catalog/reed-diffuser-pineapple-tropical-230ml.png",
+      "gallery": [
+        "/assets/products/catalog/reed-diffuser-pineapple-tropical-230ml.png"
+      ],
+      "accent": "#e0ab55",
+      "relatedSlugs": [
+        "body-cleanse-shower-gel-pineapple-tropical-230ml",
+        "body-cleanse-shower-oil-pineapple-tropical-230ml",
+        "calm-mousseline-pineapple-tropical-60ml"
+      ]
+    },
+    {
+      "id": "scented-candle-lemongrass-malaya-270ml",
+      "slug": "scented-candle-lemongrass-malaya-270ml",
+      "name": "Scented Candle Lemongrass Malaya 270ml",
+      "shortName": "Scented Candle",
+      "categoryLabel": "Scented Candle",
+      "categorySlugs": [
+        "all-products",
+        "lifestyle",
+        "lemongrass-collection"
+      ],
+      "size": "270ml",
+      "price": 249,
+      "availability": "Pre-order",
+      "leadTime": "7-14 working days",
+      "excerpt": "Lemongrass Malaya in 270ml as a candle format built for slower evening use.",
+      "description": "This product brings the Lemongrass Malaya scent profile into a candle format built for slower evening use. It is listed in the latest product draft under Lifestyle, with a 270ml fill size. The current stock note indicates a smaller or made-to-order run.",
+      "scentNotes": [
+        "lemongrass",
+        "green citrus",
+        "sunlit stem"
+      ],
+      "ritual": [
+        "Trim the wick and allow the wax pool to even out on the first burn.",
+        "Use it when you want the scent to feel slower, warmer, and more atmospheric.",
+        "Pair it with the matching diffuser or spray for a fuller room story."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Lifestyle"
+        },
+        {
+          "label": "Collection",
+          "value": "Lemongrass Malaya"
+        },
+        {
+          "label": "Size",
+          "value": "270ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "NA"
+        },
+        {
+          "label": "Status",
+          "value": "Pre-order"
+        },
+        {
+          "label": "Lead time",
+          "value": "7-14 working days"
+        },
+        {
+          "label": "Crafted for",
+          "value": "Evening ambiance"
+        }
+      ],
+      "image": "/assets/products/catalog/scented-candle-lemongrass-malaya-270ml.png",
+      "gallery": [
+        "/assets/products/catalog/scented-candle-lemongrass-malaya-270ml.png"
+      ],
+      "accent": "#c4b062",
+      "relatedSlugs": [
+        "body-cleanse-shower-gel-lemongrass-malaya-230ml",
+        "body-cleanse-shower-oil-lemongrass-malaya-230ml",
+        "calm-mousseline-lemongrass-malaya-60ml"
+      ]
+    },
+    {
+      "id": "scented-candle-pineapple-tropical-270ml",
+      "slug": "scented-candle-pineapple-tropical-270ml",
+      "name": "Scented Candle Pineapple Tropical 270ml",
+      "shortName": "Scented Candle",
+      "categoryLabel": "Scented Candle",
+      "categorySlugs": [
+        "all-products",
+        "lifestyle",
+        "pineapple-collection"
+      ],
+      "size": "270ml",
+      "price": 249,
+      "availability": "Pre-order",
+      "leadTime": "7-14 working days",
+      "excerpt": "Pineapple Tropical in 270ml as a candle format built for slower evening use.",
+      "description": "This product brings the Pineapple Tropical scent profile into a candle format built for slower evening use. It is listed in the latest product draft under Lifestyle, with a 270ml fill size. The current stock note indicates a smaller or made-to-order run.",
+      "scentNotes": [
+        "pineapple rind",
+        "bright fruit",
+        "soft green sugar"
+      ],
+      "ritual": [
+        "Trim the wick and allow the wax pool to even out on the first burn.",
+        "Use it when you want the scent to feel slower, warmer, and more atmospheric.",
+        "Pair it with the matching diffuser or spray for a fuller room story."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Lifestyle"
+        },
+        {
+          "label": "Collection",
+          "value": "Pineapple Tropical"
+        },
+        {
+          "label": "Size",
+          "value": "270ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "NA"
+        },
+        {
+          "label": "Status",
+          "value": "Pre-order"
+        },
+        {
+          "label": "Lead time",
+          "value": "7-14 working days"
+        },
+        {
+          "label": "Crafted for",
+          "value": "Evening ambiance"
+        }
+      ],
+      "image": "/assets/products/catalog/scented-candle-pineapple-tropical-270ml.png",
+      "gallery": [
+        "/assets/products/catalog/scented-candle-pineapple-tropical-270ml.png"
+      ],
+      "accent": "#e0ab55",
+      "relatedSlugs": [
+        "body-cleanse-shower-gel-pineapple-tropical-230ml",
+        "body-cleanse-shower-oil-pineapple-tropical-230ml",
+        "calm-mousseline-pineapple-tropical-60ml"
+      ]
+    },
+    {
+      "id": "essential-oil-lemongrass-malaya-10ml",
+      "slug": "essential-oil-lemongrass-malaya-10ml",
+      "name": "Essential Oil Lemongrass Malaya 10ml",
+      "shortName": "Essential Oil",
+      "categoryLabel": "Essential Oil",
+      "categorySlugs": [
+        "all-products",
+        "aromatherapy",
+        "lemongrass-collection"
+      ],
+      "size": "10ml",
+      "price": 99,
+      "availability": "In stock",
+      "excerpt": "Lemongrass Malaya in 10ml as a concentrated aromatherapy oil.",
+      "description": "This product brings the Lemongrass Malaya scent profile into a concentrated aromatherapy oil. It is listed in the latest product draft under Aromatherapy, with a 10ml fill size. The current stock note indicates ready inventory.",
+      "scentNotes": [
+        "lemongrass",
+        "green citrus",
+        "sunlit stem"
+      ],
+      "ritual": [
+        "Diffuse a few drops when you want the purest expression of the scent.",
+        "Use sparingly in a personal ritual or in a room-focused aromatherapy setup.",
+        "Keep the bottle sealed between uses so the profile stays sharp and bright."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Aromatherapy"
+        },
+        {
+          "label": "Collection",
+          "value": "Lemongrass Malaya"
+        },
+        {
+          "label": "Size",
+          "value": "10ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "700 PCS"
+        },
+        {
+          "label": "Status",
+          "value": "In stock"
+        },
+        {
+          "label": "Crafted for",
+          "value": "Diffusion and aromatherapy"
+        }
+      ],
+      "image": "/assets/products/catalog/essential-oil-lemongrass-malaya-10ml.png",
+      "gallery": [
+        "/assets/products/catalog/essential-oil-lemongrass-malaya-10ml.png"
+      ],
+      "accent": "#c4b062",
+      "relatedSlugs": [
+        "body-cleanse-shower-gel-lemongrass-malaya-230ml",
+        "body-cleanse-shower-oil-lemongrass-malaya-230ml",
+        "calm-mousseline-lemongrass-malaya-60ml"
+      ]
+    },
+    {
+      "id": "essential-oil-blend-sleep-calm-10ml",
+      "slug": "essential-oil-blend-sleep-calm-10ml",
+      "name": "Essential Oil Blend Sleep Calm 10ml",
+      "shortName": "Essential Oil Blend",
+      "categoryLabel": "Essential Oil Blend",
+      "categorySlugs": [
+        "all-products",
+        "aromatherapy"
+      ],
+      "size": "10ml",
+      "price": 159,
+      "availability": "In stock",
+      "excerpt": "Sleep Calm in 10ml as a layered essential oil blend.",
+      "description": "This product brings the Sleep Calm scent profile into a layered essential oil blend. It is listed in the latest product draft under Aromatherapy, with a 10ml fill size. The current stock note indicates ready inventory.",
+      "scentNotes": [
+        "lavender hush",
+        "powdered herbal",
+        "night air"
+      ],
+      "ritual": [
+        "Diffuse or dilute according to your preferred aromatherapy ritual.",
+        "Use when you want a more functional mood-led profile than a single-note oil.",
+        "Reach for it at the start or end of the day depending on the blend direction."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Aromatherapy"
+        },
+        {
+          "label": "Collection",
+          "value": "Sleep Calm"
+        },
+        {
+          "label": "Size",
+          "value": "10ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "50 PCS"
+        },
+        {
+          "label": "Status",
+          "value": "In stock"
+        },
+        {
+          "label": "Crafted for",
+          "value": "Targeted wellness ritual"
+        }
+      ],
+      "image": "/assets/products/catalog/essential-oil-blend-sleep-calm-10ml.png",
+      "gallery": [
+        "/assets/products/catalog/essential-oil-blend-sleep-calm-10ml.png"
+      ],
+      "accent": "#8f96c9",
+      "relatedSlugs": [
+        "scented-spray-sleep-calm-30ml",
+        "essential-oil-blend-soft-aura-10ml",
+        "essential-oil-blend-energy-shield-10ml"
+      ]
+    },
+    {
+      "id": "essential-oil-blend-soft-aura-10ml",
+      "slug": "essential-oil-blend-soft-aura-10ml",
+      "name": "Essential Oil Blend Soft Aura 10ml",
+      "shortName": "Essential Oil Blend",
+      "categoryLabel": "Essential Oil Blend",
+      "categorySlugs": [
+        "all-products",
+        "aromatherapy"
+      ],
+      "size": "10ml",
+      "price": 159,
+      "availability": "In stock",
+      "excerpt": "Soft Aura in 10ml as a layered essential oil blend.",
+      "description": "This product brings the Soft Aura scent profile into a layered essential oil blend. It is listed in the latest product draft under Aromatherapy, with a 10ml fill size. The current stock note indicates ready inventory.",
+      "scentNotes": [
+        "clean petals",
+        "sheer musk",
+        "quiet warmth"
+      ],
+      "ritual": [
+        "Diffuse or dilute according to your preferred aromatherapy ritual.",
+        "Use when you want a more functional mood-led profile than a single-note oil.",
+        "Reach for it at the start or end of the day depending on the blend direction."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Aromatherapy"
+        },
+        {
+          "label": "Collection",
+          "value": "Soft Aura"
+        },
+        {
+          "label": "Size",
+          "value": "10ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "50 PCS"
+        },
+        {
+          "label": "Status",
+          "value": "In stock"
+        },
+        {
+          "label": "Crafted for",
+          "value": "Targeted wellness ritual"
+        }
+      ],
+      "image": "/assets/products/catalog/essential-oil-blend-soft-aura-10ml.png",
+      "gallery": [
+        "/assets/products/catalog/essential-oil-blend-soft-aura-10ml.png"
+      ],
+      "accent": "#c9a8b9",
+      "relatedSlugs": [
+        "essential-oil-blend-sleep-calm-10ml",
+        "essential-oil-blend-energy-shield-10ml",
+        "essential-oil-blend-golden-bloom-10ml"
+      ]
+    },
+    {
+      "id": "essential-oil-blend-energy-shield-10ml",
+      "slug": "essential-oil-blend-energy-shield-10ml",
+      "name": "Essential Oil Blend Energy Shield 10ml",
+      "shortName": "Essential Oil Blend",
+      "categoryLabel": "Essential Oil Blend",
+      "categorySlugs": [
+        "all-products",
+        "aromatherapy"
+      ],
+      "size": "10ml",
+      "price": 159,
+      "availability": "In stock",
+      "excerpt": "Energy Shield in 10ml as a layered essential oil blend.",
+      "description": "This product brings the Energy Shield scent profile into a layered essential oil blend. It is listed in the latest product draft under Aromatherapy, with a 10ml fill size. The current stock note indicates ready inventory.",
+      "scentNotes": [
+        "citrus peel",
+        "warm spice",
+        "dry herbal edge"
+      ],
+      "ritual": [
+        "Diffuse or dilute according to your preferred aromatherapy ritual.",
+        "Use when you want a more functional mood-led profile than a single-note oil.",
+        "Reach for it at the start or end of the day depending on the blend direction."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Aromatherapy"
+        },
+        {
+          "label": "Collection",
+          "value": "Energy Shield"
+        },
+        {
+          "label": "Size",
+          "value": "10ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "50 PCS"
+        },
+        {
+          "label": "Status",
+          "value": "In stock"
+        },
+        {
+          "label": "Crafted for",
+          "value": "Targeted wellness ritual"
+        }
+      ],
+      "image": "/assets/products/catalog/essential-oil-blend-energy-shield-10ml.png",
+      "gallery": [
+        "/assets/products/catalog/essential-oil-blend-energy-shield-10ml.png"
+      ],
+      "accent": "#d29d64",
+      "relatedSlugs": [
+        "essential-oil-blend-sleep-calm-10ml",
+        "essential-oil-blend-soft-aura-10ml",
+        "essential-oil-blend-golden-bloom-10ml"
+      ]
+    },
+    {
+      "id": "essential-oil-blend-golden-bloom-10ml",
+      "slug": "essential-oil-blend-golden-bloom-10ml",
+      "name": "Essential Oil Blend Golden Bloom 10ml",
+      "shortName": "Essential Oil Blend",
+      "categoryLabel": "Essential Oil Blend",
+      "categorySlugs": [
+        "all-products",
+        "aromatherapy"
+      ],
+      "size": "10ml",
+      "price": 159,
+      "availability": "In stock",
+      "excerpt": "Golden Bloom in 10ml as a layered essential oil blend.",
+      "description": "This product brings the Golden Bloom scent profile into a layered essential oil blend. It is listed in the latest product draft under Aromatherapy, with a 10ml fill size. The current stock note indicates ready inventory.",
+      "scentNotes": [
+        "soft florals",
+        "golden resin",
+        "warm light"
+      ],
+      "ritual": [
+        "Diffuse or dilute according to your preferred aromatherapy ritual.",
+        "Use when you want a more functional mood-led profile than a single-note oil.",
+        "Reach for it at the start or end of the day depending on the blend direction."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Aromatherapy"
+        },
+        {
+          "label": "Collection",
+          "value": "Golden Bloom"
+        },
+        {
+          "label": "Size",
+          "value": "10ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "50 PCS"
+        },
+        {
+          "label": "Status",
+          "value": "In stock"
+        },
+        {
+          "label": "Crafted for",
+          "value": "Targeted wellness ritual"
+        }
+      ],
+      "image": "/assets/products/catalog/essential-oil-blend-golden-bloom-10ml.png",
+      "gallery": [
+        "/assets/products/catalog/essential-oil-blend-golden-bloom-10ml.png"
+      ],
+      "accent": "#d8bc61",
+      "relatedSlugs": [
+        "essential-oil-blend-sleep-calm-10ml",
+        "essential-oil-blend-soft-aura-10ml",
+        "essential-oil-blend-energy-shield-10ml"
+      ]
+    },
+    {
+      "id": "essential-oil-blend-floral-balance-10ml",
+      "slug": "essential-oil-blend-floral-balance-10ml",
+      "name": "Essential Oil Blend Floral Balance 10ml",
+      "shortName": "Essential Oil Blend",
+      "categoryLabel": "Essential Oil Blend",
+      "categorySlugs": [
+        "all-products",
+        "aromatherapy"
+      ],
+      "size": "10ml",
+      "price": 159,
+      "availability": "In stock",
+      "excerpt": "Floral Balance in 10ml as a layered essential oil blend.",
+      "description": "This product brings the Floral Balance scent profile into a layered essential oil blend. It is listed in the latest product draft under Aromatherapy, with a 10ml fill size. The current stock note indicates ready inventory.",
+      "scentNotes": [
+        "petal accord",
+        "fresh leaves",
+        "calm sweetness"
+      ],
+      "ritual": [
+        "Diffuse or dilute according to your preferred aromatherapy ritual.",
+        "Use when you want a more functional mood-led profile than a single-note oil.",
+        "Reach for it at the start or end of the day depending on the blend direction."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Aromatherapy"
+        },
+        {
+          "label": "Collection",
+          "value": "Floral Balance"
+        },
+        {
+          "label": "Size",
+          "value": "10ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "50 PCS"
+        },
+        {
+          "label": "Status",
+          "value": "In stock"
+        },
+        {
+          "label": "Crafted for",
+          "value": "Targeted wellness ritual"
+        }
+      ],
+      "image": "/assets/products/catalog/essential-oil-blend-floral-balance-10ml.png",
+      "gallery": [
+        "/assets/products/catalog/essential-oil-blend-floral-balance-10ml.png"
+      ],
+      "accent": "#b78ebc",
+      "relatedSlugs": [
+        "essential-oil-blend-sleep-calm-10ml",
+        "essential-oil-blend-soft-aura-10ml",
+        "essential-oil-blend-energy-shield-10ml"
+      ]
+    },
+    {
+      "id": "essential-oil-blend-serene-space-10ml",
+      "slug": "essential-oil-blend-serene-space-10ml",
+      "name": "Essential Oil Blend Serene Space 10ml",
+      "shortName": "Essential Oil Blend",
+      "categoryLabel": "Essential Oil Blend",
+      "categorySlugs": [
+        "all-products",
+        "aromatherapy"
+      ],
+      "size": "10ml",
+      "price": 159,
+      "availability": "In stock",
+      "excerpt": "Serene Space in 10ml as a layered essential oil blend.",
+      "description": "This product brings the Serene Space scent profile into a layered essential oil blend. It is listed in the latest product draft under Aromatherapy, with a 10ml fill size. The current stock note indicates ready inventory.",
+      "scentNotes": [
+        "clean wood",
+        "cool air",
+        "subtle herbal clarity"
+      ],
+      "ritual": [
+        "Diffuse or dilute according to your preferred aromatherapy ritual.",
+        "Use when you want a more functional mood-led profile than a single-note oil.",
+        "Reach for it at the start or end of the day depending on the blend direction."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Aromatherapy"
+        },
+        {
+          "label": "Collection",
+          "value": "Serene Space"
+        },
+        {
+          "label": "Size",
+          "value": "10ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "50 PCS"
+        },
+        {
+          "label": "Status",
+          "value": "In stock"
+        },
+        {
+          "label": "Crafted for",
+          "value": "Targeted wellness ritual"
+        }
+      ],
+      "image": "/assets/products/catalog/essential-oil-blend-serene-space-10ml.png",
+      "gallery": [
+        "/assets/products/catalog/essential-oil-blend-serene-space-10ml.png"
+      ],
+      "accent": "#87a7b0",
+      "relatedSlugs": [
+        "essential-oil-blend-sleep-calm-10ml",
+        "essential-oil-blend-soft-aura-10ml",
+        "essential-oil-blend-energy-shield-10ml"
+      ]
+    },
+    {
+      "id": "scented-spray-lemongrass-malaya-30ml",
+      "slug": "scented-spray-lemongrass-malaya-30ml",
+      "name": "Scented Spray Lemongrass Malaya 30ml",
+      "shortName": "Scented Spray",
+      "categoryLabel": "Scented Spray",
+      "categorySlugs": [
+        "all-products",
+        "lifestyle",
+        "lemongrass-collection"
+      ],
+      "size": "30ml",
+      "price": 107,
+      "availability": "Pre-order",
+      "leadTime": "7-14 working days",
+      "excerpt": "Lemongrass Malaya in 30ml as an easy room and fabric spray.",
+      "description": "This product brings the Lemongrass Malaya scent profile into an easy room and fabric spray. It is listed in the latest product draft under Lifestyle, with a 30ml fill size. The current stock note indicates a smaller or made-to-order run.",
+      "scentNotes": [
+        "lemongrass",
+        "green citrus",
+        "sunlit stem"
+      ],
+      "ritual": [
+        "Mist lightly into the room, onto linens, or around soft furnishings.",
+        "Use it for a quick reset when a diffuser or candle feels too permanent.",
+        "Keep it nearby for travel, work, or a mid-day atmosphere change."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Lifestyle"
+        },
+        {
+          "label": "Collection",
+          "value": "Lemongrass Malaya"
+        },
+        {
+          "label": "Size",
+          "value": "30ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "SAMPLE QUANTITY"
+        },
+        {
+          "label": "Status",
+          "value": "Pre-order"
+        },
+        {
+          "label": "Lead time",
+          "value": "7-14 working days"
+        },
+        {
+          "label": "Crafted for",
+          "value": "Portable room refresh"
+        }
+      ],
+      "image": "/assets/products/catalog/scented-spray-lemongrass-malaya-30ml.png",
+      "gallery": [
+        "/assets/products/catalog/scented-spray-lemongrass-malaya-30ml.png"
+      ],
+      "accent": "#c4b062",
+      "relatedSlugs": [
+        "body-cleanse-shower-gel-lemongrass-malaya-230ml",
+        "body-cleanse-shower-oil-lemongrass-malaya-230ml",
+        "calm-mousseline-lemongrass-malaya-60ml"
+      ]
+    },
+    {
+      "id": "scented-spray-stress-relief-30ml",
+      "slug": "scented-spray-stress-relief-30ml",
+      "name": "Scented Spray Stress Relief 30ml",
+      "shortName": "Scented Spray",
+      "categoryLabel": "Scented Spray",
+      "categorySlugs": [
+        "all-products",
+        "lifestyle"
+      ],
+      "size": "30ml",
+      "price": 107,
+      "availability": "Pre-order",
+      "leadTime": "7-14 working days",
+      "excerpt": "Stress Relief in 30ml as an easy room and fabric spray.",
+      "description": "This product brings the Stress Relief scent profile into an easy room and fabric spray. It is listed in the latest product draft under Lifestyle, with a 30ml fill size. The current stock note indicates a smaller or made-to-order run.",
+      "scentNotes": [
+        "minted herbs",
+        "fresh citrus",
+        "cool calm"
+      ],
+      "ritual": [
+        "Mist lightly into the room, onto linens, or around soft furnishings.",
+        "Use it for a quick reset when a diffuser or candle feels too permanent.",
+        "Keep it nearby for travel, work, or a mid-day atmosphere change."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Lifestyle"
+        },
+        {
+          "label": "Collection",
+          "value": "Stress Relief"
+        },
+        {
+          "label": "Size",
+          "value": "30ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "SAMPLE QUANTITY"
+        },
+        {
+          "label": "Status",
+          "value": "Pre-order"
+        },
+        {
+          "label": "Lead time",
+          "value": "7-14 working days"
+        },
+        {
+          "label": "Crafted for",
+          "value": "Portable room refresh"
+        }
+      ],
+      "image": "/assets/products/catalog/scented-spray-stress-relief-30ml.png",
+      "gallery": [
+        "/assets/products/catalog/scented-spray-stress-relief-30ml.png"
+      ],
+      "accent": "#8cab7d",
+      "relatedSlugs": [
+        "roll-on-essential-oil-stress-relief-10ml",
+        "scented-spray-lemongrass-malaya-30ml",
+        "scented-spray-sleep-calm-30ml"
+      ]
+    },
+    {
+      "id": "scented-spray-sleep-calm-30ml",
+      "slug": "scented-spray-sleep-calm-30ml",
+      "name": "Scented Spray Sleep Calm 30ml",
+      "shortName": "Scented Spray",
+      "categoryLabel": "Scented Spray",
+      "categorySlugs": [
+        "all-products",
+        "lifestyle"
+      ],
+      "size": "30ml",
+      "price": 107,
+      "availability": "In stock",
+      "leadTime": "7-14 working days",
+      "excerpt": "Sleep Calm in 30ml as an easy room and fabric spray.",
+      "description": "This product brings the Sleep Calm scent profile into an easy room and fabric spray. It is listed in the latest product draft under Lifestyle, with a 30ml fill size. The current stock note indicates ready inventory.",
+      "scentNotes": [
+        "lavender hush",
+        "powdered herbal",
+        "night air"
+      ],
+      "ritual": [
+        "Mist lightly into the room, onto linens, or around soft furnishings.",
+        "Use it for a quick reset when a diffuser or candle feels too permanent.",
+        "Keep it nearby for travel, work, or a mid-day atmosphere change."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Lifestyle"
+        },
+        {
+          "label": "Collection",
+          "value": "Sleep Calm"
+        },
+        {
+          "label": "Size",
+          "value": "30ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "15"
+        },
+        {
+          "label": "Status",
+          "value": "In stock"
+        },
+        {
+          "label": "Lead time",
+          "value": "7-14 working days"
+        },
+        {
+          "label": "Crafted for",
+          "value": "Portable room refresh"
+        }
+      ],
+      "image": "/assets/products/catalog/scented-spray-sleep-calm-30ml.png",
+      "gallery": [
+        "/assets/products/catalog/scented-spray-sleep-calm-30ml.png"
+      ],
+      "accent": "#8f96c9",
+      "relatedSlugs": [
+        "essential-oil-blend-sleep-calm-10ml",
+        "scented-spray-lemongrass-malaya-30ml",
+        "scented-spray-stress-relief-30ml"
+      ]
+    },
+    {
+      "id": "roll-on-essential-oil-jade-tea-10ml",
+      "slug": "roll-on-essential-oil-jade-tea-10ml",
+      "name": "Roll On Essential Oil Jade Tea 10ml",
+      "shortName": "Roll On Essential Oil",
+      "categoryLabel": "Roll On Essential Oil",
+      "categorySlugs": [
+        "all-products",
+        "aromatherapy"
+      ],
+      "size": "10ml",
+      "price": 107,
+      "availability": "In stock",
+      "excerpt": "Jade Tea in 10ml as a portable pulse-point oil.",
+      "description": "This product brings the Jade Tea scent profile into a portable pulse-point oil. It is listed in the latest product draft under Aromatherapy, with a 10ml fill size. The current stock note indicates ready inventory.",
+      "scentNotes": [
+        "green tea",
+        "fresh leaves",
+        "soft steam"
+      ],
+      "ritual": [
+        "Apply to pulse points such as wrists, temples, or the back of the neck.",
+        "Roll on lightly and let the scent warm naturally on skin.",
+        "Use it as the most portable version of the aromatherapy ritual."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Aromatherapy"
+        },
+        {
+          "label": "Collection",
+          "value": "Jade Tea"
+        },
+        {
+          "label": "Size",
+          "value": "10ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "50 PCS"
+        },
+        {
+          "label": "Status",
+          "value": "In stock"
+        },
+        {
+          "label": "Crafted for",
+          "value": "On-the-go pulse point ritual"
+        }
+      ],
+      "image": "/assets/products/catalog/roll-on-essential-oil-jade-tea-10ml.png",
+      "gallery": [
+        "/assets/products/catalog/roll-on-essential-oil-jade-tea-10ml.png"
+      ],
+      "accent": "#8aa47b",
+      "relatedSlugs": [
+        "roll-on-essential-oil-stress-relief-10ml",
+        "roll-on-essential-oil-happy-10ml"
+      ]
+    },
+    {
+      "id": "roll-on-essential-oil-stress-relief-10ml",
+      "slug": "roll-on-essential-oil-stress-relief-10ml",
+      "name": "Roll On Essential Oil Stress Relief 10ml",
+      "shortName": "Roll On Essential Oil",
+      "categoryLabel": "Roll On Essential Oil",
+      "categorySlugs": [
+        "all-products",
+        "aromatherapy"
+      ],
+      "size": "10ml",
+      "price": 107,
+      "availability": "In stock",
+      "excerpt": "Stress Relief in 10ml as a portable pulse-point oil.",
+      "description": "This product brings the Stress Relief scent profile into a portable pulse-point oil. It is listed in the latest product draft under Aromatherapy, with a 10ml fill size. The current stock note indicates ready inventory.",
+      "scentNotes": [
+        "minted herbs",
+        "fresh citrus",
+        "cool calm"
+      ],
+      "ritual": [
+        "Apply to pulse points such as wrists, temples, or the back of the neck.",
+        "Roll on lightly and let the scent warm naturally on skin.",
+        "Use it as the most portable version of the aromatherapy ritual."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Aromatherapy"
+        },
+        {
+          "label": "Collection",
+          "value": "Stress Relief"
+        },
+        {
+          "label": "Size",
+          "value": "10ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "50PCS"
+        },
+        {
+          "label": "Status",
+          "value": "In stock"
+        },
+        {
+          "label": "Crafted for",
+          "value": "On-the-go pulse point ritual"
+        }
+      ],
+      "image": "/assets/products/catalog/roll-on-essential-oil-stress-relief-10ml.png",
+      "gallery": [
+        "/assets/products/catalog/roll-on-essential-oil-stress-relief-10ml.png"
+      ],
+      "accent": "#8cab7d",
+      "relatedSlugs": [
+        "scented-spray-stress-relief-30ml",
+        "roll-on-essential-oil-jade-tea-10ml",
+        "roll-on-essential-oil-happy-10ml"
+      ]
+    },
+    {
+      "id": "roll-on-essential-oil-happy-10ml",
+      "slug": "roll-on-essential-oil-happy-10ml",
+      "name": "Roll On Essential Oil Happy 10ml",
+      "shortName": "Roll On Essential Oil",
+      "categoryLabel": "Roll On Essential Oil",
+      "categorySlugs": [
+        "all-products",
+        "aromatherapy"
+      ],
+      "size": "10ml",
+      "price": 107,
+      "availability": "In stock",
+      "excerpt": "Happy in 10ml as a portable pulse-point oil.",
+      "description": "This product brings the Happy scent profile into a portable pulse-point oil. It is listed in the latest product draft under Aromatherapy, with a 10ml fill size. The current stock note indicates ready inventory.",
+      "scentNotes": [
+        "bright citrus",
+        "soft fruit",
+        "sunny florals"
+      ],
+      "ritual": [
+        "Apply to pulse points such as wrists, temples, or the back of the neck.",
+        "Roll on lightly and let the scent warm naturally on skin.",
+        "Use it as the most portable version of the aromatherapy ritual."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Aromatherapy"
+        },
+        {
+          "label": "Collection",
+          "value": "Happy"
+        },
+        {
+          "label": "Size",
+          "value": "10ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "50 PCS"
+        },
+        {
+          "label": "Status",
+          "value": "In stock"
+        },
+        {
+          "label": "Crafted for",
+          "value": "On-the-go pulse point ritual"
+        }
+      ],
+      "image": "/assets/products/catalog/roll-on-essential-oil-happy-10ml.png",
+      "gallery": [
+        "/assets/products/catalog/roll-on-essential-oil-happy-10ml.png"
+      ],
+      "accent": "#e8b357",
+      "relatedSlugs": [
+        "roll-on-essential-oil-jade-tea-10ml",
+        "roll-on-essential-oil-stress-relief-10ml"
+      ]
+    },
+    {
+      "id": "essential-oil-blend-rose-10ml",
+      "slug": "essential-oil-blend-rose-10ml",
+      "name": "Essential Oil Blend Rose 10ml",
+      "shortName": "Essential Oil Blend",
+      "categoryLabel": "Essential Oil Blend",
+      "categorySlugs": [
+        "all-products",
+        "aromatherapy"
+      ],
+      "size": "10ml",
+      "price": 1115,
+      "availability": "In stock",
+      "leadTime": "7-14 working days",
+      "excerpt": "Rose in 10ml as a layered essential oil blend.",
+      "description": "This product brings the Rose scent profile into a layered essential oil blend. It is listed in the latest product draft under Aromatherapy, with a 10ml fill size. The current stock note indicates ready inventory.",
+      "scentNotes": [
+        "rose petals",
+        "velvet floral",
+        "warm powder"
+      ],
+      "ritual": [
+        "Diffuse or dilute according to your preferred aromatherapy ritual.",
+        "Use when you want a more functional mood-led profile than a single-note oil.",
+        "Reach for it at the start or end of the day depending on the blend direction."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Aromatherapy"
+        },
+        {
+          "label": "Collection",
+          "value": "Rose"
+        },
+        {
+          "label": "Size",
+          "value": "10ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "50PCS"
+        },
+        {
+          "label": "Status",
+          "value": "In stock"
+        },
+        {
+          "label": "Lead time",
+          "value": "7-14 working days"
+        },
+        {
+          "label": "Crafted for",
+          "value": "Targeted wellness ritual"
+        }
+      ],
+      "image": "/assets/products/catalog/essential-oil-blend-rose-10ml.png",
+      "gallery": [
+        "/assets/products/catalog/essential-oil-blend-rose-10ml.png"
+      ],
+      "accent": "#c98b97",
+      "relatedSlugs": [
+        "essential-oil-blend-sleep-calm-10ml",
+        "essential-oil-blend-soft-aura-10ml",
+        "essential-oil-blend-energy-shield-10ml"
+      ]
+    },
+    {
+      "id": "scented-oil-pink-chiffon-10ml",
+      "slug": "scented-oil-pink-chiffon-10ml",
+      "name": "Scented Oil Pink Chiffon 10ml",
+      "shortName": "Scented Oil",
+      "categoryLabel": "Scented Oil",
+      "categorySlugs": [
+        "all-products",
+        "others"
+      ],
+      "size": "10ml",
+      "price": 49,
+      "availability": "In stock",
+      "excerpt": "Pink Chiffon in 10ml as a compact scented oil format.",
+      "description": "This product brings the Pink Chiffon scent profile into a compact scented oil format. It is listed in the latest product draft under Others, with a 10ml fill size. The current stock note indicates ready inventory.",
+      "scentNotes": [
+        "soft florals",
+        "clean musk",
+        "powdered sweetness"
+      ],
+      "ritual": [
+        "Use with your preferred diffuser or scenting method in small amounts.",
+        "Build the room gradually rather than overloading the fragrance at once.",
+        "Pair it with a matching spray or candle if you want more presence."
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Others"
+        },
+        {
+          "label": "Collection",
+          "value": "Pink Chiffon"
+        },
+        {
+          "label": "Size",
+          "value": "10ml"
+        },
+        {
+          "label": "Inventory",
+          "value": "1,800 PCS"
+        },
+        {
+          "label": "Status",
+          "value": "In stock"
+        },
+        {
+          "label": "Crafted for",
+          "value": "Home scenting and diffuser use"
+        }
+      ],
+      "image": "/assets/products/catalog/scented-oil-pink-chiffon-10ml.png",
+      "gallery": [
+        "/assets/products/catalog/scented-oil-pink-chiffon-10ml.png"
+      ],
+      "accent": "#d8a9b8",
+      "relatedSlugs": []
+    }
+  ],
+  "categories": [
+    {
+      "slug": "all-products",
+      "name": "All Products",
+      "eyebrow": "Catalog",
+      "description": "The full Aerthera retail catalog, expanded from the latest product sheet and rebuilt with local packshots.",
+      "intro": "Browse the current storefront assortment across personal care, aromatherapy, lifestyle, and scent-led wellness products.",
+      "heroImage": "/assets/category/all-products-hero-tropical-pasture.jpg",
+      "productSlugs": [
+        "body-cleanse-shower-gel-lemongrass-malaya-230ml",
+        "body-cleanse-shower-oil-lemongrass-malaya-230ml",
+        "calm-mousseline-lemongrass-malaya-60ml",
+        "calm-mousseline-lemongrass-malaya-10ml",
+        "body-oil-lemongrass-malaya-50ml",
+        "hair-root-serum-lemongrass-malaya-50ml",
+        "body-cleanse-shower-gel-pineapple-tropical-230ml",
+        "body-cleanse-shower-oil-pineapple-tropical-230ml",
+        "calm-mousseline-pineapple-tropical-60ml",
+        "calm-mousseline-pineapple-tropical-10ml",
+        "body-oil-pineapple-tropical-50ml",
+        "hair-root-serum-pineapple-tropical-50ml",
+        "reed-diffuser-lemongrass-malaya-230ml",
+        "reed-diffuser-pineapple-tropical-230ml",
+        "scented-candle-lemongrass-malaya-270ml",
+        "scented-candle-pineapple-tropical-270ml",
+        "essential-oil-lemongrass-malaya-10ml",
+        "essential-oil-blend-sleep-calm-10ml",
+        "essential-oil-blend-soft-aura-10ml",
+        "essential-oil-blend-energy-shield-10ml",
+        "essential-oil-blend-golden-bloom-10ml",
+        "essential-oil-blend-floral-balance-10ml",
+        "essential-oil-blend-serene-space-10ml",
+        "scented-spray-lemongrass-malaya-30ml",
+        "scented-spray-stress-relief-30ml",
+        "scented-spray-sleep-calm-30ml",
+        "roll-on-essential-oil-jade-tea-10ml",
+        "roll-on-essential-oil-stress-relief-10ml",
+        "roll-on-essential-oil-happy-10ml",
+        "essential-oil-blend-rose-10ml",
+        "scented-oil-pink-chiffon-10ml"
+      ]
+    },
+    {
+      "slug": "lemongrass-collection",
+      "name": "Lemongrass Malaya Collection",
+      "eyebrow": "Collection",
+      "description": "Aerthera's core Lemongrass Malaya assortment across body care, home fragrance, and aromatherapy formats.",
+      "intro": "This edit gathers every Lemongrass Malaya SKU currently listed in the retail product draft.",
+      "heroImage": "/assets/brand/lemongrass-field-malaysia.jpg",
+      "productSlugs": [
+        "body-cleanse-shower-gel-lemongrass-malaya-230ml",
+        "body-cleanse-shower-oil-lemongrass-malaya-230ml",
+        "calm-mousseline-lemongrass-malaya-60ml",
+        "calm-mousseline-lemongrass-malaya-10ml",
+        "body-oil-lemongrass-malaya-50ml",
+        "hair-root-serum-lemongrass-malaya-50ml",
+        "reed-diffuser-lemongrass-malaya-230ml",
+        "scented-candle-lemongrass-malaya-270ml",
+        "essential-oil-lemongrass-malaya-10ml",
+        "scented-spray-lemongrass-malaya-30ml"
+      ]
+    },
+    {
+      "slug": "pineapple-collection",
+      "name": "Pineapple Tropical Collection",
+      "eyebrow": "Collection",
+      "description": "A brighter fruit-led assortment translated across cleansing, home, and aromatherapy formats.",
+      "intro": "The Pineapple Tropical range brings the same product architecture into a warmer, more playful scent direction.",
+      "heroImage": "/assets/brand/service-aroma.jpg",
+      "productSlugs": [
+        "body-cleanse-shower-gel-pineapple-tropical-230ml",
+        "body-cleanse-shower-oil-pineapple-tropical-230ml",
+        "calm-mousseline-pineapple-tropical-60ml",
+        "calm-mousseline-pineapple-tropical-10ml",
+        "body-oil-pineapple-tropical-50ml",
+        "hair-root-serum-pineapple-tropical-50ml",
+        "reed-diffuser-pineapple-tropical-230ml",
+        "scented-candle-pineapple-tropical-270ml"
+      ]
+    },
+    {
+      "slug": "personal-care",
+      "name": "Personal Care",
+      "eyebrow": "Department",
+      "description": "Daily-use body and scalp products designed to keep the scent ritual close to the skin.",
+      "intro": "These formats translate Aerthera's scent language into shower, body, and hair routines.",
+      "heroImage": "/assets/brand/hero-portrait.jpeg",
+      "productSlugs": [
+        "body-cleanse-shower-gel-lemongrass-malaya-230ml",
+        "body-cleanse-shower-oil-lemongrass-malaya-230ml",
+        "body-oil-lemongrass-malaya-50ml",
+        "hair-root-serum-lemongrass-malaya-50ml",
+        "body-cleanse-shower-gel-pineapple-tropical-230ml",
+        "body-cleanse-shower-oil-pineapple-tropical-230ml",
+        "body-oil-pineapple-tropical-50ml",
+        "hair-root-serum-pineapple-tropical-50ml"
+      ]
+    },
+    {
+      "slug": "aromatherapy",
+      "name": "Aromatherapy",
+      "eyebrow": "Department",
+      "description": "Focused oils, blends, roll-ons, and fabric mists built around everyday aromatherapy use.",
+      "intro": "This group covers the most concentrated and portable expressions in the catalog.",
+      "heroImage": "/assets/brand/service-aroma.jpg",
+      "productSlugs": [
+        "calm-mousseline-lemongrass-malaya-60ml",
+        "calm-mousseline-lemongrass-malaya-10ml",
+        "calm-mousseline-pineapple-tropical-60ml",
+        "calm-mousseline-pineapple-tropical-10ml",
+        "essential-oil-lemongrass-malaya-10ml",
+        "essential-oil-blend-sleep-calm-10ml",
+        "essential-oil-blend-soft-aura-10ml",
+        "essential-oil-blend-energy-shield-10ml",
+        "essential-oil-blend-golden-bloom-10ml",
+        "essential-oil-blend-floral-balance-10ml",
+        "essential-oil-blend-serene-space-10ml",
+        "roll-on-essential-oil-jade-tea-10ml",
+        "roll-on-essential-oil-stress-relief-10ml",
+        "roll-on-essential-oil-happy-10ml",
+        "essential-oil-blend-rose-10ml"
+      ]
+    },
+    {
+      "slug": "lifestyle",
+      "name": "Lifestyle",
+      "eyebrow": "Department",
+      "description": "Home fragrance objects and atmosphere-setting formats for slower, spatial rituals.",
+      "intro": "Diffusers, candles, and sprays sit here as the more architectural side of the collection.",
+      "heroImage": "/assets/brand/service-distillation.jpg",
+      "productSlugs": [
+        "reed-diffuser-lemongrass-malaya-230ml",
+        "reed-diffuser-pineapple-tropical-230ml",
+        "scented-candle-lemongrass-malaya-270ml",
+        "scented-candle-pineapple-tropical-270ml",
+        "scented-spray-lemongrass-malaya-30ml",
+        "scented-spray-stress-relief-30ml",
+        "scented-spray-sleep-calm-30ml"
+      ]
+    },
+    {
+      "slug": "others",
+      "name": "Other Scent Formats",
+      "eyebrow": "Department",
+      "description": "Small-batch or standalone scent formats that sit outside the main department structure.",
+      "intro": "These products are part of the retail assortment but do not sit cleanly inside the core departments.",
+      "heroImage": "/assets/brand/service-ecosystem.png",
+      "productSlugs": [
+        "scented-oil-pink-chiffon-10ml"
+      ]
+    }
+  ]
+}
