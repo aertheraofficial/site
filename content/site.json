@@ -39,7 +39,7 @@
     "footerLinks": [
       { "label": "All Products", "href": "/category/all-products" },
       { "label": "Lemongrass Collection", "href": "/category/lemongrass-collection" },
-      { "label": "Privacy Policy", "href": "/blank" },
+      { "label": "Privacy Policy", "href": "/privacy" },
       { "label": "Accessibility Statement", "href": "/blank-1" }
     ]
   },
@@ -74,8 +74,8 @@
           "subtitle": "Pure Essential Pleasure"
         },
         {
-          "title": "Fragrances",
-          "subtitle": "Functional Aromatic Blends"
+          "title": "ESG & CSR",
+          "subtitle": "Ethical impact and accountability"
         },
         {
           "title": "Experiences",

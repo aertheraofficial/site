@@ -24,7 +24,14 @@ import {
   regenerateSocialDraftVariant,
 } from "@/lib/social/agents";
 import type { SocialPlatform } from "@/lib/social/brand";
-import { publishSocialDraftToMeta } from "@/lib/social/meta";
+import {
+  createPausedMetaAdFromDraft,
+  isMetaAdBillingMissing,
+} from "@/lib/social/meta-ads";
+import {
+  isMetaAccessTokenExpiredOrInvalid,
+  publishSocialDraftToMeta,
+} from "@/lib/social/meta";
 import {
   getSocialDraftById,
   saveSocialCampaignWithDrafts,
@@ -355,20 +362,113 @@ export async function generateReviewPublishSocialAdAction(formData: FormData) {
       },
     ]);
   } catch (error) {
+    const msg =
+      error instanceof Error ? error.message : "Unable to publish to Meta.";
+    const metaError =
+      isMetaAccessTokenExpiredOrInvalid(msg) ? "meta-token-expired" : "meta-publish-failed";
+
     await saveSocialCampaignWithDrafts(campaign, [
       {
         ...draft,
         status: "failed",
-        approvalNotes:
-          error instanceof Error ? error.message : "Unable to publish to Meta.",
+        approvalNotes: msg,
       },
     ]);
     revalidatePath("/admin/social");
-    redirect("/admin/social?error=meta-publish-failed");
+    redirect(`/admin/social?error=${metaError}`);
   }
 
   revalidatePath("/admin/social");
   redirect("/admin/social?published=1");
+}
+
+export async function generateReviewCreateMetaAdAction(formData: FormData) {
+  await requireAdminSession("/admin/social");
+
+  const productSlug =
+    typeof formData.get("productSlug") === "string"
+      ? String(formData.get("productSlug")).trim()
+      : undefined;
+
+  let campaign: Awaited<ReturnType<typeof generateSingleSocialAd>>["campaign"];
+  let drafts: Awaited<ReturnType<typeof generateSingleSocialAd>>["drafts"];
+
+  try {
+    const generated = await generateSingleSocialAd({
+      productSlug,
+      platform: "instagram",
+    });
+    campaign = generated.campaign;
+    drafts = generated.drafts;
+  } catch (error) {
+    redirect(
+      `/admin/social?error=${encodeURIComponent(
+        error instanceof Error ? error.message : "AI ad generation failed.",
+      )}`,
+    );
+  }
+
+  const draft = drafts[0];
+
+  if (draft.reviewerFlags.length > 0) {
+    await saveSocialCampaignWithDrafts(campaign, [
+      {
+        ...draft,
+        status: "failed",
+        approvalNotes: `Review blocked ad creation: ${draft.reviewerFlags.join(" ")}`,
+      },
+    ]);
+    revalidatePath("/admin/social");
+    redirect("/admin/social?error=review-blocked");
+  }
+
+  try {
+    const result = await createPausedMetaAdFromDraft(draft);
+    await saveSocialCampaignWithDrafts(campaign, [
+      {
+        ...draft,
+        platform: "facebook",
+        status: "scheduled",
+        externalPostId: result.adId,
+        publishedUrl: result.adsManagerUrl,
+        approvalNotes:
+          "Generated, reviewed, and created as a paused Meta ad for Facebook and Instagram placements. It will not spend until activated in Ads Manager.",
+        modelOutput: {
+          ...(draft.modelOutput ?? {}),
+          metaAdResult: result.raw,
+          metaAdIds: {
+            campaignId: result.campaignId,
+            adSetId: result.adSetId,
+            creativeId: result.creativeId,
+            adId: result.adId,
+          },
+          productUrl: result.productUrl,
+        },
+      },
+    ]);
+  } catch (error) {
+    const msg =
+      error instanceof Error ? error.message : "Unable to create Meta ad.";
+    const metaError = isMetaAccessTokenExpiredOrInvalid(msg)
+      ? "meta-token-expired"
+      : isMetaAdBillingMissing(msg)
+        ? "meta-billing-missing"
+        : "meta-ad-failed";
+
+    await saveSocialCampaignWithDrafts(campaign, [
+      {
+        ...draft,
+        platform: "facebook",
+        status: "failed",
+        approvalNotes: msg,
+      },
+    ]);
+    revalidatePath("/admin/social");
+    redirect(`/admin/social?error=${metaError}`);
+  }
+
+  revalidatePath("/admin/social");
+  redirect("/admin/social?adCreated=1");
 }
 
 export async function updateSocialDraftStatusAction(formData: FormData) {

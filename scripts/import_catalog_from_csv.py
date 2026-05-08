@@ -181,7 +181,7 @@ CATEGORY_DEFINITIONS = [
         "eyebrow": "Department",
         "description": "Daily-use body and scalp products designed to keep the scent ritual close to the skin.",
         "intro": "These formats translate Aerthera's scent language into shower, body, and hair routines.",
-        "heroImage": "/assets/brand/hero-portrait.jpeg",
+        "heroImage": "/assets/brand/hero-portrait.png",
         "selector": lambda row: row.department == "Personal Care",
     },
     {
@@ -214,6 +214,20 @@ CATEGORY_DEFINITIONS = [
 ]
 
 
+@dataclass(frozen=True)
+class ColumnMap:
+    number: int
+    department: int
+    category: int
+    scent: int
+    capacity: int
+    photo: int
+    label: int
+    price: int
+    inventory: int
+    sku: int | None
+
+
 @dataclass
 class SourceRow:
     number: str
@@ -225,6 +239,7 @@ class SourceRow:
     label_url: str
     price: int
     inventory: str
+    sku: str
 
 
 def title_case(value: str) -> str:
@@ -346,32 +361,104 @@ def build_related_slugs(
     return (same_scent + same_category)[:3]
 
 
+def normalize_header_cell(value: str) -> str:
+    return re.sub(r"\s+", " ", (value or "").strip()).upper()
+
+
+def find_first_column(keys: list[str], *fragments: str) -> int | None:
+    for index, key in enumerate(keys):
+        if all(fragment.upper() in key for fragment in fragments):
+            return index
+    return None
+
+
+def find_number_column(keys: list[str]) -> int | None:
+    for index, key in enumerate(keys):
+        base = key.rstrip(".")
+        if base == "NO" or key.startswith("NO"):
+            return index
+    return None
+
+
+def find_sku_column(keys: list[str]) -> int | None:
+    for index, key in enumerate(keys):
+        if "UPDATE" in key and "SKU" in key:
+            return index
+    for index, key in enumerate(keys):
+        if key in {"SKU", "SKU CODE", "ITEM SKU"}:
+            return index
+    for index, key in enumerate(keys):
+        if "SKU" in key:
+            return index
+    return None
+
+
+def build_column_map(header: list[str]) -> ColumnMap:
+    keys = [normalize_header_cell(cell) for cell in header]
+    legacy = ColumnMap(0, 1, 2, 3, 4, 5, 7, 8, 9, None)
+
+    number = find_number_column(keys)
+    department = find_first_column(keys, "DEPARTMENT")
+    category = find_first_column(keys, "CATEGORY")
+    scent = find_first_column(keys, "SCENTS", "COLLECTION") or find_first_column(keys, "SCENT", "COLLECTION")
+    capacity = find_first_column(keys, "CAPACITY")
+    photo = find_first_column(keys, "LINK", "PHOTO")
+    label = find_first_column(keys, "LINK", "LABEL")
+    price = find_first_column(keys, "PRICE", "RETAIL") or find_first_column(keys, "PRICE", "ECOMMERCE")
+    inventory = find_first_column(keys, "INVENTORY", "COUNT")
+    sku = find_sku_column(keys)
+
+    return ColumnMap(
+        number=number if number is not None else legacy.number,
+        department=department if department is not None else legacy.department,
+        category=category if category is not None else legacy.category,
+        scent=scent if scent is not None else legacy.scent,
+        capacity=capacity if capacity is not None else legacy.capacity,
+        photo=photo if photo is not None else legacy.photo,
+        label=label if label is not None else legacy.label,
+        price=price if price is not None else legacy.price,
+        inventory=inventory if inventory is not None else legacy.inventory,
+        sku=sku,
+    )
+
+
+def cell_at(row: list[str], column: int) -> str:
+    if column < 0 or column >= len(row):
+        return ""
+    return row[column]
+
+
 def parse_rows() -> list[SourceRow]:
     with CSV_PATH.open(newline="", encoding="utf-8-sig") as csv_file:
         rows = list(csv.reader(csv_file))
 
     header = rows[1]
+    cols = build_column_map(header)
     source_rows: list[SourceRow] = []
 
     for row in rows[2:]:
         row += [""] * (len(header) - len(row))
-        number = row[0].strip()
-        category = row[2].strip()
+        number = cell_at(row, cols.number).strip()
+        category = cell_at(row, cols.category).strip()
 
         if not re.match(r"^\d+\*?$", number) or not category:
             continue
 
+        sku_raw = cell_at(row, cols.sku).strip() if cols.sku is not None else ""
+        sku_clean = re.sub(r"\s+", " ", sku_raw)
+
         source_rows.append(
             SourceRow(
                 number=number,
-                department=clean_department(row[1].strip()),
+                department=clean_department(cell_at(row, cols.department).strip()),
                 category=clean_category(category),
-                scent=title_case(row[3].strip()),
-                capacity=normalize_capacity(row[4].strip()),
-                photo_url=row[5].strip(),
-                label_url=row[7].strip(),
-                price=parse_price(row[8].strip()),
-                inventory=re.sub(r"\s+", " ", row[9].strip()),
+                scent=title_case(cell_at(row, cols.scent).strip()),
+                capacity=normalize_capacity(cell_at(row, cols.capacity).strip()),
+                photo_url=cell_at(row, cols.photo).strip(),
+                label_url=cell_at(row, cols.label).strip(),
+                price=parse_price(cell_at(row, cols.price).strip()),
+                inventory=re.sub(r"\s+", " ", cell_at(row, cols.inventory).strip()),
+                sku=sku_clean,
             )
         )
 
@@ -420,8 +507,11 @@ def build_catalog() -> dict[str, Any]:
             {"label": "Crafted for", "value": CRAFTED_FOR[row.category]},
         ]
 
+        if row.sku:
+            details.insert(3, {"label": "SKU", "value": row.sku})
+
         if lead_time:
-            details.insert(5, {"label": "Lead time", "value": lead_time})
+            details.insert(5 + (1 if row.sku else 0), {"label": "Lead time", "value": lead_time})
 
         products.append(
             {
@@ -433,6 +523,7 @@ def build_catalog() -> dict[str, Any]:
                 "categorySlugs": category_slugs,
                 "size": row.capacity,
                 "price": row.price,
+                **({"sku": row.sku} if row.sku else {}),
                 "availability": availability,
                 **({"leadTime": lead_time} if lead_time else {}),
                 "excerpt": build_excerpt(row.category, row.scent, row.capacity),

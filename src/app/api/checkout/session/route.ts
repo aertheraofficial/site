@@ -60,6 +60,7 @@ export async function POST(request: Request) {
                 slug: product.slug,
                 category: product.categoryLabel,
                 size: product.size,
+                ...(product.sku ? { sku: product.sku } : {}),
               },
             },
           },

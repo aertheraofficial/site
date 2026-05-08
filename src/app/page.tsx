@@ -14,17 +14,19 @@ const collectionProducts = getProductsBySlugs([
   "essential-oil-lemongrass-malaya-10ml",
 ]);
 
+/** Order matches `homeContent.services.offerings`: Oils, ESG & CSR, Experiences */
 const offeringVisuals = [
-  "/assets/brand/service-distillation.jpg",
-  "/assets/brand/service-aroma.jpg",
-  "/assets/brand/service-ecosystem.png",
+  "/assets/brand/service-oils.jpg",
+  "/assets/brand/service-esg-csr.jpg",
+  "/assets/brand/service-experience.jpg",
 ];
 
-const featureVisuals = [
-  "/assets/brand/service-distillation.jpg",
-  "/assets/brand/service-aroma.jpg",
-  "/assets/brand/hero-portrait.jpeg",
-  "/assets/brand/service-ecosystem.png",
+/** Order matches `homeContent.feature.cards`: Quality, Innovation, Community, Sustainability */
+const whyChooseUsVisuals = [
+  "/assets/brand/value-quality.jpg",
+  "/assets/brand/value-innovation.jpg",
+  "/assets/brand/value-community.jpg",
+  "/assets/brand/value-sustainability.jpg",
 ];
 
 const collectionCardShells = [
@@ -62,18 +64,31 @@ export default function Home() {
     <div className="pb-24">
       <section id="welcome" className="border-b border-[color:var(--line)] py-4 sm:py-6">
         <div className="page-frame">
-          <div className="wide-shell overflow-hidden rounded-[2rem] border border-black/8 bg-[#f7f2ea] shadow-[0_30px_80px_rgba(31,28,24,0.06)] sm:rounded-[2.5rem]">
-            <div className="grid lg:min-h-[calc(100vh-8rem)] lg:grid-cols-[minmax(0,0.94fr)_minmax(0,1.06fr)]">
-              <div className="flex items-center bg-[#f7f2ea] px-5 py-12 sm:px-9 sm:py-14 lg:px-14 xl:px-16">
+          <div className="wide-shell relative overflow-hidden rounded-[2rem] border border-black/8 bg-[#f7f2ea] shadow-[0_30px_80px_rgba(31,28,24,0.06)] sm:rounded-[2.5rem]">
+            {/* Mobile / tablet: full-bleed hero photo behind headline + cards */}
+            <div className="pointer-events-none absolute inset-0 z-0 lg:hidden">
+              <Image
+                src="/assets/brand/hero-portrait.png"
+                alt=""
+                fill
+                priority
+                sizes="100vw"
+                className="object-cover object-center"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-[rgba(12,10,8,0.72)] via-[rgba(12,10,8,0.38)] to-[rgba(12,10,8,0.82)]" />
+            </div>
+
+            <div className="relative z-10 grid min-h-[min(88vh,780px)] grid-cols-1 lg:min-h-[calc(100vh-8rem)] lg:grid-cols-[minmax(0,0.94fr)_minmax(0,1.06fr)]">
+              <div className="flex items-center bg-transparent px-5 py-12 sm:px-9 sm:py-14 lg:bg-[#f7f2ea] lg:px-14 xl:px-16">
                 <div className="w-full max-w-xl space-y-8 lg:space-y-10">
                   <div className="space-y-4">
-                    <p className="font-display text-[1.35rem] italic text-[#7a6851]">
+                    <p className="font-display text-[1.35rem] italic text-[#f0e6d4] lg:text-[#7a6851]">
                       {siteInfo.collection}
                     </p>
-                    <h1 className="whitespace-pre-line text-[3rem] font-black leading-[0.88] tracking-[-0.08em] text-[#201d17] sm:text-[4.5rem] lg:text-[4.9rem]">
+                    <h1 className="whitespace-pre-line text-[3rem] font-black leading-[0.88] tracking-[-0.08em] text-white drop-shadow-[0_2px_24px_rgba(0,0,0,0.35)] sm:text-[4.5rem] lg:text-[4.9rem] lg:text-[#201d17] lg:drop-shadow-none">
                       {homeContent.hero.title}
                     </h1>
-                    <p className="max-w-lg text-[1rem] leading-8 text-[#5d574f] sm:text-[1.05rem]">
+                    <p className="max-w-lg text-[1rem] leading-8 text-white/90 sm:text-[1.05rem] lg:text-[#5d574f]">
                       {homeContent.vision.description}
                     </p>
                   </div>
@@ -81,13 +96,13 @@ export default function Home() {
                   <div className="flex flex-wrap gap-3">
                     <Link
                       href="/category/all-products"
-                      className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#201d17] px-6 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-white"
+                      className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#201d17] px-6 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-white shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
                     >
                       Shop the Range
                     </Link>
                     <Link
                       href="/#about"
-                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-black/10 px-6 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-[#201d17]"
+                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/45 bg-white/10 px-6 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-white backdrop-blur-sm lg:border-black/10 lg:bg-transparent lg:text-[#201d17] lg:backdrop-blur-none"
                     >
                       Our Mission
                     </Link>
@@ -95,29 +110,31 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="relative min-h-[28rem] overflow-hidden bg-[#e8dccb] lg:min-h-full lg:border-l lg:border-black/8">
-                <Image
-                  src="/assets/brand/hero-portrait.jpeg"
-                  alt="Aerthera hero visual"
-                  fill
-                  priority
-                  sizes="(max-width: 1024px) 100vw, 52vw"
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[rgba(22,17,12,0.45)] via-transparent to-transparent" />
+              <div className="relative flex min-h-0 flex-col lg:min-h-full lg:border-l lg:border-black/8 lg:bg-[#e8dccb]">
+                <div className="relative hidden min-h-[28rem] flex-1 overflow-hidden lg:block lg:min-h-0">
+                  <Image
+                    src="/assets/brand/hero-portrait.png"
+                    alt="Aerthera hero visual"
+                    fill
+                    priority
+                    sizes="(max-width: 1024px) 100vw, 52vw"
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[rgba(22,17,12,0.45)] via-transparent to-transparent" />
+                </div>
 
-                <div className="absolute inset-x-4 bottom-4 sm:inset-x-6 sm:bottom-6">
+                <div className="relative mt-6 px-4 pb-10 pt-2 sm:px-6 lg:absolute lg:inset-x-6 lg:bottom-6 lg:mt-0 lg:px-0 lg:pb-0 lg:pt-0">
                   <div className="grid gap-4 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)]">
-                    <article className="rounded-[1.75rem] bg-[rgba(17,17,14,0.68)] p-6 text-white backdrop-blur-xl">
-                      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[#d1c5ae]">
+                    <article className="rounded-[1.75rem] border border-white/15 bg-[rgba(17,17,14,0.5)] p-6 text-white backdrop-blur-md lg:border-transparent lg:bg-[rgba(17,17,14,0.68)] lg:backdrop-blur-xl">
+                      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[#e8dcc8] lg:text-[#d1c5ae]">
                         Explore the Collection
                       </p>
-                      <p className="mt-3 max-w-sm text-sm leading-7 text-white/80">
+                      <p className="mt-3 max-w-sm text-sm leading-7 text-white/90 lg:text-white/80">
                         {homeContent.collection.description.split("\n").join(" ")}
                       </p>
                     </article>
 
-                    <article className="rounded-[1.75rem] bg-[#fff1b8] p-6 text-[#171717] shadow-[0_16px_40px_rgba(31,28,24,0.14)]">
+                    <article className="rounded-[1.75rem] border border-white/10 bg-[#fff1b8]/92 p-6 text-[#171717] shadow-[0_16px_40px_rgba(31,28,24,0.14)] backdrop-blur-sm lg:border-transparent lg:bg-[#fff1b8] lg:backdrop-blur-none">
                       <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[#8d6d3f]">
                         Handmade with Love
                       </p>
@@ -437,37 +454,36 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-5 sm:gap-6 md:grid-cols-2 xl:grid-cols-4">
               {homeContent.feature.cards.map((card, index) => (
                 <article
                   key={card.title}
-                  className="rounded-[2rem] border border-white/10 bg-white/4 p-6 backdrop-blur-sm"
+                  className="flex flex-col overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.04] shadow-[0_20px_48px_rgba(0,0,0,0.35)] backdrop-blur-sm sm:rounded-[2rem]"
                 >
-                  <div className="relative h-14 w-14 overflow-hidden rounded-[1.15rem] border border-white/10 bg-white/6 shadow-[0_10px_24px_rgba(0,0,0,0.18)]">
+                  <div className="relative h-44 overflow-hidden sm:h-56 lg:h-60">
                     <Image
-                      src={featureVisuals[index] ?? featureVisuals[0]}
+                      src={whyChooseUsVisuals[index] ?? whyChooseUsVisuals[0]}
                       alt={card.title}
                       fill
-                      sizes="56px"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
                       className="object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[rgba(17,17,14,0.2)] to-transparent" />
                   </div>
-                  <div className="mt-6 space-y-2">
-                    <h3 className="text-[1.25rem] font-semibold leading-none tracking-[-0.03em] text-white">
+                  <div className="flex flex-1 flex-col space-y-2 p-5 sm:p-6">
+                    <h3 className="text-[1.25rem] font-semibold leading-tight tracking-[-0.03em] text-white">
                       {card.title}
                     </h3>
                     <p className="text-sm font-medium text-[#d1c5ae]">{card.subtitle}</p>
+                    <p className="mt-3 flex-1 text-sm leading-7 text-white/72">{card.description}</p>
+                    {card.buttonLabel && index === homeContent.feature.cards.length - 1 ? (
+                      <Link
+                        href="/category/all-products"
+                        className="mt-6 inline-flex min-h-11 items-center justify-center rounded-full bg-[#fff2b6] px-6 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#171717]"
+                      >
+                        {card.buttonLabel}
+                      </Link>
+                    ) : null}
                   </div>
-                  <p className="mt-4 text-sm leading-7 text-white/72">{card.description}</p>
-                  {card.buttonLabel && index === homeContent.feature.cards.length - 1 ? (
-                    <Link
-                      href="/category/all-products"
-                      className="mt-6 inline-flex min-h-11 items-center justify-center rounded-full bg-[#fff2b6] px-6 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#171717]"
-                    >
-                      {card.buttonLabel}
-                    </Link>
-                  ) : null}
                 </article>
               ))}
             </div>

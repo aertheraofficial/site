@@ -1,10 +1,11 @@
-import { generateReviewPublishSocialAdAction } from "@/app/admin/actions";
 import { getSocialBrandContext } from "@/lib/social/brand";
 import { readSocialContent, type SocialPostStatus } from "@/lib/social/store";
+import { SocialAgentForm } from "./social-agent-form";
 
 type SocialPageProps = {
   searchParams: Promise<{
     published?: string;
+    adCreated?: string;
     error?: string;
   }>;
 };
@@ -33,7 +34,7 @@ function getStatusClasses(status: SocialPostStatus) {
 }
 
 export default async function AdminSocialPage({ searchParams }: SocialPageProps) {
-  const { published, error } = await searchParams;
+  const { published, adCreated, error } = await searchParams;
   const [store, brandContext] = await Promise.all([
     readSocialContent(),
     Promise.resolve(getSocialBrandContext()),
@@ -42,7 +43,10 @@ export default async function AdminSocialPage({ searchParams }: SocialPageProps)
     (draft) => draft.status === "manual_posted" || draft.status === "published",
   ).length;
   const productOptions = brandContext.productFacts;
-  const latestDraft = store.drafts[0] ?? null;
+  const latestDraft =
+    [...store.drafts].sort((left, right) =>
+      right.createdAt.localeCompare(left.createdAt),
+    )[0] ?? null;
 
   return (
     <div className="space-y-6">
@@ -55,7 +59,7 @@ export default async function AdminSocialPage({ searchParams }: SocialPageProps)
             {store.drafts.length}
           </p>
           <p className="mt-2 text-sm text-[#5d574f]">
-            Each attempt generates, reviews, and publishes immediately.
+            Each attempt generates, reviews, and creates a paused paid ad.
           </p>
         </article>
 
@@ -77,67 +81,49 @@ export default async function AdminSocialPage({ searchParams }: SocialPageProps)
               Social Agent
             </p>
             <h2 className="mt-3 font-display text-[2.5rem] leading-[0.95] tracking-[-0.05em] text-[#201d17]">
-              Generate, review, publish
+              Generate, review, create ads
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-[#5d574f]">
-              Pick one Meta platform and one product. The agent writes the ad, checks brand
-              guardrails, and publishes it live in one run. If review or Meta fails, the latest
-              result below explains why.
+              Pick one product. The agent writes the paid ad, checks brand guardrails, creates the
+              campaign/ad set/creative/ad in Meta for Facebook and Instagram, and leaves everything
+              paused so it cannot spend until you activate it.
             </p>
           </div>
 
-          <form action={generateReviewPublishSocialAdAction} className="rounded-[1.75rem] border border-black/8 bg-[#fcfaf6] p-5 sm:p-6">
-            <label className="block">
-              <span className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#8d7a5c]">
-                Platform
-              </span>
-              <select
-                name="platform"
-                defaultValue="instagram"
-                className="mt-2 w-full rounded-[1.25rem] border border-black/8 bg-white px-4 py-3 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59]"
-              >
-                <option value="instagram">Instagram</option>
-                <option value="facebook">Facebook</option>
-              </select>
-            </label>
-
-            <label className="mt-5 block">
-              <span className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#8d7a5c]">
-                Product
-              </span>
-              <select
-                name="productSlug"
-                defaultValue={productOptions[0]?.slug}
-                className="mt-2 w-full rounded-[1.25rem] border border-black/8 bg-white px-4 py-3 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59]"
-              >
-                {productOptions.map((product) => (
-                  <option key={product.slug} value={product.slug}>
-                    {product.shortName} · {product.priceLabel}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <button
-              type="submit"
-              className="mt-5 inline-flex min-h-12 items-center justify-center rounded-full bg-[#201d17] px-6 text-[0.76rem] font-semibold uppercase tracking-[0.2em] text-white transition hover:opacity-92"
-            >
-              Generate & Publish
-            </button>
-          </form>
+          <SocialAgentForm productOptions={productOptions} />
         </div>
 
         {published ? (
-          <p className="mt-6 rounded-[1.25rem] border border-[#8cc8a4] bg-[#e9f7ee] px-4 py-3 text-sm leading-6 text-[#256542]">
+          <p
+            data-testid="social-feedback-success"
+            className="mt-6 rounded-[1.25rem] border border-[#8cc8a4] bg-[#e9f7ee] px-4 py-3 text-sm leading-6 text-[#256542]"
+          >
             Ad generated, reviewed, and published through Meta.
           </p>
         ) : null}
+        {adCreated ? (
+          <p
+            data-testid="social-feedback-success"
+            className="mt-6 rounded-[1.25rem] border border-[#8cc8a4] bg-[#e9f7ee] px-4 py-3 text-sm leading-6 text-[#256542]"
+          >
+            Paid ad generated, reviewed, and created in Meta as paused.
+          </p>
+        ) : null}
         {error ? (
-          <p className="mt-6 rounded-[1.25rem] border border-[#d6c2a0] bg-[#f8f1e4] px-4 py-3 text-sm leading-6 text-[#8b5e1d]">
-            {error === "review-blocked"
+          <p
+            data-testid="social-feedback-error"
+            className="mt-6 rounded-[1.25rem] border border-[#d6c2a0] bg-[#f8f1e4] px-4 py-3 text-sm leading-6 text-[#8b5e1d]"
+          >
+            {error === "meta-token-expired"
+              ? "Your Meta Page access token has expired or was revoked. In Meta (Graph API Explorer or Business settings), generate a new Page access token with the right permissions, set META_PAGE_ACCESS_TOKEN in the Vercel project (Production), then try again. Long‑lived Page tokens last about 60 days; set a calendar reminder to refresh."
+              : error === "review-blocked"
               ? "AI generated an ad, but review blocked publishing. See the latest result below."
               : error === "unsupported-platform"
               ? "Immediate publishing is only connected for Facebook and Instagram right now."
+              : error === "meta-billing-missing"
+              ? "Meta ad account billing is not ready. Add a valid payment method in Meta Billing and Payment Center for this ad account, then try again. See the latest result below for details."
+              : error === "meta-ad-failed"
+              ? "Meta ad creation failed. See the latest result below for details."
               : error === "meta-publish-failed"
               ? "Meta publishing failed. See the latest result below for details."
               : error}
@@ -145,7 +131,10 @@ export default async function AdminSocialPage({ searchParams }: SocialPageProps)
         ) : null}
       </section>
 
-      <section className="rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_20px_60px_rgba(32,29,23,0.05)] sm:p-7">
+      <section
+        data-testid="social-latest-result"
+        className="rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_20px_60px_rgba(32,29,23,0.05)] sm:p-7"
+      >
         <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[#8d7a5c]">
           Latest Result
         </p>
@@ -155,7 +144,10 @@ export default async function AdminSocialPage({ searchParams }: SocialPageProps)
 
         <div className="mt-8">
           {!latestDraft ? (
-            <div className="rounded-[1.75rem] border border-dashed border-black/10 bg-[#f7f2ea] px-6 py-10 text-center text-sm leading-7 text-[#5d574f]">
+            <div
+              data-testid="social-latest-empty"
+              className="rounded-[1.75rem] border border-dashed border-black/10 bg-[#f7f2ea] px-6 py-10 text-center text-sm leading-7 text-[#5d574f]"
+            >
               No ad has been generated yet.
             </div>
           ) : (
@@ -217,7 +209,7 @@ export default async function AdminSocialPage({ searchParams }: SocialPageProps)
                       rel="noreferrer"
                       className="mt-2 inline-flex font-semibold text-[#201d17] underline underline-offset-4"
                     >
-                      Open published post
+                      {latestDraft.modelOutput?.metaAdIds ? "Open in Ads Manager" : "Open published post"}
                     </a>
                   ) : null}
                 </div>

@@ -90,9 +90,11 @@ Drafts are stored in Supabase when the social tables from `supabase/schema.sql` 
 Otherwise the app falls back to `SOCIAL_STORAGE_PATH` just like order storage falls back to
 `ORDER_STORAGE_PATH`.
 
-Optional social publishing setup values are included in `.env.example`. Direct publishing is
-intentionally staged: Meta can be connected first for Instagram/Facebook, TikTok requires
-Content Posting API approval, and X should only be connected if paid API access is justified.
+Optional social publishing and paid ad setup values are included in `.env.example`. Meta paid ads
+require a Marketing API token with `ads_management`, a `META_AD_ACCOUNT_ID`, and an active Meta ad
+account payment method. The admin flow creates campaign/ad set/creative/ad objects in `PAUSED`
+status for Facebook + Instagram placements with a Shop Now link to the selected product page;
+activation and spend should happen only after review in Meta Ads Manager.
 
 For scheduled generation, call:
 

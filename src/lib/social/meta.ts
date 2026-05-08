@@ -20,6 +20,18 @@ export type MetaPublishResult = {
   raw: Record<string, unknown>;
 };
 
+/** Detect expired/invalid Meta access tokens from Graph API error text. */
+export function isMetaAccessTokenExpiredOrInvalid(message: string) {
+  const m = message.toLowerCase();
+  return (
+    m.includes("session has expired") ||
+    m.includes("error validating access token") ||
+    m.includes("invalid oauth") ||
+    m.includes("oauth exception") ||
+    (m.includes("token") && m.includes("expired"))
+  );
+}
+
 const GRAPH_VERSION = "v20.0";
 const GRAPH_BASE_URL = `https://graph.facebook.com/${GRAPH_VERSION}`;
 
@@ -55,9 +67,12 @@ function getDraftImageUrl(draft: SocialPostDraft) {
     (entry) => entry.slug === primaryProductSlug,
   );
 
-  return product
-    ? new URL(product.imagePath, getMetaPublicSiteUrl()).toString()
-    : null;
+  if (!product) {
+    return null;
+  }
+
+  const instagramPublishImagePath = `/assets/products/social/${product.slug}.jpg`;
+  return new URL(instagramPublishImagePath, getMetaPublicSiteUrl()).toString();
 }
 
 function buildCaption(draft: SocialPostDraft) {

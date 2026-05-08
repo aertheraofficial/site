@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/product-card";
 import { ProductPurchaseControls } from "@/components/product-purchase-controls";
+import { siteInfo } from "@/data/site";
 import { getProductBySlug, getRelatedProducts, products } from "@/data/products";
 import {
   getStorefrontAvailabilityLabel,
@@ -36,9 +37,29 @@ export async function generateMetadata({
     };
   }
 
+  const imageUrl = getProductDetailImageSrc(product);
+  const pagePath = `/product-page/${product.slug}`;
+
   return {
     title: product.name,
     description: product.excerpt,
+    alternates: {
+      canonical: pagePath,
+    },
+    openGraph: {
+      type: "website",
+      siteName: siteInfo.name,
+      title: product.name,
+      description: product.excerpt,
+      url: pagePath,
+      images: [{ url: imageUrl, alt: product.name }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: product.name,
+      description: product.excerpt,
+      images: [imageUrl],
+    },
   };
 }
 

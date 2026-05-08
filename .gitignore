@@ -60,3 +60,4 @@ next-env.d.ts
 # local data (PII / runtime state; app creates empty files if missing)
 /data/orders.json
 /data/social-content.json
+.vercel

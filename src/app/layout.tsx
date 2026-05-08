@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     url: getSiteUrl(),
     images: [
       {
-        url: "/assets/brand/hero-portrait.jpeg",
+        url: "/assets/brand/hero-portrait.png",
         alt: "Aerthera hero portrait",
       },
     ],
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     title: "Aerthera | Sustainable Wellness Aromatherapy",
     description:
       "Explore Aerthera's Lemongrass Malaya collection across body, home, fabric, and essential oil rituals.",
-    images: ["/assets/brand/hero-portrait.jpeg"],
+    images: ["/assets/brand/hero-portrait.png"],
   },
 };
 

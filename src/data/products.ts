@@ -8,6 +8,7 @@ export type Product = {
   categoryLabel: string;
   categorySlugs: string[];
   size: string;
+  sku?: string;
   price: number;
   compareAtPrice?: number;
   badge?: string;
@@ -83,6 +84,10 @@ function assertProduct(candidate: unknown): asserts candidate is Product {
 
   if (typeof product.price !== "number" || Number.isNaN(product.price)) {
     throw new Error(`Catalog product "${product.slug}" has an invalid price.`);
+  }
+
+  if ("sku" in product && product.sku !== undefined && typeof product.sku !== "string") {
+    throw new Error(`Catalog product "${product.slug}" has an invalid sku.`);
   }
 
   for (const field of ["categorySlugs", "scentNotes", "ritual", "gallery", "relatedSlugs"]) {

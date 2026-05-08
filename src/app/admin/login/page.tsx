@@ -94,7 +94,11 @@ export default async function AdminLoginPage({
           ) : null}
 
           {isConfigured ? (
-            <form action={loginAction} className="mt-8 space-y-5">
+            <form
+              action={loginAction}
+              className="mt-8 space-y-5"
+              data-testid="admin-login-form"
+            >
               <input type="hidden" name="next" value={nextPath} />
 
               <label className="block">
@@ -118,6 +122,7 @@ export default async function AdminLoginPage({
                   type="password"
                   name="password"
                   autoComplete="current-password"
+                  data-testid="admin-password"
                   className="mt-3 w-full rounded-[1.25rem] border border-black/8 bg-[#f7f2ea] px-4 py-3.5 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59] focus:bg-white"
                 />
               </label>
