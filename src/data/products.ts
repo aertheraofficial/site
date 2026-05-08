@@ -28,16 +28,6 @@ export type Product = {
   relatedSlugs: string[];
 };
 
-export type Category = {
-  slug: string;
-  name: string;
-  eyebrow: string;
-  description: string;
-  intro: string;
-  heroImage: string;
-  productSlugs: string[];
-};
-
 function getProductImageExtension(image: string) {
   const extensionIndex = image.lastIndexOf(".");
   return extensionIndex >= 0 ? image.slice(extensionIndex) : "";
@@ -101,68 +91,24 @@ function assertProduct(candidate: unknown): asserts candidate is Product {
   }
 }
 
-function assertCategory(candidate: unknown): asserts candidate is Category {
-  if (!candidate || typeof candidate !== "object") {
-    throw new Error("Invalid category entry in catalog content.");
-  }
-
-  const category = candidate as Record<string, unknown>;
-  const requiredStringFields = [
-    "slug",
-    "name",
-    "eyebrow",
-    "description",
-    "intro",
-    "heroImage",
-  ];
-
-  for (const field of requiredStringFields) {
-    if (typeof category[field] !== "string" || category[field] === "") {
-      throw new Error(`Catalog category is missing required field "${field}".`);
-    }
-  }
-
-  if (!Array.isArray(category.productSlugs)) {
-    throw new Error(`Catalog category "${category.slug}" has invalid productSlugs.`);
-  }
-}
-
 const rawProducts = catalogData.products as unknown[];
-const rawCategories = catalogData.categories as unknown[];
 
 rawProducts.forEach(assertProduct);
-rawCategories.forEach(assertCategory);
 
 export const products: Product[] = (rawProducts as Product[]).map(
   normalizeProductImagePaths,
 );
-export const categories: Category[] = rawCategories as Category[];
 
 const productMap = new Map(products.map((product) => [product.slug, product]));
-const categoryMap = new Map(categories.map((category) => [category.slug, category]));
 
 export function getProductBySlug(slug: string) {
   return productMap.get(slug);
-}
-
-export function getCategoryBySlug(slug: string) {
-  return categoryMap.get(slug);
 }
 
 export function getProductsBySlugs(slugs: string[]) {
   return slugs
     .map((slug) => productMap.get(slug))
     .filter((product): product is Product => Boolean(product));
-}
-
-export function getProductsForCategory(slug: string) {
-  const category = getCategoryBySlug(slug);
-
-  if (!category) {
-    return [];
-  }
-
-  return getProductsBySlugs(category.productSlugs);
 }
 
 export function getRelatedProducts(product: Product) {

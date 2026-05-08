@@ -147,73 +147,6 @@ RITUALS = {
     ],
 }
 
-CATEGORY_DEFINITIONS = [
-    {
-        "slug": "all-products",
-        "name": "All Products",
-        "eyebrow": "Catalog",
-        "description": "The full Aerthera retail catalog, expanded from the latest product sheet and rebuilt with local packshots.",
-        "intro": "Browse the current storefront assortment across personal care, aromatherapy, lifestyle, and scent-led wellness products.",
-        "heroImage": "/assets/category/lemongrass-field.jpg",
-        "selector": lambda row: True,
-    },
-    {
-        "slug": "lemongrass-collection",
-        "name": "Lemongrass Malaya Collection",
-        "eyebrow": "Collection",
-        "description": "Aerthera's core Lemongrass Malaya assortment across body care, home fragrance, and aromatherapy formats.",
-        "intro": "This edit gathers every Lemongrass Malaya SKU currently listed in the retail product draft.",
-        "heroImage": "/assets/brand/lemongrass-field-malaysia.jpg",
-        "selector": lambda row: row.scent == "Lemongrass Malaya",
-    },
-    {
-        "slug": "pineapple-collection",
-        "name": "Pineapple Tropical Collection",
-        "eyebrow": "Collection",
-        "description": "A brighter fruit-led assortment translated across cleansing, home, and aromatherapy formats.",
-        "intro": "The Pineapple Tropical range brings the same product architecture into a warmer, more playful scent direction.",
-        "heroImage": "/assets/brand/service-aroma.jpg",
-        "selector": lambda row: row.scent == "Pineapple Tropical",
-    },
-    {
-        "slug": "personal-care",
-        "name": "Personal Care",
-        "eyebrow": "Department",
-        "description": "Daily-use body and scalp products designed to keep the scent ritual close to the skin.",
-        "intro": "These formats translate Aerthera's scent language into shower, body, and hair routines.",
-        "heroImage": "/assets/brand/hero-portrait.png",
-        "selector": lambda row: row.department == "Personal Care",
-    },
-    {
-        "slug": "aromatherapy",
-        "name": "Aromatherapy",
-        "eyebrow": "Department",
-        "description": "Focused oils, blends, roll-ons, and fabric mists built around everyday aromatherapy use.",
-        "intro": "This group covers the most concentrated and portable expressions in the catalog.",
-        "heroImage": "/assets/brand/service-aroma.jpg",
-        "selector": lambda row: row.department == "Aromatherapy",
-    },
-    {
-        "slug": "lifestyle",
-        "name": "Lifestyle",
-        "eyebrow": "Department",
-        "description": "Home fragrance objects and atmosphere-setting formats for slower, spatial rituals.",
-        "intro": "Diffusers, candles, and sprays sit here as the more architectural side of the collection.",
-        "heroImage": "/assets/brand/service-distillation.jpg",
-        "selector": lambda row: row.department == "Lifestyle",
-    },
-    {
-        "slug": "others",
-        "name": "Other Scent Formats",
-        "eyebrow": "Department",
-        "description": "Small-batch or standalone scent formats that sit outside the main department structure.",
-        "intro": "These products are part of the retail assortment but do not sit cleanly inside the core departments.",
-        "heroImage": "/assets/brand/service-ecosystem.png",
-        "selector": lambda row: row.department == "Others",
-    },
-]
-
-
 @dataclass(frozen=True)
 class ColumnMap:
     number: int
@@ -548,23 +481,7 @@ def build_catalog() -> dict[str, Any]:
             product["categoryLabel"],
         )
 
-    categories: list[dict[str, Any]] = []
-    for definition in CATEGORY_DEFINITIONS:
-        product_slugs = [
-            product["slug"]
-            for source_row, product in zip(rows, products, strict=True)
-            if definition["selector"](source_row)
-        ]
-        categories.append(
-            {
-                key: value
-                for key, value in definition.items()
-                if key not in {"selector"}
-            }
-            | {"productSlugs": product_slugs}
-        )
-
-    return {"products": products, "categories": categories}
+    return {"products": products}
 
 
 def main() -> None:

@@ -43,7 +43,7 @@ export default async function ProtectedAdminLayout({
                 Social
               </Link>
               <Link
-                href="/category/all-products"
+                href="/products"
                 className="inline-flex min-h-11 items-center justify-center rounded-full border border-black/8 px-5 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#201d17] transition hover:bg-black/4"
               >
                 View Store

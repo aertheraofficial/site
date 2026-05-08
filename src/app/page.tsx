@@ -21,13 +21,13 @@ const offeringVisuals = [
   "/assets/brand/service-experience.jpg",
 ];
 
-/** Order matches `homeContent.feature.cards`: Quality, Innovation, Community, Sustainability */
-const whyChooseUsVisuals = [
-  "/assets/brand/value-quality.jpg",
-  "/assets/brand/value-innovation.jpg",
-  "/assets/brand/value-community.jpg",
-  "/assets/brand/value-sustainability.jpg",
-];
+/** Visual for each "Why Choose Us" card (titles from `homeContent.feature.cards`). */
+const whyChooseUsVisualByTitle: Record<string, string> = {
+  Quality: "/assets/brand/value-quality.jpg",
+  Innovation: "/assets/brand/value-innovation.jpg",
+  Community: "/assets/brand/value-community.jpg",
+  Sustainability: "/assets/brand/value-sustainability.jpg",
+};
 
 const collectionCardShells = [
   "rounded-[2.4rem_1.55rem_2.1rem_1.7rem]",
@@ -95,7 +95,7 @@ export default function Home() {
 
                   <div className="flex flex-wrap gap-3">
                     <Link
-                      href="/category/all-products"
+                      href="/products"
                       className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#201d17] px-6 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-white shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
                     >
                       Shop the Range
@@ -180,7 +180,7 @@ export default function Home() {
                   {homeContent.collection.description.split("\n").join(" ")}
                 </p>
                 <Link
-                  href="/category/all-products"
+                  href="/products"
                   className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#ffe9a8]/70 bg-[#fff2b6] px-6 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-[#171717] shadow-[0_18px_32px_rgba(255,242,182,0.18)] transition-colors duration-300 hover:bg-[#ffe99f]"
                 >
                   {homeContent.collection.buttonLabel}
@@ -410,7 +410,7 @@ export default function Home() {
                 space, and personal ritual through practical discovery.
               </p>
               <Link
-                href="/category/all-products"
+                href="/products"
                 className="mt-8 inline-flex min-h-11 items-center justify-center rounded-full bg-[#201d17] px-6 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-white"
               >
                 {homeContent.services.workshopButtonLabel}
@@ -462,11 +462,16 @@ export default function Home() {
                 >
                   <div className="relative h-44 overflow-hidden sm:h-56 lg:h-60">
                     <Image
-                      src={whyChooseUsVisuals[index] ?? whyChooseUsVisuals[0]}
+                      src={
+                        whyChooseUsVisualByTitle[card.title] ??
+                        "/assets/brand/value-quality.jpg"
+                      }
                       alt={card.title}
                       fill
                       sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
                       className="object-cover"
+                      priority={index === 0}
+                      loading={index === 0 ? "eager" : "lazy"}
                     />
                   </div>
                   <div className="flex flex-1 flex-col space-y-2 p-5 sm:p-6">
@@ -477,7 +482,7 @@ export default function Home() {
                     <p className="mt-3 flex-1 text-sm leading-7 text-white/72">{card.description}</p>
                     {card.buttonLabel && index === homeContent.feature.cards.length - 1 ? (
                       <Link
-                        href="/category/all-products"
+                        href="/products"
                         className="mt-6 inline-flex min-h-11 items-center justify-center rounded-full bg-[#fff2b6] px-6 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#171717]"
                       >
                         {card.buttonLabel}

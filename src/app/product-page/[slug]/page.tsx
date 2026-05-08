@@ -90,7 +90,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 Home
               </Link>
               <span>/</span>
-              <Link href="/category/all-products" className="hover:text-white">
+              <Link href="/products" className="hover:text-white">
                 All Products
               </Link>
               <span>/</span>

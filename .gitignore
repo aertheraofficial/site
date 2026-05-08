@@ -61,3 +61,4 @@ next-env.d.ts
 /data/orders.json
 /data/social-content.json
 .vercel
+.env*.local

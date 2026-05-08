@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { ProductCard } from "@/components/product-card";
-import type { Category, Product } from "@/data/products";
+import type { Product } from "@/data/products";
 import {
   getStorefrontAvailabilityLabel,
   isProductAvailableNow,
 } from "@/lib/product-availability";
 
 type CatalogBrowserProps = {
-  category: Category;
+  listingDescription: string;
   products: Product[];
 };
 
@@ -19,8 +19,7 @@ function toggleValue(values: string[], value: string) {
     : [...values, value];
 }
 
-export function CatalogBrowser({ category, products }: CatalogBrowserProps) {
-  const isAllProductsCategory = category.slug === "all-products";
+export function CatalogBrowser({ listingDescription, products }: CatalogBrowserProps) {
   const [searchValue, setSearchValue] = useState("");
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedAvailability, setSelectedAvailability] = useState<string[]>([]);
@@ -120,7 +119,7 @@ export function CatalogBrowser({ category, products }: CatalogBrowserProps) {
           type="search"
           value={searchValue}
           onChange={(event) => setSearchValue(event.target.value)}
-          placeholder={`Search ${category.name.toLowerCase()}`}
+          placeholder="Search the catalog"
           className="mt-3 w-full rounded-[1rem] border border-black/8 bg-[#f7f2ea] px-4 py-3 text-sm text-[#201d17] outline-none transition focus:border-[#201d17]"
         />
       </label>
@@ -129,7 +128,7 @@ export function CatalogBrowser({ category, products }: CatalogBrowserProps) {
         <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[#8d7a5c]">
           Collection Note
         </p>
-        <p className="mt-3 text-sm leading-7 text-[#5d574f]">{category.description}</p>
+        <p className="mt-3 text-sm leading-7 text-[#5d574f]">{listingDescription}</p>
       </div>
 
       <div className="space-y-5">
@@ -233,7 +232,7 @@ export function CatalogBrowser({ category, products }: CatalogBrowserProps) {
             key={product.slug}
             product={product}
             linkToProduct
-            showAddToCart={isAllProductsCategory}
+            showAddToCart
             singleSurface
           />
         ))}
@@ -250,7 +249,7 @@ export function CatalogBrowser({ category, products }: CatalogBrowserProps) {
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[#8d7a5c]">
                 Catalog View
               </p>
-              <p className="text-[1rem] leading-8 text-[#5d574f]">{category.description}</p>
+              <p className="text-[1rem] leading-8 text-[#5d574f]">{listingDescription}</p>
               <p className="text-sm text-[#8d7a5c]">
                 Showing {visibleProducts.length} of {browserProducts.length} products
               </p>

@@ -17,6 +17,13 @@ type SiteData = {
     primaryLinks: Array<{ label: string; href: string }>;
     footerLinks: Array<{ label: string; href: string }>;
   };
+  shopListing: {
+    name: string;
+    eyebrow: string;
+    description: string;
+    intro: string;
+    heroImage: string;
+  };
   homeContent: {
     hero: { title: string; buttonLabel: string };
     collection: { title: string; description: string; buttonLabel: string };
@@ -77,7 +84,7 @@ function assertSectionArray(
 
 const data = siteData as SiteData;
 
-if (!data.siteInfo?.name || !data.homeContent?.hero?.title) {
+if (!data.siteInfo?.name || !data.homeContent?.hero?.title || !data.shopListing?.heroImage) {
   throw new Error("Site content is missing required core fields.");
 }
 
@@ -85,6 +92,7 @@ assertSectionArray(data.privacySections, "privacySections");
 assertSectionArray(data.accessibilitySections, "accessibilitySections");
 
 export const siteInfo = data.siteInfo;
+export const shopListing = data.shopListing;
 export const homeContent = data.homeContent;
 export const privacySections = data.privacySections;
 export const accessibilitySections = data.accessibilitySections;

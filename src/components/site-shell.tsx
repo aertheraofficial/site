@@ -11,7 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { useCart } from "@/components/cart-context";
-import { categories, products } from "@/data/products";
+import { products } from "@/data/products";
 import { siteInfo } from "@/data/site";
 import { startCheckout } from "@/lib/checkout";
 import { formatMoney } from "@/lib/money";
@@ -158,18 +158,6 @@ export function SiteShell({ children }: { children: ReactNode }) {
       return haystack.includes(normalizedSearch);
     })
     .slice(0, 6);
-
-  const searchCollections = categories.filter((category) => {
-    if (!normalizedSearch) {
-      return true;
-    }
-
-    const haystack = [category.name, category.description, category.intro]
-      .join(" ")
-      .toLowerCase();
-
-    return haystack.includes(normalizedSearch);
-  });
 
   const isProductPage = pathname.startsWith("/product-page/");
   const isAdminPath = pathname.startsWith("/admin");
@@ -461,7 +449,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
                 <Link href="/#about" className="block hover:opacity-70">
                   About
                 </Link>
-                <Link href="/category/all-products" className="block hover:opacity-70">
+                <Link href="/products" className="block hover:opacity-70">
                   Shop
                 </Link>
                 <Link href="/#feature" className="block hover:opacity-70">
@@ -471,20 +459,17 @@ export function SiteShell({ children }: { children: ReactNode }) {
 
               <div className="space-y-3 text-sm">
                 <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[#9b8b78]">
-                  Pages
+                  Legal
                 </p>
-                <Link href="/blank" className="block hover:opacity-70">
+                <Link href="/privacy" className="block hover:opacity-70">
                   Privacy Policy
                 </Link>
                 <Link href="/blank-1" className="block hover:opacity-70">
                   Accessibility Statement
                 </Link>
-                <Link href="/category/lemongrass-collection" className="block hover:opacity-70">
-                  Lemongrass Collection
-                </Link>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-3 text-sm">
                 <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[#9b8b78]">
                   Follow
                 </p>
@@ -633,20 +618,15 @@ export function SiteShell({ children }: { children: ReactNode }) {
               <div className="space-y-6">
                 <div className="rounded-[1.75rem] bg-[#f7f2ea] p-5">
                   <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[#8d7a5c]">
-                    Collections
+                    Shop
                   </p>
-                  <div className="mt-4 grid gap-3">
-                    {searchCollections.map((collection) => (
-                      <Link
-                        key={collection.slug}
-                        href={`/category/${collection.slug}`}
-                        onClick={() => setSearchOpen(false)}
-                        className="rounded-[1rem] border border-black/8 bg-white px-4 py-3 text-sm font-medium text-[#201d17] transition hover:bg-[#fffdf9]"
-                      >
-                        {collection.name}
-                      </Link>
-                    ))}
-                  </div>
+                  <Link
+                    href="/products"
+                    onClick={() => setSearchOpen(false)}
+                    className="mt-4 block rounded-[1rem] border border-black/8 bg-white px-4 py-3 text-sm font-medium text-[#201d17] transition hover:bg-[#fffdf9]"
+                  >
+                    Browse full catalog
+                  </Link>
                 </div>
 
                 <div className="rounded-[1.75rem] border border-black/8 bg-white p-5">
@@ -655,7 +635,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
                   </p>
                   <div className="mt-4 grid gap-3 text-sm text-[#51483d]">
                     <Link
-                      href="/category/all-products"
+                      href="/products"
                       onClick={() => setSearchOpen(false)}
                       className="hover:text-[#201d17]"
                     >
@@ -729,7 +709,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
                 secure guest checkout.
               </p>
               <Link
-                href="/category/all-products"
+                href="/products"
                 onClick={closeCart}
                 className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#201d17] px-6 text-[0.74rem] font-semibold uppercase tracking-[0.16em] text-white transition hover:opacity-92"
               >

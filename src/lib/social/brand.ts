@@ -1,4 +1,4 @@
-import { categories, products } from "@/data/products";
+import { products } from "@/data/products";
 import { homeContent, siteInfo } from "@/data/site";
 import { formatMoney } from "@/lib/money";
 
@@ -220,11 +220,16 @@ export function getSocialBrandContext(): SocialBrandContext {
     ],
     platforms: PLATFORM_STRATEGY,
     productFacts: uniqueProducts.slice(0, 18).map(toProductFact),
-    categoryStories: categories.map((category) => ({
-      slug: category.slug,
-      name: category.name,
-      description: category.description,
-    })),
+    categoryStories: [...new Set(products.map((product) => product.categoryLabel))].map(
+      (label) => ({
+        slug: label
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "") || "catalog",
+        name: label,
+        description: `Products grouped under the ${label} lane in the catalog.`,
+      }),
+    ),
   };
 }
 

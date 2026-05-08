@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { categories, products } from "@/data/products";
+import { products } from "@/data/products";
 import { getSiteUrl } from "@/lib/store-config";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -9,13 +9,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/blank",
     "/blank-1",
     "/checkout/cancel",
+    "/products",
   ].map((path) => ({
     url: `${siteUrl}${path}`,
-    lastModified: new Date(),
-  }));
-
-  const categoryRoutes = categories.map((category) => ({
-    url: `${siteUrl}/category/${category.slug}`,
     lastModified: new Date(),
   }));
 
@@ -24,5 +20,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: new Date(),
   }));
 
-  return [...routes, ...categoryRoutes, ...productRoutes];
+  return [...routes, ...productRoutes];
 }

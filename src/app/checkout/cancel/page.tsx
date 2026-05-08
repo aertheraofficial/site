@@ -19,7 +19,7 @@ export default function CheckoutCancelPage() {
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
-                href="/category/all-products"
+                href="/products"
                 className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#201d17] px-6 text-[0.76rem] font-semibold uppercase tracking-[0.18em] text-white transition hover:opacity-92"
               >
                 Back to Shop
