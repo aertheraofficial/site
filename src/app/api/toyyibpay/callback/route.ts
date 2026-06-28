@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getOrderBySessionId, upsertOrder } from "@/lib/orders";
 
 export const runtime = "nodejs";
+export const preferredRegion = "sin1";
 
 export async function POST(request: Request) {
   try {

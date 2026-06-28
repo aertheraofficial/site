@@ -6,6 +6,7 @@ import { upsertOrder } from "@/lib/orders";
 import { getSupabaseAdmin, isSupabaseOrderStoreConfigured } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
+export const preferredRegion = "sin1"; // Singapore — closest to ToyyibPay (Malaysia)
 
 type RawLine = {
   slug?: unknown;
