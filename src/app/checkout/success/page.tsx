@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CheckoutSuccessClient } from "@/components/checkout-success-client";
 import { formatMoney } from "@/lib/money";
-import { getOrderBySessionId } from "@/lib/orders";
+import { getOrderBySessionId, upsertOrder } from "@/lib/orders";
 
 type CheckoutSuccessPageProps = {
   searchParams: Promise<{
@@ -22,7 +22,16 @@ export default async function CheckoutSuccessPage({
     redirect("/checkout/cancel");
   }
 
-  const order = orderId ? await getOrderBySessionId(orderId) : null;
+  let order = orderId ? await getOrderBySessionId(orderId) : null;
+
+  // Fallback: mark as paid here if the callback hasn't fired yet
+  if (statusId === "1" && order && order.paymentStatus !== "paid") {
+    order = await upsertOrder(
+      { ...order, paymentStatus: "paid", checkoutStatus: "complete" },
+      { preserveAdminFields: true },
+    );
+  }
+
   const isPaid =
     order?.paymentStatus === "paid" || statusId === "1";
 
