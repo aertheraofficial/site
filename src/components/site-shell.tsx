@@ -10,6 +10,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
+import { useAuth } from "@/components/auth-context";
 import { useCart } from "@/components/cart-context";
 import { products } from "@/data/products";
 import { siteInfo } from "@/data/site";
@@ -120,9 +121,19 @@ function useHasHydrated() {
   );
 }
 
+function UserIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className={className} aria-hidden="true">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+    </svg>
+  );
+}
+
 export function SiteShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const hasHydrated = useHasHydrated();
+  const { user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
@@ -285,6 +296,21 @@ export function SiteShell({ children }: { children: ReactNode }) {
                 >
                   <SearchIcon className="h-4 w-4" />
                 </button>
+
+                <Link
+                  href={hasHydrated && user ? "/account" : "/account/login"}
+                  aria-label={hasHydrated && user ? "My account" : "Sign in"}
+                  className={`relative inline-flex h-10 w-10 items-center justify-center rounded-full border transition ${
+                    isProductPage
+                      ? "border-white/12 text-white hover:bg-white/8"
+                      : "border-black/8 text-[#201d17] hover:bg-black/4"
+                  }`}
+                >
+                  <UserIcon className="h-4.5 w-4.5" />
+                  {hasHydrated && user && (
+                    <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-white" />
+                  )}
+                </Link>
 
                 <button
                   type="button"

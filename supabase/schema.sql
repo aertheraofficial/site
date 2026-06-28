@@ -5,6 +5,7 @@ create table if not exists public.orders (
   ordered_at timestamptz not null,
   updated_at timestamptz not null default timezone('utc', now()),
   recorded_from text not null check (recorded_from in ('webhook', 'success-page')),
+  customer_id uuid references auth.users(id) on delete set null,
   customer_name text,
   customer_email text,
   customer_phone text,
@@ -34,12 +35,31 @@ create table if not exists public.order_lines (
 create index if not exists orders_ordered_at_idx on public.orders (ordered_at desc);
 create index if not exists orders_customer_email_idx on public.orders (customer_email);
 create index if not exists orders_payment_status_idx on public.orders (payment_status);
+create index if not exists orders_customer_id_idx on public.orders (customer_id);
 
 alter table public.orders enable row level security;
 alter table public.order_lines enable row level security;
 
 revoke all on public.orders from anon, authenticated;
 revoke all on public.order_lines from anon, authenticated;
+
+-- Customers can view their own orders
+grant select on public.orders to authenticated;
+grant select on public.order_lines to authenticated;
+
+create policy "customers_select_own_orders"
+  on public.orders for select
+  to authenticated
+  using (customer_id = auth.uid());
+
+create policy "customers_select_own_order_lines"
+  on public.order_lines for select
+  to authenticated
+  using (
+    order_session_id in (
+      select session_id from public.orders where customer_id = auth.uid()
+    )
+  );
 
 create table if not exists public.social_campaigns (
   id text primary key,

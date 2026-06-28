@@ -1,42 +1,30 @@
 import Link from "next/link";
-import type Stripe from "stripe";
+import { redirect } from "next/navigation";
 import { CheckoutSuccessClient } from "@/components/checkout-success-client";
 import { formatMoney } from "@/lib/money";
-import { getOrderBySessionId, recordCompletedOrder } from "@/lib/orders";
-import { getStripeServer } from "@/lib/stripe";
+import { getOrderBySessionId } from "@/lib/orders";
 
 type CheckoutSuccessPageProps = {
-  searchParams: Promise<{ session_id?: string }>;
+  searchParams: Promise<{
+    order_id?: string;
+    status_id?: string;
+    billcode?: string;
+  }>;
 };
 
 export default async function CheckoutSuccessPage({
   searchParams,
 }: CheckoutSuccessPageProps) {
-  const { session_id: sessionId } = await searchParams;
+  const { order_id: orderId, status_id: statusId } = await searchParams;
 
-  let session: Stripe.Checkout.Session | null = null;
-  let order = sessionId ? await getOrderBySessionId(sessionId) : null;
-  let errorMessage = "";
-
-  if (sessionId) {
-    try {
-      const stripe = getStripeServer();
-      session = await stripe.checkout.sessions.retrieve(sessionId);
-      const lineItems = await stripe.checkout.sessions.listLineItems(sessionId, {
-        limit: 100,
-      });
-      order = await recordCompletedOrder({
-        session,
-        lineItems,
-        source: "success-page",
-      });
-    } catch (error) {
-      errorMessage =
-        error instanceof Error
-          ? error.message
-          : "We couldn't load your checkout details.";
-    }
+  // ToyyibPay status_id 3 = failed/cancelled
+  if (statusId === "3") {
+    redirect("/checkout/cancel");
   }
+
+  const order = orderId ? await getOrderBySessionId(orderId) : null;
+  const isPaid =
+    order?.paymentStatus === "paid" || statusId === "1";
 
   return (
     <div className="bg-[#f7f2ea] py-16 text-[#201d17] sm:py-20">
@@ -48,55 +36,47 @@ export default async function CheckoutSuccessPage({
               Checkout Complete
             </p>
             <h1 className="mt-4 font-display text-[3rem] leading-[0.96] tracking-[-0.05em] sm:text-[3.8rem]">
-              Thank you for your order.
+              Terima kasih atas pesanan anda.
             </h1>
             <p className="mt-4 max-w-2xl text-[1rem] leading-8 text-[#5d574f]">
-              Your guest checkout has been completed securely through Stripe. We&apos;ll
-              use the details collected at checkout for fulfillment and confirmation.
+              Pembayaran anda telah diproses melalui ToyyibPay. Kami akan
+              menghubungi anda untuk pengesahan dan penghantaran.
             </p>
-
-            {errorMessage ? (
-              <p className="mt-6 rounded-[1.25rem] bg-[#f7f2ea] px-4 py-3 text-sm leading-6 text-[#8b3c26]">
-                {errorMessage}
-              </p>
-            ) : null}
 
             <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               <article className="min-w-0 rounded-[1.5rem] bg-[#f7f2ea] p-5">
                 <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#8d7a5c]">
-                  Payment status
+                  Status Pembayaran
                 </p>
                 <p className="mt-2 text-sm leading-6 capitalize text-[#201d17]">
-                  {session?.payment_status ?? "Processing"}
+                  {isPaid ? "Berjaya" : "Sedang diproses"}
                 </p>
               </article>
               <article className="min-w-0 rounded-[1.5rem] bg-[#f7f2ea] p-5">
                 <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#8d7a5c]">
-                  Total paid
+                  Jumlah Dibayar
                 </p>
                 <p className="mt-2 text-sm leading-6 text-[#201d17]">
                   {typeof order?.totalAmount === "number"
                     ? formatMoney(order.totalAmount / 100)
-                    : typeof session?.amount_total === "number"
-                      ? formatMoney(session.amount_total / 100)
-                      : "Confirmed"}
+                    : "Disahkan"}
                 </p>
               </article>
               <article className="min-w-0 rounded-[1.5rem] bg-[#f7f2ea] p-5">
                 <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#8d7a5c]">
-                  Email
+                  No. Rujukan
                 </p>
                 <p className="mt-2 text-sm leading-6 text-[#201d17] [overflow-wrap:anywhere] break-words">
-                  {order?.customerEmail ?? session?.customer_details?.email ?? "Unavailable"}
+                  {orderId ?? "—"}
                 </p>
               </article>
             </div>
 
-            {order ? (
+            {order && order.lines.length > 0 ? (
               <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
                 <section className="rounded-[1.75rem] border border-black/8 bg-[#f7f2ea] p-6">
                   <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#8d7a5c]">
-                    Order Summary
+                    Ringkasan Pesanan
                   </p>
                   <div className="mt-5 space-y-4">
                     {order.lines.map((line, index) => (
@@ -109,30 +89,42 @@ export default async function CheckoutSuccessPage({
                             {line.description}
                           </p>
                           <p className="mt-1 text-sm text-[#5d574f]">
-                            Qty {line.quantity}
+                            Kuantiti: {line.quantity}
                             {typeof line.unitAmount === "number"
-                              ? ` • ${formatMoney(line.unitAmount / 100)} each`
+                              ? ` • ${formatMoney(line.unitAmount / 100)} seunit`
                               : ""}
                           </p>
                         </div>
                         <p className="shrink-0 text-sm font-medium text-[#201d17]">
                           {typeof line.totalAmount === "number"
                             ? formatMoney(line.totalAmount / 100)
-                            : "Confirmed"}
+                            : "Disahkan"}
                         </p>
                       </div>
                     ))}
+                  </div>
+
+                  <div className="mt-4 border-t border-black/8 pt-4 space-y-1 text-sm text-[#5d574f]">
+                    <p>
+                      Subtotal:{" "}
+                      {typeof order.subtotalAmount === "number"
+                        ? formatMoney(order.subtotalAmount / 100)
+                        : "—"}
+                    </p>
+                    <p className="font-semibold text-[#201d17]">
+                      Jumlah:{" "}
+                      {typeof order.totalAmount === "number"
+                        ? formatMoney(order.totalAmount / 100)
+                        : "Disahkan"}
+                    </p>
                   </div>
                 </section>
 
                 <section className="rounded-[1.75rem] border border-black/8 bg-white p-6">
                   <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#8d7a5c]">
-                    Delivery
+                    Penghantaran
                   </p>
-                  <div className="mt-4 min-w-0 space-y-3 text-sm leading-7 text-[#5d574f]">
-                    <p className="font-medium text-[#201d17] [overflow-wrap:anywhere] break-words">
-                      {order.shippingName ?? order.customerName ?? "Guest checkout"}
-                    </p>
+                  <div className="mt-4 space-y-3 text-sm leading-7 text-[#5d574f]">
                     {order.shippingAddress ? (
                       <p className="[overflow-wrap:anywhere] break-words">
                         {[
@@ -147,13 +139,11 @@ export default async function CheckoutSuccessPage({
                           .join(", ")}
                       </p>
                     ) : (
-                      <p>Shipping details will be confirmed from your checkout record.</p>
+                      <p>
+                        Maklumat penghantaran akan disahkan dari rekod pesanan
+                        anda.
+                      </p>
                     )}
-                    <div className="border-t border-black/8 pt-4">
-                      <p>Subtotal: {typeof order.subtotalAmount === "number" ? formatMoney(order.subtotalAmount / 100) : "Included"}</p>
-                      <p>Shipping: {typeof order.shippingAmount === "number" ? formatMoney(order.shippingAmount / 100) : "Calculated at checkout"}</p>
-                      <p>Tax: {typeof order.taxAmount === "number" ? formatMoney(order.taxAmount / 100) : "As applicable"}</p>
-                    </div>
                   </div>
                 </section>
               </div>
@@ -164,13 +154,13 @@ export default async function CheckoutSuccessPage({
                 href="/products"
                 className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#201d17] px-6 text-[0.76rem] font-semibold uppercase tracking-[0.18em] text-white transition hover:opacity-92"
               >
-                Continue Shopping
+                Terus Membeli-belah
               </Link>
               <Link
                 href="/"
                 className="inline-flex min-h-11 items-center justify-center rounded-full border border-black/8 px-6 text-[0.76rem] font-semibold uppercase tracking-[0.18em] text-[#201d17] transition hover:bg-black/4"
               >
-                Return Home
+                Kembali ke Laman Utama
               </Link>
             </div>
           </div>

@@ -1,3 +1,5 @@
+import { getSupabaseBrowser } from "@/lib/supabase-browser";
+
 export type CheckoutLineInput = {
   slug: string;
   quantity: number;
@@ -15,11 +17,21 @@ export async function startCheckout(lines: CheckoutLineInput[]) {
     throw new Error("Add at least one product before checking out.");
   }
 
+  // Attach auth token if the customer is logged in so the API can link the order
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  try {
+    const supabase = getSupabaseBrowser();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      headers["Authorization"] = `Bearer ${session.access_token}`;
+    }
+  } catch {
+    // Not logged in or Supabase not configured — continue as guest
+  }
+
   const response = await fetch("/api/checkout/session", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers,
     body: JSON.stringify({ lines: sanitizedLines }),
   });
 

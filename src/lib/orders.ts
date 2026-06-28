@@ -29,6 +29,7 @@ export type StoredOrder = {
   createdAt: string;
   updatedAt: string;
   recordedFrom: "webhook" | "success-page";
+  customerId: string | null;
   customerName: string | null;
   customerEmail: string | null;
   customerPhone: string | null;
@@ -105,6 +106,7 @@ type SupabaseOrderRow = {
   ordered_at: string;
   updated_at: string;
   recorded_from: "webhook" | "success-page";
+  customer_id: string | null;
   customer_name: string | null;
   customer_email: string | null;
   customer_phone: string | null;
@@ -367,6 +369,7 @@ function toSupabaseOrderRow(order: StoredOrder): SupabaseOrderRow {
     ordered_at: order.createdAt,
     updated_at: order.updatedAt,
     recorded_from: order.recordedFrom,
+    customer_id: order.customerId,
     customer_name: order.customerName,
     customer_email: order.customerEmail,
     customer_phone: order.customerPhone,
@@ -405,6 +408,7 @@ function fromSupabaseOrderRow(row: SupabaseOrderRow): StoredOrder {
     createdAt: row.ordered_at,
     updatedAt: row.updated_at,
     recordedFrom: row.recorded_from,
+    customerId: row.customer_id,
     customerName: row.customer_name,
     customerEmail: row.customer_email,
     customerPhone: row.customer_phone,
@@ -484,7 +488,7 @@ async function readOrdersFromSupabase() {
   const { data, error } = await supabase
     .from("orders")
     .select(
-      "order_id, session_id, payment_intent_id, ordered_at, updated_at, recorded_from, customer_name, customer_email, customer_phone, payment_status, checkout_status, currency, subtotal_amount, shipping_amount, tax_amount, total_amount, shipping_name, shipping_address, order_lines(order_session_id, line_position, description, quantity, currency, unit_amount, subtotal_amount, total_amount)",
+      "order_id, session_id, payment_intent_id, ordered_at, updated_at, recorded_from, customer_id, customer_name, customer_email, customer_phone, payment_status, checkout_status, currency, subtotal_amount, shipping_amount, tax_amount, total_amount, shipping_name, shipping_address, order_lines(order_session_id, line_position, description, quantity, currency, unit_amount, subtotal_amount, total_amount)",
     )
     .order("ordered_at", { ascending: false });
 
@@ -500,7 +504,7 @@ async function getOrderBySessionIdFromSupabase(sessionId: string) {
   const { data, error } = await supabase
     .from("orders")
     .select(
-      "order_id, session_id, payment_intent_id, ordered_at, updated_at, recorded_from, customer_name, customer_email, customer_phone, payment_status, checkout_status, currency, subtotal_amount, shipping_amount, tax_amount, total_amount, shipping_name, shipping_address, order_lines(order_session_id, line_position, description, quantity, currency, unit_amount, subtotal_amount, total_amount)",
+      "order_id, session_id, payment_intent_id, ordered_at, updated_at, recorded_from, customer_id, customer_name, customer_email, customer_phone, payment_status, checkout_status, currency, subtotal_amount, shipping_amount, tax_amount, total_amount, shipping_name, shipping_address, order_lines(order_session_id, line_position, description, quantity, currency, unit_amount, subtotal_amount, total_amount)",
     )
     .eq("session_id", sessionId)
     .maybeSingle();
@@ -620,6 +624,29 @@ export async function getOrdersBySessionIds(sessionIds: string[]) {
   return orders.filter((order) => sessionIdSet.has(order.sessionId));
 }
 
+export async function getOrdersByCustomerId(customerId: string) {
+  if (isSupabaseOrderStoreConfigured()) {
+    try {
+      const supabase = getSupabaseAdmin();
+      const { data, error } = await supabase
+        .from("orders")
+        .select(
+          "order_id, session_id, payment_intent_id, ordered_at, updated_at, recorded_from, customer_id, customer_name, customer_email, customer_phone, payment_status, checkout_status, currency, subtotal_amount, shipping_amount, tax_amount, total_amount, shipping_name, shipping_address, order_lines(order_session_id, line_position, description, quantity, currency, unit_amount, subtotal_amount, total_amount)",
+        )
+        .eq("customer_id", customerId)
+        .order("ordered_at", { ascending: false });
+
+      if (error) throw new Error(error.message);
+      return (data ?? []).map((row) => fromSupabaseOrderRow(row as SupabaseOrderRow));
+    } catch {
+      return [];
+    }
+  }
+
+  const orders = await readOrdersFromFile();
+  return orders.filter((order) => order.customerId === customerId);
+}
+
 export async function updateOrderManagement(
   sessionId: string,
   patch: Partial<AdminMeta>,
@@ -718,6 +745,7 @@ export async function recordCompletedOrder(params: {
     createdAt,
     updatedAt: new Date().toISOString(),
     recordedFrom: source,
+    customerId: null,
     customerName: customer?.name ?? null,
     customerEmail: customer?.email ?? null,
     customerPhone: customer?.phone ?? null,

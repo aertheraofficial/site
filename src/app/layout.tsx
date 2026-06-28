@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
+import { AuthProvider } from "@/components/auth-context";
 import { CartProvider } from "@/components/cart-context";
 import { SiteShell } from "@/components/site-shell";
 import { siteInfo } from "@/data/site";
@@ -59,9 +60,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${display.variable} ${body.variable}`}>
       <body>
-        <CartProvider>
-          <SiteShell>{children}</SiteShell>
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            <SiteShell>{children}</SiteShell>
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );
