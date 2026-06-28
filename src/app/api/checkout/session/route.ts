@@ -62,13 +62,27 @@ export async function POST(request: Request) {
 
     // Resolve customer if they're logged in
     let customerId: string | null = null;
+    let customerEmail: string | null = null;
+    let customerName: string | null = null;
+    let customerPhone: string | null = null;
     const authHeader = request.headers.get("Authorization");
     if (authHeader?.startsWith("Bearer ") && isSupabaseOrderStoreConfigured()) {
       try {
         const token = authHeader.slice(7);
         const supabase = getSupabaseAdmin();
         const { data: { user } } = await supabase.auth.getUser(token);
-        customerId = user?.id ?? null;
+        if (user) {
+          customerId = user.id;
+          customerEmail = user.email ?? null;
+          // Load saved delivery profile for name + phone
+          const { data: profile } = await supabase
+            .from("customer_profiles")
+            .select("full_name, phone")
+            .eq("user_id", user.id)
+            .single();
+          customerName = profile?.full_name ?? null;
+          customerPhone = profile?.phone ?? null;
+        }
       } catch {
         // Token invalid — continue as guest
       }
@@ -84,9 +98,9 @@ export async function POST(request: Request) {
         updatedAt: now,
         recordedFrom: "webhook",
         customerId,
-        customerName: null,
-        customerEmail: null,
-        customerPhone: null,
+        customerName,
+        customerEmail,
+        customerPhone,
         paymentStatus: "pending",
         checkoutStatus: "open",
         currency: "myr",
@@ -136,6 +150,9 @@ export async function POST(request: Request) {
       billReturnUrl: `${siteUrl}/checkout/success?order_id=${sessionId}`,
       billCallbackUrl: `${siteUrl}/api/toyyibpay/callback`,
       billExternalReferenceNo: sessionId,
+      billTo: customerName ?? undefined,
+      billEmail: customerEmail ?? undefined,
+      billPhone: customerPhone ?? undefined,
     });
 
     return NextResponse.json({ url: bill.paymentUrl });

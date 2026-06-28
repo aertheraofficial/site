@@ -46,6 +46,19 @@ export default async function AccountPage() {
         </form>
       </div>
 
+      <div className="mb-8">
+        <Link
+          href="/account/profile"
+          className="inline-flex items-center gap-2 rounded-xl border border-black/10 px-4 py-2.5 text-sm font-medium text-[#51483d] transition hover:bg-black/4"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Delivery Profile
+        </Link>
+      </div>
+
       <h2 className="mb-4 text-lg font-semibold text-[#201d17]">Order History</h2>
 
       {orders.length === 0 ? (
