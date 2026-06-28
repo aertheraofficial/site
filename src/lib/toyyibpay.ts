@@ -41,7 +41,7 @@ export async function createToyyibPayBill(
     billSplitPaymentArgs: "",
     billMultiPayment: "0",
     billChargeToCustomer: "1",
-    billContentEmail: "Terima kasih atas pembelian anda. Pesanan anda sedang diproses.",
+    billContentEmail: "Thank you for your order. We will process it shortly.",
   });
 
   const response = await fetch(`${TOYYIBPAY_BASE}/index.php/api/createBill`, {
@@ -51,7 +51,8 @@ export async function createToyyibPayBill(
   });
 
   if (!response.ok) {
-    throw new Error(`ToyyibPay API error: HTTP ${response.status}`);
+    const body = await response.text().catch(() => "");
+    throw new Error(`ToyyibPay API error: HTTP ${response.status} — ${body.slice(0, 200)}`);
   }
 
   type ApiResponse = Array<{ BillCode?: string; msg?: string }> | { msg?: string };
