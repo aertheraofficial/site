@@ -3,8 +3,14 @@ import { getSupabaseServer } from "@/lib/supabase-server";
 
 export const runtime = "nodejs";
 
-export async function POST() {
-  const supabase = await getSupabaseServer();
-  await supabase.auth.signOut();
-  return NextResponse.redirect(new URL("/", process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3001"));
+export async function POST(request: Request) {
+  try {
+    const supabase = await getSupabaseServer();
+    await supabase.auth.signOut();
+  } catch {
+    // Ignore sign-out errors — redirect anyway
+  }
+
+  const origin = new URL(request.url).origin;
+  return NextResponse.redirect(`${origin}/`, { status: 302 });
 }
