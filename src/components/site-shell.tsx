@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   useEffect,
   useRef,
@@ -132,6 +132,7 @@ function UserIcon({ className }: { className?: string }) {
 
 export function SiteShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const hasHydrated = useHasHydrated();
   const { user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -185,7 +186,11 @@ export function SiteShell({ children }: { children: ReactNode }) {
       };
 
   async function handleCartCheckout() {
-    if (items.length === 0 || isCheckingOut) {
+    if (items.length === 0 || isCheckingOut) return;
+
+    if (!user) {
+      closeCart();
+      router.push("/account/login?next=/");
       return;
     }
 
@@ -822,10 +827,16 @@ export function SiteShell({ children }: { children: ReactNode }) {
                   disabled={isCheckingOut}
                   className="mt-4 inline-flex h-12 w-full items-center justify-center rounded-full bg-[#201d17] px-5 text-sm font-semibold text-white transition hover:opacity-92 disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  {isCheckingOut ? "Redirecting to Checkout..." : "Secure Guest Checkout"}
+                  {isCheckingOut
+                    ? "Redirecting to payment..."
+                    : user
+                      ? "Proceed to Payment"
+                      : "Sign in to Checkout"}
                 </button>
                 <p className="mt-3 text-xs leading-6 text-[#6a6258]">
-                  Secure payment is handled through Stripe Checkout. No account is required.
+                  {user
+                    ? "Secure payment via ToyyibPay."
+                    : "You need an account to track your order."}
                 </p>
               </div>
             </>
