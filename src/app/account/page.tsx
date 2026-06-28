@@ -78,7 +78,7 @@ export default async function AccountPage() {
                   <StatusBadge status={order.paymentStatus} />
                   <p className="mt-1 text-sm font-semibold text-[#201d17]">
                     {order.totalAmount != null
-                      ? formatMoney(order.totalAmount / 100, order.currency)
+                      ? formatMoney(order.totalAmount / 100)
                       : "—"}
                   </p>
                 </div>
@@ -93,7 +93,7 @@ export default async function AccountPage() {
                     </span>
                     <span>
                       {line.totalAmount != null
-                        ? formatMoney(line.totalAmount / 100, line.currency)
+                        ? formatMoney(line.totalAmount / 100)
                         : "—"}
                     </span>
                   </div>
