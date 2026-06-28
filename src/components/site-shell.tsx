@@ -137,6 +137,8 @@ export function SiteShell({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const accountRef = useRef<HTMLDivElement>(null);
   const [searchValue, setSearchValue] = useState("");
   const [cartError, setCartError] = useState("");
   const [isCheckingOut, setIsCheckingOut] = useState(false);
@@ -149,6 +151,17 @@ export function SiteShell({ children }: { children: ReactNode }) {
       searchInputRef.current?.focus();
     }
   }, [searchOpen]);
+
+  useEffect(() => {
+    if (!accountOpen) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (accountRef.current && !accountRef.current.contains(e.target as Node)) {
+        setAccountOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [accountOpen]);
 
   const normalizedSearch = searchValue.trim().toLowerCase();
   const searchResults = products
@@ -302,20 +315,103 @@ export function SiteShell({ children }: { children: ReactNode }) {
                   <SearchIcon className="h-4 w-4" />
                 </button>
 
-                <Link
-                  href={hasHydrated && user ? "/account" : "/account/login"}
-                  aria-label={hasHydrated && user ? "My account" : "Sign in"}
-                  className={`relative inline-flex h-10 w-10 items-center justify-center rounded-full border transition ${
-                    isProductPage
-                      ? "border-white/12 text-white hover:bg-white/8"
-                      : "border-black/8 text-[#201d17] hover:bg-black/4"
-                  }`}
-                >
-                  <UserIcon className="h-4.5 w-4.5" />
-                  {hasHydrated && user && (
-                    <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-white" />
+                {/* Account button + dropdown */}
+                <div ref={accountRef} className="relative">
+                  {hasHydrated && user ? (
+                    <button
+                      type="button"
+                      onClick={() => setAccountOpen((v) => !v)}
+                      aria-label="My account"
+                      className={`relative inline-flex h-10 w-10 items-center justify-center rounded-full border transition ${
+                        isProductPage
+                          ? "border-white/12 text-white hover:bg-white/8"
+                          : "border-black/8 text-[#201d17] hover:bg-black/4"
+                      }`}
+                    >
+                      <UserIcon className="h-4.5 w-4.5" />
+                      <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-white" />
+                    </button>
+                  ) : (
+                    <Link
+                      href="/account/login"
+                      aria-label="Sign in"
+                      className={`relative inline-flex h-10 w-10 items-center justify-center rounded-full border transition ${
+                        isProductPage
+                          ? "border-white/12 text-white hover:bg-white/8"
+                          : "border-black/8 text-[#201d17] hover:bg-black/4"
+                      }`}
+                    >
+                      <UserIcon className="h-4.5 w-4.5" />
+                    </Link>
                   )}
-                </Link>
+
+                  {accountOpen && user && (
+                    <div className="absolute right-0 top-12 z-50 w-60 overflow-hidden rounded-2xl border border-black/8 bg-white shadow-[0_16px_48px_rgba(32,29,23,0.12)]">
+                      {/* Header */}
+                      <div className="border-b border-black/6 px-4 py-3">
+                        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.15em] text-[#8d7a5c]">Signed in as</p>
+                        <p className="mt-0.5 truncate text-sm font-medium text-[#201d17]">{user.email}</p>
+                      </div>
+
+                      {/* Menu items */}
+                      <nav className="py-1.5">
+                        <Link
+                          href="/account"
+                          onClick={() => setAccountOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#201d17] transition hover:bg-[#faf7f2]"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M3 21v-1a6 6 0 0 1 6-6h0a6 6 0 0 1 6 6v1"/></svg>
+                          My Orders
+                        </Link>
+                        <Link
+                          href="/account/profile"
+                          onClick={() => setAccountOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#201d17] transition hover:bg-[#faf7f2]"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                          Delivery Profile
+                        </Link>
+                        <Link
+                          href="/account?filter=to-pay"
+                          onClick={() => setAccountOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#201d17] transition hover:bg-[#faf7f2]"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+                          To Pay
+                        </Link>
+                        <Link
+                          href="/account?filter=processing"
+                          onClick={() => setAccountOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#201d17] transition hover:bg-[#faf7f2]"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M5 8h14M5 12h8m-8 4h5"/><rect x="3" y="4" width="18" height="16" rx="2"/></svg>
+                          Processing
+                        </Link>
+                        <Link
+                          href="/account?filter=shipped"
+                          onClick={() => setAccountOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#201d17] transition hover:bg-[#faf7f2]"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 4v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                          Shipped
+                        </Link>
+                      </nav>
+
+                      {/* Sign out */}
+                      <div className="border-t border-black/6 py-1.5">
+                        <form action="/api/account/signout" method="POST">
+                          <button
+                            type="submit"
+                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-600 transition hover:bg-red-50"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                            Sign Out
+                          </button>
+                        </form>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 <button
                   type="button"
