@@ -48,6 +48,7 @@ export async function createToyyibPayBill(
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: body.toString(),
+    cache: "no-store",
   });
 
   if (!response.ok) {
