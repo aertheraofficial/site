@@ -29,7 +29,7 @@ export function CatalogBrowser({ listingDescription, products }: CatalogBrowserP
   const browserProducts = products;
 
   const productTypes = [...new Set(browserProducts.map((product) => product.categoryLabel))];
-  const availabilities = ["Available", "Pre-order"].filter((availability) =>
+  const availabilities = ["Available", "Pre-order", "Sold Out"].filter((availability) =>
     browserProducts.some(
       (product) => getStorefrontAvailabilityLabel(product) === availability,
     ),

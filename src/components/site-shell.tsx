@@ -17,6 +17,13 @@ import { siteInfo } from "@/data/site";
 import { startCheckout } from "@/lib/checkout";
 import { formatMoney } from "@/lib/money";
 
+const MY_STATES = [
+  "Johor", "Kedah", "Kelantan", "Melaka", "Negeri Sembilan",
+  "Pahang", "Perak", "Perlis", "Pulau Pinang", "Sabah",
+  "Sarawak", "Selangor", "Terengganu",
+  "Kuala Lumpur", "Labuan", "Putrajaya",
+];
+
 function SearchIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -142,6 +149,17 @@ export function SiteShell({ children }: { children: ReactNode }) {
   const [searchValue, setSearchValue] = useState("");
   const [cartError, setCartError] = useState("");
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [fulfillmentType, setFulfillmentType] = useState<"delivery" | "pickup">(
+    "delivery",
+  );
+  const [deliveryAddress, setDeliveryAddress] = useState({
+    name: "",
+    line1: "",
+    line2: "",
+    city: "",
+    state: "",
+    postcode: "",
+  });
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { items, count, subtotal, isOpen, openCart, closeCart, updateItem } =
     useCart();
@@ -207,11 +225,27 @@ export function SiteShell({ children }: { children: ReactNode }) {
       return;
     }
 
+    if (
+      fulfillmentType === "delivery" &&
+      (!deliveryAddress.name.trim() ||
+        !deliveryAddress.line1.trim() ||
+        !deliveryAddress.city.trim() ||
+        !deliveryAddress.state.trim() ||
+        !deliveryAddress.postcode.trim())
+    ) {
+      setCartError("Please fill in your delivery address before checking out.");
+      return;
+    }
+
     setCartError("");
     setIsCheckingOut(true);
 
     try {
-      await startCheckout(items.map((item) => ({ slug: item.slug, quantity: item.quantity })));
+      await startCheckout(
+        items.map((item) => ({ slug: item.slug, quantity: item.quantity })),
+        fulfillmentType,
+        fulfillmentType === "delivery" ? deliveryAddress : undefined,
+      );
     } catch (error) {
       setCartError(
         error instanceof Error
@@ -368,8 +402,8 @@ export function SiteShell({ children }: { children: ReactNode }) {
                           onClick={() => setAccountOpen(false)}
                           className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#201d17] transition hover:bg-[#faf7f2]"
                         >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-                          Delivery Profile
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-6 8-6s8 2 8 6"/></svg>
+                          My Profile
                         </Link>
                         <Link
                           href="/account?filter=to-pay"
@@ -906,7 +940,102 @@ export function SiteShell({ children }: { children: ReactNode }) {
               </div>
 
               <div className="border-t border-black/8 px-5 py-5">
-                <div className="flex items-center justify-between text-sm text-[#6a6258]">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8d7a5c]">
+                  How would you like to receive this order?
+                </p>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFulfillmentType("delivery")}
+                    className={`h-11 rounded-full border px-4 text-sm font-semibold transition ${
+                      fulfillmentType === "delivery"
+                        ? "border-[#201d17] bg-[#201d17] text-white"
+                        : "border-black/8 bg-[#f7f2ea] text-[#201d17] hover:bg-black/4"
+                    }`}
+                  >
+                    Delivery
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFulfillmentType("pickup")}
+                    className={`h-11 rounded-full border px-4 text-sm font-semibold transition ${
+                      fulfillmentType === "pickup"
+                        ? "border-[#201d17] bg-[#201d17] text-white"
+                        : "border-black/8 bg-[#f7f2ea] text-[#201d17] hover:bg-black/4"
+                    }`}
+                  >
+                    Pickup at Shop
+                  </button>
+                </div>
+
+                {fulfillmentType === "delivery" ? (
+                  <div className="mt-4 space-y-3 rounded-[1.25rem] border border-black/8 bg-[#f7f2ea] p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8d7a5c]">
+                      Delivery Address
+                    </p>
+                    <input
+                      type="text"
+                      placeholder="Recipient name"
+                      value={deliveryAddress.name}
+                      onChange={(e) =>
+                        setDeliveryAddress((a) => ({ ...a, name: e.target.value }))
+                      }
+                      className="w-full rounded-[0.85rem] border border-black/8 bg-white px-3.5 py-2.5 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59]"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Address line 1"
+                      value={deliveryAddress.line1}
+                      onChange={(e) =>
+                        setDeliveryAddress((a) => ({ ...a, line1: e.target.value }))
+                      }
+                      className="w-full rounded-[0.85rem] border border-black/8 bg-white px-3.5 py-2.5 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59]"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Address line 2 (optional)"
+                      value={deliveryAddress.line2}
+                      onChange={(e) =>
+                        setDeliveryAddress((a) => ({ ...a, line2: e.target.value }))
+                      }
+                      className="w-full rounded-[0.85rem] border border-black/8 bg-white px-3.5 py-2.5 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59]"
+                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <input
+                        type="text"
+                        placeholder="Postcode"
+                        value={deliveryAddress.postcode}
+                        onChange={(e) =>
+                          setDeliveryAddress((a) => ({ ...a, postcode: e.target.value }))
+                        }
+                        className="w-full rounded-[0.85rem] border border-black/8 bg-white px-3.5 py-2.5 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59]"
+                      />
+                      <input
+                        type="text"
+                        placeholder="City"
+                        value={deliveryAddress.city}
+                        onChange={(e) =>
+                          setDeliveryAddress((a) => ({ ...a, city: e.target.value }))
+                        }
+                        className="w-full rounded-[0.85rem] border border-black/8 bg-white px-3.5 py-2.5 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59]"
+                      />
+                    </div>
+                    <select
+                      value={deliveryAddress.state}
+                      onChange={(e) =>
+                        setDeliveryAddress((a) => ({ ...a, state: e.target.value }))
+                      }
+                      className="w-full rounded-[0.85rem] border border-black/8 bg-white px-3.5 py-2.5 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59]"
+                    >
+                      <option value="">Select state</option>
+                      {MY_STATES.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </div>
+                ) : null}
+
+                <div className="mt-4 flex items-center justify-between text-sm text-[#6a6258]">
                   <span>Subtotal</span>
                   <span className="text-lg font-semibold text-[#201d17]">
                     {formatMoney(subtotal)}

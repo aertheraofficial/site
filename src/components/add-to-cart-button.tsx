@@ -6,12 +6,14 @@ type AddToCartButtonProps = {
   productSlug: string;
   className?: string;
   label?: string;
+  disabled?: boolean;
 };
 
 export function AddToCartButton({
   productSlug,
   className,
   label = "Add to cart",
+  disabled = false,
 }: AddToCartButtonProps) {
   const { addItem } = useCart();
 
@@ -19,7 +21,8 @@ export function AddToCartButton({
     <button
       type="button"
       onClick={() => addItem(productSlug)}
-      className={className}
+      disabled={disabled}
+      className={`${className ?? ""} disabled:cursor-not-allowed disabled:opacity-50`}
     >
       {label}
     </button>

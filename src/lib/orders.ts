@@ -8,6 +8,7 @@ import {
 } from "@/lib/supabase-admin";
 
 export type StoredOrderLine = {
+  slug: string | null;
   description: string;
   quantity: number;
   currency: string;
@@ -21,6 +22,8 @@ export type FulfillmentStatus =
   | "packed"
   | "fulfilled"
   | "cancelled";
+
+export type FulfillmentType = "delivery" | "pickup";
 
 export type StoredOrder = {
   id: string;
@@ -40,6 +43,7 @@ export type StoredOrder = {
   shippingAmount: number | null;
   taxAmount: number | null;
   totalAmount: number | null;
+  fulfillmentType: FulfillmentType;
   shippingName: string | null;
   shippingAddress: {
     line1?: string | null;
@@ -91,6 +95,7 @@ type ShippingAddressRecord = NonNullable<StoredOrder["shippingAddress"]> & {
 type SupabaseOrderLineRow = {
   order_session_id: string;
   line_position: number;
+  product_slug: string | null;
   description: string;
   quantity: number;
   currency: string;
@@ -117,12 +122,21 @@ type SupabaseOrderRow = {
   shipping_amount: number | null;
   tax_amount: number | null;
   total_amount: number | null;
+  fulfillment_type: string | null;
   shipping_name: string | null;
   shipping_address: Record<string, unknown> | null;
   order_lines?: SupabaseOrderLineRow[] | null;
 };
 
 const DEFAULT_FULFILLMENT_STATUS: FulfillmentStatus = "unfulfilled";
+const DEFAULT_FULFILLMENT_TYPE: FulfillmentType = "delivery";
+
+const ORDER_SELECT_COLUMNS =
+  "order_id, session_id, payment_intent_id, ordered_at, updated_at, recorded_from, customer_id, customer_name, customer_email, customer_phone, payment_status, checkout_status, currency, subtotal_amount, shipping_amount, tax_amount, total_amount, fulfillment_type, shipping_name, shipping_address, order_lines(order_session_id, line_position, product_slug, description, quantity, currency, unit_amount, subtotal_amount, total_amount)";
+
+function isFulfillmentType(value: unknown): value is FulfillmentType {
+  return value === "delivery" || value === "pickup";
+}
 
 function resolveOrdersFilePath() {
   return path.resolve(
@@ -316,6 +330,9 @@ async function readOrdersFromFile() {
 
       return {
         ...candidate,
+        fulfillmentType: isFulfillmentType(candidate.fulfillmentType)
+          ? candidate.fulfillmentType
+          : DEFAULT_FULFILLMENT_TYPE,
         fulfillmentStatus: isFulfillmentStatus(candidate.fulfillmentStatus)
           ? candidate.fulfillmentStatus
           : admin.fulfillmentStatus,
@@ -380,6 +397,7 @@ function toSupabaseOrderRow(order: StoredOrder): SupabaseOrderRow {
     shipping_amount: order.shippingAmount,
     tax_amount: order.taxAmount,
     total_amount: order.totalAmount,
+    fulfillment_type: order.fulfillmentType,
     shipping_name: order.shippingName,
     shipping_address: embedAdminMeta(order.shippingAddress, adminMeta),
   };
@@ -389,6 +407,7 @@ function toSupabaseOrderLineRows(order: StoredOrder): SupabaseOrderLineRow[] {
   return order.lines.map((line, index) => ({
     order_session_id: order.sessionId,
     line_position: index,
+    product_slug: line.slug,
     description: line.description,
     quantity: line.quantity,
     currency: line.currency,
@@ -419,12 +438,16 @@ function fromSupabaseOrderRow(row: SupabaseOrderRow): StoredOrder {
     shippingAmount: row.shipping_amount,
     taxAmount: row.tax_amount,
     totalAmount: row.total_amount,
+    fulfillmentType: isFulfillmentType(row.fulfillment_type)
+      ? row.fulfillment_type
+      : DEFAULT_FULFILLMENT_TYPE,
     shippingName: row.shipping_name,
     shippingAddress,
     ...adminMeta,
     lines: [...(row.order_lines ?? [])]
       .sort((left, right) => left.line_position - right.line_position)
       .map((line) => ({
+        slug: line.product_slug,
         description: line.description,
         quantity: line.quantity,
         currency: line.currency,
@@ -488,7 +511,7 @@ async function readOrdersFromSupabase() {
   const { data, error } = await supabase
     .from("orders")
     .select(
-      "order_id, session_id, payment_intent_id, ordered_at, updated_at, recorded_from, customer_id, customer_name, customer_email, customer_phone, payment_status, checkout_status, currency, subtotal_amount, shipping_amount, tax_amount, total_amount, shipping_name, shipping_address, order_lines(order_session_id, line_position, description, quantity, currency, unit_amount, subtotal_amount, total_amount)",
+      ORDER_SELECT_COLUMNS,
     )
     .order("ordered_at", { ascending: false });
 
@@ -504,7 +527,7 @@ async function getOrderBySessionIdFromSupabase(sessionId: string) {
   const { data, error } = await supabase
     .from("orders")
     .select(
-      "order_id, session_id, payment_intent_id, ordered_at, updated_at, recorded_from, customer_id, customer_name, customer_email, customer_phone, payment_status, checkout_status, currency, subtotal_amount, shipping_amount, tax_amount, total_amount, shipping_name, shipping_address, order_lines(order_session_id, line_position, description, quantity, currency, unit_amount, subtotal_amount, total_amount)",
+      ORDER_SELECT_COLUMNS,
     )
     .eq("session_id", sessionId)
     .maybeSingle();
@@ -631,7 +654,7 @@ export async function getOrdersByCustomerId(customerId: string) {
       const { data, error } = await supabase
         .from("orders")
         .select(
-          "order_id, session_id, payment_intent_id, ordered_at, updated_at, recorded_from, customer_id, customer_name, customer_email, customer_phone, payment_status, checkout_status, currency, subtotal_amount, shipping_amount, tax_amount, total_amount, shipping_name, shipping_address, order_lines(order_session_id, line_position, description, quantity, currency, unit_amount, subtotal_amount, total_amount)",
+          ORDER_SELECT_COLUMNS,
         )
         .eq("customer_id", customerId)
         .order("ordered_at", { ascending: false });
@@ -756,10 +779,12 @@ export async function recordCompletedOrder(params: {
     shippingAmount: session.total_details?.amount_shipping ?? null,
     taxAmount: session.total_details?.amount_tax ?? null,
     totalAmount: session.amount_total ?? null,
+    fulfillmentType: DEFAULT_FULFILLMENT_TYPE,
     shippingName: customer?.name ?? null,
     shippingAddress: customer?.address ?? null,
     ...admin,
     lines: lineItems.data.map((line) => ({
+      slug: null,
       description: line.description ?? "Product",
       quantity: line.quantity ?? 0,
       currency: line.currency ?? session.currency ?? "myr",

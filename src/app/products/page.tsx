@@ -2,15 +2,19 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { CatalogBrowser } from "@/components/catalog-browser";
-import { products } from "@/data/products";
 import { shopListing } from "@/data/site";
+import { getProductsWithStock } from "@/lib/product-stock";
 
 export const metadata: Metadata = {
   title: shopListing.name,
   description: shopListing.description,
 };
 
-export default function ProductsPage() {
+export const revalidate = 60;
+
+export default async function ProductsPage() {
+  const products = await getProductsWithStock();
+
   return (
     <div className="bg-[#f7f2ea] pb-20">
       <section className="relative overflow-hidden border-b border-[color:var(--line)]">

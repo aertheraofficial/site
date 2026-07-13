@@ -10,7 +10,9 @@ import {
   getStorefrontAvailabilityLabel,
   getStorefrontProductDetails,
   isProductAvailableNow,
+  isProductPurchasable,
 } from "@/lib/product-availability";
+import { getProductBySlugWithStock, getProductsWithStock } from "@/lib/product-stock";
 import { formatMoney } from "@/lib/money";
 import {
   getProductDetailImageClassName,
@@ -20,6 +22,8 @@ import {
 type ProductPageProps = {
   params: Promise<{ slug: string }>;
 };
+
+export const revalidate = 60;
 
 export async function generateStaticParams() {
   return products.map((product) => ({ slug: product.slug }));
@@ -65,13 +69,17 @@ export async function generateMetadata({
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getProductBySlugWithStock(slug);
 
   if (!product) {
     notFound();
   }
 
-  const relatedProducts = getRelatedProducts(product);
+  const allProductsWithStock = await getProductsWithStock();
+  const relatedProducts = getRelatedProducts(product).map(
+    (related) =>
+      allProductsWithStock.find((entry) => entry.slug === related.slug) ?? related,
+  );
   const heroNote = product.details.find((detail) => detail.label === "Crafted for");
   const heroImageSrc = getProductDetailImageSrc(product);
   const heroImageClassName = getProductDetailImageClassName(product);
@@ -174,7 +182,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   </div>
 
                   <div className="mt-8 border-t border-white/10 pt-6">
-                    <ProductPurchaseControls productSlug={product.slug} />
+                    <ProductPurchaseControls
+                      productSlug={product.slug}
+                      canPurchase={isProductPurchasable(product)}
+                      maxQuantity={
+                        typeof product.quantity === "number" ? product.quantity : null
+                      }
+                    />
                   </div>
                 </div>
               </div>

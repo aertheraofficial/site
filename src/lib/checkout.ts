@@ -5,7 +5,22 @@ export type CheckoutLineInput = {
   quantity: number;
 };
 
-export async function startCheckout(lines: CheckoutLineInput[]) {
+export type FulfillmentType = "delivery" | "pickup";
+
+export type DeliveryAddressInput = {
+  name: string;
+  line1: string;
+  line2: string;
+  city: string;
+  state: string;
+  postcode: string;
+};
+
+export async function startCheckout(
+  lines: CheckoutLineInput[],
+  fulfillmentType: FulfillmentType = "delivery",
+  deliveryAddress?: DeliveryAddressInput,
+) {
   const sanitizedLines = lines
     .map((line) => ({
       slug: line.slug,
@@ -32,7 +47,7 @@ export async function startCheckout(lines: CheckoutLineInput[]) {
   const response = await fetch("/api/checkout/session", {
     method: "POST",
     headers,
-    body: JSON.stringify({ lines: sanitizedLines }),
+    body: JSON.stringify({ lines: sanitizedLines, fulfillmentType, deliveryAddress }),
   });
 
   const payload = (await response.json().catch(() => null)) as

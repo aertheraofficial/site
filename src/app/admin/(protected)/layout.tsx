@@ -1,6 +1,25 @@
 import Link from "next/link";
 import { logoutAction } from "@/app/admin/actions";
 import { getAdminUsername, requireAdminSession } from "@/lib/admin-auth";
+import { NavDropdown } from "@/components/admin/nav-dropdown";
+
+const NAV_GROUPS: { label: string; items: { href: string; label: string }[] }[] = [
+  {
+    label: "Fulfillment",
+    items: [{ href: "/admin/orders", label: "Orders" }],
+  },
+  {
+    label: "Catalog",
+    items: [
+      { href: "/admin/stock", label: "Manage Stock" },
+      { href: "/admin/labels", label: "Print Labels" },
+    ],
+  },
+  {
+    label: "Marketing",
+    items: [{ href: "/admin/social", label: "Social" }],
+  },
+];
 
 export default async function ProtectedAdminLayout({
   children,
@@ -30,18 +49,9 @@ export default async function ProtectedAdminLayout({
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              <Link
-                href="/admin/orders"
-                className="inline-flex min-h-11 items-center justify-center rounded-full border border-black/8 bg-white px-5 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#201d17] transition hover:bg-[#f7f2ea]"
-              >
-                Orders
-              </Link>
-              <Link
-                href="/admin/social"
-                className="inline-flex min-h-11 items-center justify-center rounded-full border border-black/8 bg-white px-5 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#201d17] transition hover:bg-[#f7f2ea]"
-              >
-                Social
-              </Link>
+              {NAV_GROUPS.map((group) => (
+                <NavDropdown key={group.label} label={group.label} items={group.items} />
+              ))}
               <Link
                 href="/products"
                 className="inline-flex min-h-11 items-center justify-center rounded-full border border-black/8 px-5 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#201d17] transition hover:bg-black/4"

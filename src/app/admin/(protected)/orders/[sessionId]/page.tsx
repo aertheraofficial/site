@@ -78,6 +78,11 @@ export default async function AdminOrderDetailPage({
           <span className="inline-flex rounded-full border border-black/8 bg-white px-4 py-2 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[#6a6258]">
             {order.paymentStatus ?? "Pending"}
           </span>
+          {order.fulfillmentType === "pickup" ? (
+            <span className="inline-flex rounded-full border border-[#c9b9e6] bg-[#f3edfb] px-4 py-2 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[#5b3f96]">
+              Pickup at Shop
+            </span>
+          ) : null}
         </div>
       </div>
 

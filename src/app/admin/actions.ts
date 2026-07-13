@@ -20,6 +20,11 @@ import {
   updateOrderManagement,
 } from "@/lib/orders";
 import {
+  markProductPreorder,
+  quickDecrementStock,
+  setProductQuantity,
+} from "@/lib/product-stock";
+import {
   generateSingleSocialAd,
   regenerateSocialDraftVariant,
 } from "@/lib/social/agents";
@@ -188,6 +193,88 @@ export async function updateOrderManagementAction(formData: FormData) {
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${sessionId}`);
   redirect(`/admin/orders/${encodeURIComponent(sessionId)}?saved=1`);
+}
+
+function revalidateStockPaths(slug: string) {
+  revalidatePath("/admin/stock");
+  revalidatePath("/products");
+  revalidatePath(`/product-page/${slug}`);
+  revalidatePath("/");
+}
+
+function getRequiredSlug(formData: FormData) {
+  const slug =
+    typeof formData.get("slug") === "string" ? String(formData.get("slug")) : "";
+
+  if (!slug) {
+    redirect("/admin/stock?error=missing-product");
+  }
+
+  return slug;
+}
+
+export async function setProductQuantityAction(formData: FormData) {
+  await requireAdminSession("/admin/stock");
+
+  const slug = getRequiredSlug(formData);
+  const rawQuantity =
+    typeof formData.get("quantity") === "string" ? String(formData.get("quantity")) : "";
+  const quantity = Number(rawQuantity);
+
+  if (!Number.isFinite(quantity) || quantity < 0) {
+    redirect("/admin/stock?error=invalid-quantity");
+  }
+
+  try {
+    await setProductQuantity(slug, quantity);
+  } catch (error) {
+    redirect(
+      `/admin/stock?error=${encodeURIComponent(
+        error instanceof Error ? error.message : "Unable to update stock.",
+      )}`,
+    );
+  }
+
+  revalidateStockPaths(slug);
+  redirect("/admin/stock?saved=1");
+}
+
+export async function quickDecrementStockAction(formData: FormData) {
+  await requireAdminSession("/admin/stock");
+
+  const slug = getRequiredSlug(formData);
+
+  try {
+    await quickDecrementStock(slug, 1);
+  } catch (error) {
+    redirect(
+      `/admin/stock?error=${encodeURIComponent(
+        error instanceof Error ? error.message : "Unable to update stock.",
+      )}`,
+    );
+  }
+
+  revalidateStockPaths(slug);
+  redirect("/admin/stock?saved=1");
+}
+
+export async function markProductPreorderAction(formData: FormData) {
+  await requireAdminSession("/admin/stock");
+
+  const slug = getRequiredSlug(formData);
+
+  try {
+    await markProductPreorder(slug);
+  } catch (error) {
+    redirect(
+      `/admin/stock?error=${encodeURIComponent(
+        error instanceof Error ? error.message : "Unable to update stock.",
+      )}`,
+    );
+  }
+
+  revalidateStockPaths(slug);
+  redirect("/admin/stock?saved=1");
 }
 
 export async function generateDhlShipmentBatchAction(formData: FormData) {

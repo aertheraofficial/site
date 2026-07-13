@@ -12,7 +12,9 @@ export type Product = {
   price: number;
   compareAtPrice?: number;
   badge?: string;
-  availability: "In stock" | "Pre-order";
+  availability: "In stock" | "Pre-order" | "Sold Out";
+  /** Tracked unit count from the Manage Stock admin page. Null/undefined = not tracked (legacy toggle behavior). */
+  quantity?: number | null;
   leadTime?: string;
   excerpt: string;
   description: string;

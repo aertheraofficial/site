@@ -2,12 +2,18 @@ import Link from "next/link";
 import { generateDhlShipmentBatchAction } from "@/app/admin/actions";
 import { isDhlEcommerceConfigured } from "@/lib/dhl-ecommerce";
 import { formatMoney } from "@/lib/money";
-import { type FulfillmentStatus, type StoredOrder, readOrders } from "@/lib/orders";
+import {
+  type FulfillmentStatus,
+  type FulfillmentType,
+  type StoredOrder,
+  readOrders,
+} from "@/lib/orders";
 
 type OrdersPageProps = {
   searchParams: Promise<{
     q?: string;
     status?: string;
+    type?: string;
     error?: string;
     shipmentError?: string;
   }>;
@@ -21,6 +27,12 @@ const STATUS_FILTERS = [
   { value: "cancelled", label: "Cancelled" },
 ] as const;
 
+const TYPE_FILTERS = [
+  { value: "all", label: "All" },
+  { value: "delivery", label: "Delivery" },
+  { value: "pickup", label: "Pickup at Shop" },
+] as const;
+
 function isFulfillmentStatus(value: string | undefined): value is FulfillmentStatus {
   return (
     value === "unfulfilled" ||
@@ -30,6 +42,10 @@ function isFulfillmentStatus(value: string | undefined): value is FulfillmentSta
   );
 }
 
+function isFulfillmentType(value: string | undefined): value is FulfillmentType {
+  return value === "delivery" || value === "pickup";
+}
+
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("en-MY", {
     dateStyle: "medium",
@@ -37,11 +53,15 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-function buildOrdersHref(status: string, query: string) {
+function buildOrdersHref(status: string, query: string, type: string = "all") {
   const params = new URLSearchParams();
 
   if (status !== "all") {
     params.set("status", status);
+  }
+
+  if (type !== "all") {
+    params.set("type", type);
   }
 
   if (query) {
@@ -67,6 +87,14 @@ function getStatusClasses(status: FulfillmentStatus) {
 
 function getDhlSelectionState(order: StoredOrder) {
   const country = order.shippingAddress?.country?.toUpperCase() ?? "";
+
+  if (order.fulfillmentType === "pickup") {
+    return {
+      selectable: false,
+      label: "Pickup at Shop",
+      classes: "border-[#c9b9e6] bg-[#f3edfb] text-[#5b3f96]",
+    };
+  }
 
   if (order.fulfillmentStatus === "cancelled") {
     return {
@@ -118,16 +146,21 @@ function getDhlSelectionState(order: StoredOrder) {
 export default async function AdminOrdersPage({
   searchParams,
 }: OrdersPageProps) {
-  const { q, status, error, shipmentError } = await searchParams;
+  const { q, status, type, error, shipmentError } = await searchParams;
   const query = q?.trim() ?? "";
   const normalizedQuery = query.toLowerCase();
   const activeStatus = isFulfillmentStatus(status) ? status : "all";
+  const activeType = isFulfillmentType(type) ? type : "all";
   const orders = await readOrders();
   const dhlConfigured = isDhlEcommerceConfigured();
-  const returnTo = buildOrdersHref(activeStatus, query);
+  const returnTo = buildOrdersHref(activeStatus, query, activeType);
 
   const filteredOrders = orders.filter((order) => {
     if (activeStatus !== "all" && order.fulfillmentStatus !== activeStatus) {
+      return false;
+    }
+
+    if (activeType !== "all" && order.fulfillmentType !== activeType) {
       return false;
     }
 
@@ -234,7 +267,7 @@ export default async function AdminOrdersPage({
             </p>
           </div>
 
-          <form className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_200px] xl:min-w-[520px]">
+          <form className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_200px_200px] xl:min-w-[680px]">
             <label className="block">
               <span className="sr-only">Search orders</span>
               <input
@@ -259,7 +292,21 @@ export default async function AdminOrdersPage({
                 ))}
               </select>
             </label>
-            <div className="flex flex-wrap gap-3 sm:col-span-2">
+            <label className="block">
+              <span className="sr-only">Fulfillment type</span>
+              <select
+                name="type"
+                defaultValue={activeType}
+                className="w-full rounded-[1.25rem] border border-black/8 bg-[#f7f2ea] px-4 py-3 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59] focus:bg-white"
+              >
+                {TYPE_FILTERS.map((filter) => (
+                  <option key={filter.value} value={filter.value}>
+                    {filter.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="flex flex-wrap gap-3 sm:col-span-2 xl:col-span-3">
               <button
                 type="submit"
                 className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#201d17] px-5 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-white transition hover:opacity-92"
@@ -282,7 +329,7 @@ export default async function AdminOrdersPage({
             return (
               <Link
                 key={filter.value}
-                href={buildOrdersHref(filter.value, query)}
+                href={buildOrdersHref(filter.value, query, activeType)}
                 className={`inline-flex min-h-10 items-center justify-center rounded-full border px-4 text-[0.72rem] font-semibold uppercase tracking-[0.18em] transition ${
                   isActive
                     ? "border-[#201d17] bg-[#201d17] text-white"
@@ -379,6 +426,11 @@ export default async function AdminOrdersPage({
                             <span className="rounded-full border border-black/8 bg-white px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#6a6258]">
                               {order.paymentStatus ?? "Pending"}
                             </span>
+                            {order.fulfillmentType === "pickup" ? (
+                              <span className="rounded-full border border-[#c9b9e6] bg-[#f3edfb] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#5b3f96]">
+                                Pickup at Shop
+                              </span>
+                            ) : null}
                             <span className="rounded-full border border-black/8 bg-white px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#6a6258]">
                               {order.lines.length} item{order.lines.length === 1 ? "" : "s"}
                             </span>

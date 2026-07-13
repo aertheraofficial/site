@@ -3,7 +3,10 @@ import Link from "next/link";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import type { Product } from "@/data/products";
 import { getProductHoverBackgroundSrc } from "@/lib/product-hover-backgrounds";
-import { getStorefrontAvailabilityLabel } from "@/lib/product-availability";
+import {
+  getStorefrontAvailabilityLabel,
+  isProductPurchasable,
+} from "@/lib/product-availability";
 import {
   getCatalogCardImageClassName,
   getCatalogCardImageSrc,
@@ -34,9 +37,14 @@ export function ProductCard({
   const hoverBackgroundSrc = getProductHoverBackgroundSrc(product);
   const availabilityLabel = getStorefrontAvailabilityLabel(product);
   const isAvailableNow = availabilityLabel === "Available";
+  const isSoldOut = availabilityLabel === "Sold Out";
+  const canPurchase = isProductPurchasable(product);
   const availabilityChipClasses = isAvailableNow
     ? "border-[#b9d3ba] bg-[#edf7ed] text-[#33563a]"
-    : "border-[#e1cfb2] bg-[#f3e7d6] text-[#7b5e35]";
+    : isSoldOut
+      ? "border-[#e6b4b4] bg-[#fff0ef] text-[#9b3d32]"
+      : "border-[#e1cfb2] bg-[#f3e7d6] text-[#7b5e35]";
+  const addToCartLabel = isSoldOut ? "Sold Out" : isAvailableNow ? "Add to Cart" : "Pre-Order";
 
   return (
     <article
@@ -188,7 +196,8 @@ export function ProductCard({
               <div className="mt-auto pt-3">
                 <AddToCartButton
                   productSlug={product.slug}
-                  label={isAvailableNow ? "Add to Cart" : "Pre-Order"}
+                  label={addToCartLabel}
+                  disabled={!canPurchase}
                   className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[#231b13] px-5 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[#f8f0de] transition hover:bg-[#17120d]"
                 />
               </div>
@@ -243,7 +252,8 @@ export function ProductCard({
             {showAddToCart ? (
               <AddToCartButton
                 productSlug={product.slug}
-                label={isAvailableNow ? "Add to Cart" : "Pre-Order"}
+                label={addToCartLabel}
+                disabled={!canPurchase}
                 className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[#201d17] px-5 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-white transition hover:opacity-92"
               />
             ) : null}

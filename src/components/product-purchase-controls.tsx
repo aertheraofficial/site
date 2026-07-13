@@ -6,15 +6,21 @@ import { startCheckout } from "@/lib/checkout";
 
 type ProductPurchaseControlsProps = {
   productSlug: string;
+  canPurchase?: boolean;
+  maxQuantity?: number | null;
 };
 
 export function ProductPurchaseControls({
   productSlug,
+  canPurchase = true,
+  maxQuantity = null,
 }: ProductPurchaseControlsProps) {
   const [quantity, setQuantity] = useState(1);
   const [isBuyingNow, setIsBuyingNow] = useState(false);
   const [checkoutError, setCheckoutError] = useState("");
   const { addItem } = useCart();
+
+  const upperBound = maxQuantity ?? Infinity;
 
   function addToCart() {
     setCheckoutError("");
@@ -41,6 +47,16 @@ export function ProductPurchaseControls({
     }
   }
 
+  if (!canPurchase) {
+    return (
+      <div className="space-y-3">
+        <p className="rounded-[1rem] bg-[#2a241c] px-4 py-3 text-sm leading-6 text-white/72">
+          This product is currently sold out.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
       <div className="space-y-1.5">
@@ -61,13 +77,16 @@ export function ProductPurchaseControls({
           </span>
           <button
             type="button"
-            onClick={() => setQuantity((current) => current + 1)}
+            onClick={() => setQuantity((current) => Math.min(upperBound, current + 1))}
             className="flex h-9 w-9 items-center justify-center text-lg"
             aria-label="Increase quantity"
           >
             +
           </button>
         </div>
+        {maxQuantity !== null ? (
+          <p className="text-xs text-white/50">{maxQuantity} left in stock</p>
+        ) : null}
       </div>
 
       <div className="space-y-3">

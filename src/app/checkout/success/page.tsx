@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { CheckoutSuccessClient } from "@/components/checkout-success-client";
 import { formatMoney } from "@/lib/money";
 import { getOrderBySessionId, upsertOrder } from "@/lib/orders";
+import { decrementStockForOrderLines } from "@/lib/product-stock";
 
 type CheckoutSuccessPageProps = {
   searchParams: Promise<{
@@ -29,6 +30,9 @@ export default async function CheckoutSuccessPage({
     order = await upsertOrder(
       { ...order, paymentStatus: "paid", checkoutStatus: "complete" },
       { preserveAdminFields: true },
+    );
+    await decrementStockForOrderLines(
+      order.lines.map((line) => ({ slug: line.slug, quantity: line.quantity })),
     );
   }
 

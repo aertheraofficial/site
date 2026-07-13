@@ -25,7 +25,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ profile: data ?? null });
+  return NextResponse.json({ profile: data ?? null, email: user.email ?? null });
 }
 
 export async function PATCH(request: Request) {
@@ -33,10 +33,16 @@ export async function PATCH(request: Request) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json();
-  const allowed = ["full_name", "phone", "address_line1", "address_line2", "city", "state", "postcode", "country"];
-  const patch: Record<string, string> = { user_id: user.id, updated_at: new Date().toISOString() };
+  const allowed = ["full_name", "phone", "preferred_name", "social_handle"];
+  const patch: Record<string, string | null> = {
+    user_id: user.id,
+    updated_at: new Date().toISOString(),
+  };
   for (const key of allowed) {
     if (typeof body[key] === "string") patch[key] = body[key].trim();
+  }
+  if (typeof body.birthday === "string") {
+    patch.birthday = body.birthday.trim() || null;
   }
 
   const { data, error } = await getSupabaseAdmin()
