@@ -31,6 +31,7 @@ const TYPE_FILTERS = [
   { value: "all", label: "All" },
   { value: "delivery", label: "Delivery" },
   { value: "pickup", label: "Pickup at Shop" },
+  { value: "in-store", label: "Counter Sale" },
 ] as const;
 
 function isFulfillmentStatus(value: string | undefined): value is FulfillmentStatus {
@@ -43,7 +44,7 @@ function isFulfillmentStatus(value: string | undefined): value is FulfillmentSta
 }
 
 function isFulfillmentType(value: string | undefined): value is FulfillmentType {
-  return value === "delivery" || value === "pickup";
+  return value === "delivery" || value === "pickup" || value === "in-store";
 }
 
 function formatDate(value: string) {
@@ -93,6 +94,14 @@ function getDhlSelectionState(order: StoredOrder) {
       selectable: false,
       label: "Pickup at Shop",
       classes: "border-[#c9b9e6] bg-[#f3edfb] text-[#5b3f96]",
+    };
+  }
+
+  if (order.fulfillmentType === "in-store") {
+    return {
+      selectable: false,
+      label: "Counter Sale",
+      classes: "border-[#a8cbe0] bg-[#eaf4fa] text-[#2a5f7a]",
     };
   }
 
@@ -429,6 +438,11 @@ export default async function AdminOrdersPage({
                             {order.fulfillmentType === "pickup" ? (
                               <span className="rounded-full border border-[#c9b9e6] bg-[#f3edfb] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#5b3f96]">
                                 Pickup at Shop
+                              </span>
+                            ) : null}
+                            {order.fulfillmentType === "in-store" ? (
+                              <span className="rounded-full border border-[#a8cbe0] bg-[#eaf4fa] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#2a5f7a]">
+                                Counter Sale
                               </span>
                             ) : null}
                             <span className="rounded-full border border-black/8 bg-white px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#6a6258]">

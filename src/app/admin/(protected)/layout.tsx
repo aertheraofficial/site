@@ -6,7 +6,10 @@ import { NavDropdown } from "@/components/admin/nav-dropdown";
 const NAV_GROUPS: { label: string; items: { href: string; label: string }[] }[] = [
   {
     label: "Fulfillment",
-    items: [{ href: "/admin/orders", label: "Orders" }],
+    items: [
+      { href: "/admin/orders", label: "Orders" },
+      { href: "/admin/counter-sale", label: "Counter Sale" },
+    ],
   },
   {
     label: "Catalog",

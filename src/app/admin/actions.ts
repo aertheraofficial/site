@@ -14,12 +14,17 @@ import {
   getDhlTrackingPortalUrl,
   isDhlEcommerceConfigured,
 } from "@/lib/dhl-ecommerce";
+import { randomBytes } from "crypto";
+import { getProductBySlug } from "@/data/products";
 import {
   type FulfillmentStatus,
   getOrdersBySessionIds,
+  upsertOrder,
   updateOrderManagement,
 } from "@/lib/orders";
 import {
+  decrementStockForOrderLines,
+  getQuantitiesForSlugs,
   markProductPreorder,
   quickDecrementStock,
   setProductQuantity,
@@ -275,6 +280,131 @@ export async function markProductPreorderAction(formData: FormData) {
 
   revalidateStockPaths(slug);
   redirect("/admin/stock?saved=1");
+}
+
+export type CounterSaleLine = {
+  slug: string;
+  quantity: number;
+};
+
+export type CounterSalePayload = {
+  lines: CounterSaleLine[];
+  customerName: string;
+  customerPhone: string;
+  paymentMethod: "Cash" | "Card" | "DuitNow QR" | "Other";
+};
+
+export async function recordCounterSaleAction(payload: CounterSalePayload) {
+  await requireAdminSession("/admin/counter-sale");
+
+  const consolidated = new Map<string, number>();
+  for (const line of payload.lines) {
+    if (!line.slug || !Number.isFinite(line.quantity) || line.quantity <= 0) continue;
+    const quantity = Math.floor(line.quantity);
+    consolidated.set(line.slug, (consolidated.get(line.slug) ?? 0) + quantity);
+  }
+
+  if (consolidated.size === 0) {
+    return { ok: false as const, error: "Add at least one product to the sale." };
+  }
+
+  const slugs = [...consolidated.keys()];
+  const trackedQuantities = await getQuantitiesForSlugs(slugs);
+
+  const lineItems: Array<{
+    slug: string;
+    name: string;
+    quantity: number;
+    unitAmountCents: number;
+  }> = [];
+
+  for (const [slug, quantity] of consolidated.entries()) {
+    const product = getProductBySlug(slug);
+    if (!product) {
+      return { ok: false as const, error: `Unknown product: ${slug}` };
+    }
+
+    const available = trackedQuantities.get(slug);
+    if (available !== null && available !== undefined && quantity > available) {
+      return {
+        ok: false as const,
+        error: `Only ${available} of "${product.name}" left in stock.`,
+      };
+    }
+
+    lineItems.push({
+      slug,
+      name: product.name,
+      quantity,
+      unitAmountCents: Math.round(product.price * 100),
+    });
+  }
+
+  const subtotalCents = lineItems.reduce(
+    (sum, l) => sum + l.unitAmountCents * l.quantity,
+    0,
+  );
+
+  const sessionId = `INSTORE-${Date.now()}-${randomBytes(4).toString("hex")}`;
+  const now = new Date().toISOString();
+
+  await upsertOrder(
+    {
+      id: sessionId,
+      sessionId,
+      paymentIntentId: null,
+      createdAt: now,
+      updatedAt: now,
+      recordedFrom: "admin-walk-in",
+      customerId: null,
+      customerName: payload.customerName.trim() || null,
+      customerEmail: null,
+      customerPhone: payload.customerPhone.trim() || null,
+      paymentStatus: "paid",
+      checkoutStatus: "complete",
+      currency: "myr",
+      subtotalAmount: subtotalCents,
+      shippingAmount: null,
+      taxAmount: null,
+      totalAmount: subtotalCents,
+      fulfillmentType: "in-store",
+      shippingName: null,
+      shippingAddress: null,
+      fulfillmentStatus: "fulfilled",
+      trackingNumber: null,
+      trackingCarrier: null,
+      trackingUrl: null,
+      internalNotes: `Counter sale — paid via ${payload.paymentMethod}.`,
+      fulfilledAt: now,
+      packageWeightGrams: null,
+      packageLengthCm: null,
+      packageWidthCm: null,
+      packageHeightCm: null,
+      packageDescription: null,
+      shippingBatchId: null,
+      courierShipmentId: null,
+      shippingLabelGeneratedAt: null,
+      lines: lineItems.map((l) => ({
+        slug: l.slug,
+        description: l.name,
+        quantity: l.quantity,
+        currency: "myr",
+        unitAmount: l.unitAmountCents,
+        subtotalAmount: l.unitAmountCents * l.quantity,
+        totalAmount: l.unitAmountCents * l.quantity,
+      })),
+    },
+    { preserveAdminFields: false },
+  );
+
+  await decrementStockForOrderLines(
+    lineItems.map((l) => ({ slug: l.slug, quantity: l.quantity })),
+  );
+
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin/stock");
+
+  return { ok: true as const, sessionId };
 }
 
 export async function generateDhlShipmentBatchAction(formData: FormData) {

@@ -23,7 +23,7 @@ export type FulfillmentStatus =
   | "fulfilled"
   | "cancelled";
 
-export type FulfillmentType = "delivery" | "pickup";
+export type FulfillmentType = "delivery" | "pickup" | "in-store";
 
 export type StoredOrder = {
   id: string;
@@ -31,7 +31,7 @@ export type StoredOrder = {
   paymentIntentId: string | null;
   createdAt: string;
   updatedAt: string;
-  recordedFrom: "webhook" | "success-page";
+  recordedFrom: "webhook" | "success-page" | "admin-walk-in";
   customerId: string | null;
   customerName: string | null;
   customerEmail: string | null;
@@ -110,7 +110,7 @@ type SupabaseOrderRow = {
   payment_intent_id: string | null;
   ordered_at: string;
   updated_at: string;
-  recorded_from: "webhook" | "success-page";
+  recorded_from: "webhook" | "success-page" | "admin-walk-in";
   customer_id: string | null;
   customer_name: string | null;
   customer_email: string | null;
@@ -135,7 +135,7 @@ const ORDER_SELECT_COLUMNS =
   "order_id, session_id, payment_intent_id, ordered_at, updated_at, recorded_from, customer_id, customer_name, customer_email, customer_phone, payment_status, checkout_status, currency, subtotal_amount, shipping_amount, tax_amount, total_amount, fulfillment_type, shipping_name, shipping_address, order_lines(order_session_id, line_position, product_slug, description, quantity, currency, unit_amount, subtotal_amount, total_amount)";
 
 function isFulfillmentType(value: unknown): value is FulfillmentType {
-  return value === "delivery" || value === "pickup";
+  return value === "delivery" || value === "pickup" || value === "in-store";
 }
 
 function resolveOrdersFilePath() {

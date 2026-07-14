@@ -83,6 +83,11 @@ export default async function AdminOrderDetailPage({
               Pickup at Shop
             </span>
           ) : null}
+          {order.fulfillmentType === "in-store" ? (
+            <span className="inline-flex rounded-full border border-[#a8cbe0] bg-[#eaf4fa] px-4 py-2 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[#2a5f7a]">
+              Counter Sale
+            </span>
+          ) : null}
         </div>
       </div>
 
