@@ -1,8 +1,9 @@
 import QRCode from "qrcode";
-import { products } from "@/data/products";
+import { getProductsWithStock } from "@/lib/product-stock";
 import { PrintButton } from "./print-button";
 
 async function buildLabels() {
+  const products = await getProductsWithStock();
   return Promise.all(
     products.map(async (product) => ({
       slug: product.slug,

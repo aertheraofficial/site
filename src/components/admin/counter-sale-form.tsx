@@ -23,7 +23,13 @@ type SaleLine = {
 
 const PAYMENT_METHODS = ["Cash", "Card", "DuitNow QR", "Other"] as const;
 
-export function CounterSaleForm({ products }: { products: PickerProduct[] }) {
+type CounterSaleFormProps = {
+  products: PickerProduct[];
+  location: string;
+  locationName: string;
+};
+
+export function CounterSaleForm({ products, location, locationName }: CounterSaleFormProps) {
   const [search, setSearch] = useState("");
   const [lines, setLines] = useState<SaleLine[]>([]);
   const [customerName, setCustomerName] = useState("");
@@ -122,6 +128,7 @@ export function CounterSaleForm({ products }: { products: PickerProduct[] }) {
         customerName,
         customerPhone,
         paymentMethod,
+        location,
       });
 
       if (!result.ok) {
@@ -262,6 +269,10 @@ export function CounterSaleForm({ products }: { products: PickerProduct[] }) {
       <div className="h-fit rounded-[1.75rem] border border-black/8 bg-white p-6">
         <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#8d7a5c]">
           Sale Summary
+        </p>
+
+        <p className="mt-2 inline-flex rounded-full border border-[#a8cbe0] bg-[#eaf4fa] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[#2a5f7a]">
+          Selling at: {locationName}
         </p>
 
         <div className="mt-4 flex items-center justify-between text-sm">

@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/product-card";
 import { ProductPurchaseControls } from "@/components/product-purchase-controls";
 import { siteInfo } from "@/data/site";
-import { getProductBySlug, getRelatedProducts, products } from "@/data/products";
+import { getRelatedProducts, products } from "@/data/products";
 import {
   getStorefrontAvailabilityLabel,
   getStorefrontProductDetails,
@@ -33,7 +33,7 @@ export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getProductBySlugWithStock(slug);
 
   if (!product) {
     return {

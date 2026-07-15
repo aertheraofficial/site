@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { randomBytes } from "crypto";
-import { getProductBySlug } from "@/data/products";
 import { createToyyibPayBill, getToyyibPayConfig } from "@/lib/toyyibpay";
 import { upsertOrder } from "@/lib/orders";
-import { getQuantitiesForSlugs } from "@/lib/product-stock";
+import { getProductBySlugWithStock, getQuantitiesForSlugs } from "@/lib/product-stock";
 import { getSupabaseAdmin, isSupabaseOrderStoreConfigured } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -76,7 +75,7 @@ export async function POST(request: Request) {
 
     const lineItems: LineItem[] = [];
     for (const [slug, quantity] of consolidatedLines.entries()) {
-      const product = getProductBySlug(slug);
+      const product = await getProductBySlugWithStock(slug);
       if (!product) continue;
       lineItems.push({
         slug,

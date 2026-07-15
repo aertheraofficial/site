@@ -1,5 +1,28 @@
 import { products, type Product } from "@/data/products";
+import { getAdminProductBySlug, getAdminProducts } from "@/lib/admin-products";
 import { getSupabaseAdmin, isSupabaseOrderStoreConfigured } from "@/lib/supabase-admin";
+
+export const ONLINE_LOCATION = "online";
+
+export const SHOP_LOCATIONS = [
+  { id: "destina-putrajaya", name: "Destina Putrajaya" },
+  { id: "merdeka-tower-118", name: "Merdeka Tower 118" },
+] as const;
+
+export const ALL_LOCATIONS = [
+  { id: ONLINE_LOCATION, name: "Online / Warehouse" },
+  ...SHOP_LOCATIONS,
+] as const;
+
+export type LocationId = (typeof ALL_LOCATIONS)[number]["id"];
+
+export function isLocationId(value: unknown): value is LocationId {
+  return ALL_LOCATIONS.some((loc) => loc.id === value);
+}
+
+export function getLocationName(id: string) {
+  return ALL_LOCATIONS.find((loc) => loc.id === id)?.name ?? id;
+}
 
 type StockRow = {
   slug: string;
@@ -12,7 +35,7 @@ type StockOverride = {
   quantity: number | null;
 };
 
-async function getStockOverrides(): Promise<Map<string, StockOverride>> {
+async function getStockOverrides(location: string): Promise<Map<string, StockOverride>> {
   if (!isSupabaseOrderStoreConfigured()) {
     return new Map();
   }
@@ -20,7 +43,8 @@ async function getStockOverrides(): Promise<Map<string, StockOverride>> {
   try {
     const { data, error } = await getSupabaseAdmin()
       .from("product_stock")
-      .select("slug, availability, quantity");
+      .select("slug, availability, quantity")
+      .eq("location", location);
 
     if (error) {
       return new Map();
@@ -62,25 +86,40 @@ function applyOverrides(list: Product[], overrides: Map<string, StockOverride>) 
   });
 }
 
+/** Customer-facing / catalog use — always the online pool. */
 export async function getProductsWithStock(): Promise<Product[]> {
-  const overrides = await getStockOverrides();
-  return applyOverrides(products, overrides);
+  const [overrides, adminProducts] = await Promise.all([
+    getStockOverrides(ONLINE_LOCATION),
+    getAdminProducts(),
+  ]);
+  return applyOverrides([...products, ...adminProducts], overrides);
 }
 
 export async function getProductBySlugWithStock(slug: string): Promise<Product | null> {
-  const product = products.find((entry) => entry.slug === slug);
+  const product =
+    products.find((entry) => entry.slug === slug) ?? (await getAdminProductBySlug(slug));
   if (!product) return null;
 
-  const overrides = await getStockOverrides();
+  const overrides = await getStockOverrides(ONLINE_LOCATION);
   const override = overrides.get(slug);
   return override ? withOverride(product, override) : product;
 }
 
-/** For checkout: current tracked quantity per slug. Null = not tracked (unlimited/pre-order). */
+/** Admin use — stock for a specific shop/warehouse location. */
+export async function getProductsWithStockAtLocation(location: string): Promise<Product[]> {
+  const [overrides, adminProducts] = await Promise.all([
+    getStockOverrides(location),
+    getAdminProducts(),
+  ]);
+  return applyOverrides([...products, ...adminProducts], overrides);
+}
+
+/** For checkout: current tracked quantity per slug in the online pool. Null = not tracked. */
 export async function getQuantitiesForSlugs(
   slugs: string[],
+  location: string = ONLINE_LOCATION,
 ): Promise<Map<string, number | null>> {
-  const overrides = await getStockOverrides();
+  const overrides = await getStockOverrides(location);
   const result = new Map<string, number | null>();
   for (const slug of slugs) {
     result.set(slug, overrides.get(slug)?.quantity ?? null);
@@ -88,8 +127,8 @@ export async function getQuantitiesForSlugs(
   return result;
 }
 
-/** Sets an exact tracked quantity. quantity > 0 -> "In stock", 0 -> "Sold Out". */
-export async function setProductQuantity(slug: string, quantity: number) {
+/** Sets an exact tracked quantity for a location. quantity > 0 -> "In stock", 0 -> "Sold Out". */
+export async function setProductQuantity(slug: string, quantity: number, location: string) {
   if (!isSupabaseOrderStoreConfigured()) {
     throw new Error("Supabase is not configured — cannot save stock changes.");
   }
@@ -102,11 +141,12 @@ export async function setProductQuantity(slug: string, quantity: number) {
     .upsert(
       {
         slug,
+        location,
         availability,
         quantity: safeQuantity,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "slug" },
+      { onConflict: "slug,location" },
     );
 
   if (error) {
@@ -114,8 +154,8 @@ export async function setProductQuantity(slug: string, quantity: number) {
   }
 }
 
-/** Marks a product as pre-order — purchasable, but not tracked by quantity. */
-export async function markProductPreorder(slug: string) {
+/** Marks a product as pre-order at a location — purchasable, but not tracked by quantity. */
+export async function markProductPreorder(slug: string, location: string) {
   if (!isSupabaseOrderStoreConfigured()) {
     throw new Error("Supabase is not configured — cannot save stock changes.");
   }
@@ -125,11 +165,12 @@ export async function markProductPreorder(slug: string) {
     .upsert(
       {
         slug,
+        location,
         availability: "Pre-order",
         quantity: null,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "slug" },
+      { onConflict: "slug,location" },
     );
 
   if (error) {
@@ -137,8 +178,8 @@ export async function markProductPreorder(slug: string) {
   }
 }
 
-/** Fast mall-counter decrement — atomic, never goes below 0. Amount defaults to 1 ("Sold 1"). */
-export async function quickDecrementStock(slug: string, amount = 1) {
+/** Fast mall-counter decrement at a location — atomic, never goes below 0. Amount defaults to 1 ("Sold 1"). */
+export async function quickDecrementStock(slug: string, location: string, amount = 1) {
   if (!isSupabaseOrderStoreConfigured()) {
     throw new Error("Supabase is not configured — cannot update stock.");
   }
@@ -146,6 +187,7 @@ export async function quickDecrementStock(slug: string, amount = 1) {
   const { error } = await getSupabaseAdmin().rpc("decrement_product_stock", {
     p_slug: slug,
     p_amount: amount,
+    p_location: location,
   });
 
   if (error) {
@@ -153,9 +195,10 @@ export async function quickDecrementStock(slug: string, amount = 1) {
   }
 }
 
-/** Called after a paid order to decrement stock for every tracked line item. Never throws — logs and continues. */
+/** Called after a paid order to decrement stock for every tracked line item at a location. Never throws — logs and continues. */
 export async function decrementStockForOrderLines(
   lines: Array<{ slug: string | null; quantity: number }>,
+  location: string = ONLINE_LOCATION,
 ) {
   if (!isSupabaseOrderStoreConfigured()) {
     return;
@@ -170,6 +213,7 @@ export async function decrementStockForOrderLines(
       const { error } = await supabase.rpc("decrement_product_stock", {
         p_slug: line.slug,
         p_amount: line.quantity,
+        p_location: location,
       });
 
       if (error) {

@@ -14,6 +14,7 @@ const NAV_GROUPS: { label: string; items: { href: string; label: string }[] }[] 
   {
     label: "Catalog",
     items: [
+      { href: "/admin/products/new", label: "Add Product" },
       { href: "/admin/stock", label: "Manage Stock" },
       { href: "/admin/labels", label: "Print Labels" },
     ],

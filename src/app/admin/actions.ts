@@ -15,7 +15,6 @@ import {
   isDhlEcommerceConfigured,
 } from "@/lib/dhl-ecommerce";
 import { randomBytes } from "crypto";
-import { getProductBySlug } from "@/data/products";
 import {
   type FulfillmentStatus,
   getOrdersBySessionIds,
@@ -24,11 +23,15 @@ import {
 } from "@/lib/orders";
 import {
   decrementStockForOrderLines,
+  getLocationName,
+  getProductBySlugWithStock,
   getQuantitiesForSlugs,
+  isLocationId,
   markProductPreorder,
   quickDecrementStock,
   setProductQuantity,
 } from "@/lib/product-stock";
+import { createAdminProduct, uploadProductImage } from "@/lib/admin-products";
 import {
   generateSingleSocialAd,
   regenerateSocialDraftVariant,
@@ -218,68 +221,138 @@ function getRequiredSlug(formData: FormData) {
   return slug;
 }
 
+function getRequiredLocation(formData: FormData) {
+  const location =
+    typeof formData.get("location") === "string" ? String(formData.get("location")) : "";
+
+  if (!isLocationId(location)) {
+    redirect("/admin/stock?error=missing-location");
+  }
+
+  return location;
+}
+
+function stockReturnPath(location: string) {
+  return `/admin/stock?location=${encodeURIComponent(location)}`;
+}
+
 export async function setProductQuantityAction(formData: FormData) {
   await requireAdminSession("/admin/stock");
 
   const slug = getRequiredSlug(formData);
+  const location = getRequiredLocation(formData);
   const rawQuantity =
     typeof formData.get("quantity") === "string" ? String(formData.get("quantity")) : "";
   const quantity = Number(rawQuantity);
 
   if (!Number.isFinite(quantity) || quantity < 0) {
-    redirect("/admin/stock?error=invalid-quantity");
+    redirect(`${stockReturnPath(location)}&error=invalid-quantity`);
   }
 
   try {
-    await setProductQuantity(slug, quantity);
+    await setProductQuantity(slug, quantity, location);
   } catch (error) {
     redirect(
-      `/admin/stock?error=${encodeURIComponent(
+      `${stockReturnPath(location)}&error=${encodeURIComponent(
         error instanceof Error ? error.message : "Unable to update stock.",
       )}`,
     );
   }
 
   revalidateStockPaths(slug);
-  redirect("/admin/stock?saved=1");
+  redirect(`${stockReturnPath(location)}&saved=1`);
 }
 
 export async function quickDecrementStockAction(formData: FormData) {
   await requireAdminSession("/admin/stock");
 
   const slug = getRequiredSlug(formData);
+  const location = getRequiredLocation(formData);
 
   try {
-    await quickDecrementStock(slug, 1);
+    await quickDecrementStock(slug, location, 1);
   } catch (error) {
     redirect(
-      `/admin/stock?error=${encodeURIComponent(
+      `${stockReturnPath(location)}&error=${encodeURIComponent(
         error instanceof Error ? error.message : "Unable to update stock.",
       )}`,
     );
   }
 
   revalidateStockPaths(slug);
-  redirect("/admin/stock?saved=1");
+  redirect(`${stockReturnPath(location)}&saved=1`);
 }
 
 export async function markProductPreorderAction(formData: FormData) {
   await requireAdminSession("/admin/stock");
 
   const slug = getRequiredSlug(formData);
+  const location = getRequiredLocation(formData);
 
   try {
-    await markProductPreorder(slug);
+    await markProductPreorder(slug, location);
   } catch (error) {
     redirect(
-      `/admin/stock?error=${encodeURIComponent(
+      `${stockReturnPath(location)}&error=${encodeURIComponent(
         error instanceof Error ? error.message : "Unable to update stock.",
       )}`,
     );
   }
 
   revalidateStockPaths(slug);
-  redirect("/admin/stock?saved=1");
+  redirect(`${stockReturnPath(location)}&saved=1`);
+}
+
+export async function createAdminProductAction(formData: FormData) {
+  await requireAdminSession("/admin/products/new");
+
+  const name = String(formData.get("name") ?? "").trim();
+  const newCategoryLabel = String(formData.get("newCategoryLabel") ?? "").trim();
+  const categoryLabel = newCategoryLabel || String(formData.get("categoryLabel") ?? "").trim();
+  const size = String(formData.get("size") ?? "").trim();
+  const priceRaw = String(formData.get("price") ?? "").trim();
+  const excerpt = String(formData.get("excerpt") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+  const imageFile = formData.get("image");
+
+  const price = Number(priceRaw);
+
+  if (!name || !categoryLabel || !size || !Number.isFinite(price) || price <= 0) {
+    redirect("/admin/products/new?error=missing-fields");
+  }
+
+  if (!(imageFile instanceof File) || imageFile.size === 0) {
+    redirect("/admin/products/new?error=missing-image");
+  }
+
+  let slug: string;
+
+  try {
+    const imageUrl = await uploadProductImage(imageFile);
+    slug = await createAdminProduct({
+      name,
+      categoryLabel,
+      size,
+      price,
+      excerpt,
+      description,
+      imageUrl,
+    });
+  } catch (error) {
+    redirect(
+      `/admin/products/new?error=${encodeURIComponent(
+        error instanceof Error ? error.message : "Unable to create product.",
+      )}`,
+    );
+  }
+
+  revalidatePath("/products");
+  revalidatePath("/");
+  revalidatePath("/admin/stock");
+  revalidatePath("/admin/labels");
+  revalidatePath("/admin/counter-sale");
+  revalidatePath(`/product-page/${slug}`);
+  redirect(`/admin/stock?saved=1`);
 }
 
 export type CounterSaleLine = {
@@ -292,10 +365,15 @@ export type CounterSalePayload = {
   customerName: string;
   customerPhone: string;
   paymentMethod: "Cash" | "Card" | "DuitNow QR" | "Other";
+  location: string;
 };
 
 export async function recordCounterSaleAction(payload: CounterSalePayload) {
   await requireAdminSession("/admin/counter-sale");
+
+  if (!isLocationId(payload.location) || payload.location === "online") {
+    return { ok: false as const, error: "Choose which shop this sale happened at." };
+  }
 
   const consolidated = new Map<string, number>();
   for (const line of payload.lines) {
@@ -309,7 +387,7 @@ export async function recordCounterSaleAction(payload: CounterSalePayload) {
   }
 
   const slugs = [...consolidated.keys()];
-  const trackedQuantities = await getQuantitiesForSlugs(slugs);
+  const trackedQuantities = await getQuantitiesForSlugs(slugs, payload.location);
 
   const lineItems: Array<{
     slug: string;
@@ -319,7 +397,7 @@ export async function recordCounterSaleAction(payload: CounterSalePayload) {
   }> = [];
 
   for (const [slug, quantity] of consolidated.entries()) {
-    const product = getProductBySlug(slug);
+    const product = await getProductBySlugWithStock(slug);
     if (!product) {
       return { ok: false as const, error: `Unknown product: ${slug}` };
     }
@@ -374,7 +452,7 @@ export async function recordCounterSaleAction(payload: CounterSalePayload) {
       trackingNumber: null,
       trackingCarrier: null,
       trackingUrl: null,
-      internalNotes: `Counter sale — paid via ${payload.paymentMethod}.`,
+      internalNotes: `Counter sale at ${getLocationName(payload.location)} — paid via ${payload.paymentMethod}.`,
       fulfilledAt: now,
       packageWeightGrams: null,
       packageLengthCm: null,
@@ -399,10 +477,12 @@ export async function recordCounterSaleAction(payload: CounterSalePayload) {
 
   await decrementStockForOrderLines(
     lineItems.map((l) => ({ slug: l.slug, quantity: l.quantity })),
+    payload.location,
   );
 
   revalidatePath("/admin/orders");
   revalidatePath("/admin/stock");
+  revalidatePath("/admin/counter-sale");
 
   return { ok: true as const, sessionId };
 }
