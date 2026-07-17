@@ -168,29 +168,20 @@ export default async function ManageStockPage({ searchParams }: StockPageProps) 
   return (
     <div className="space-y-8">
       {/* Page header */}
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="space-y-3">
-          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.3em] text-[#8d7a5c]">
-            Catalog
-          </p>
-          <h2 className="font-display text-[2.6rem] leading-[0.95] tracking-[-0.04em] text-[#201d17]">
-            Manage Stock
-          </h2>
-          <p className="max-w-2xl text-sm leading-7 text-[#5d574f]">
-            Each location (online, and each shop) keeps its own stock count.
-            Set exact quantities so the site auto-shows &quot;Sold Out&quot; and
-            blocks purchase at zero. Online orders decrement the online pool
-            automatically; use <strong className="font-semibold text-[#201d17]">Sold 1</strong>{" "}
-            at a shop right after an in-person sale to keep it in sync.
-          </p>
-        </div>
-
-        <Link
-          href="/admin/products/new"
-          className="inline-flex h-11 shrink-0 items-center justify-center rounded-full bg-[#201d17] px-5 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-white transition hover:bg-[#2f2a22]"
-        >
-          + Add Product
-        </Link>
+      <div className="space-y-3">
+        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.3em] text-[#8d7a5c]">
+          Catalog
+        </p>
+        <h2 className="font-display text-[2.6rem] leading-[0.95] tracking-[-0.04em] text-[#201d17]">
+          Manage Stock
+        </h2>
+        <p className="max-w-2xl text-sm leading-7 text-[#5d574f]">
+          Each location (online, and each shop) keeps its own stock count.
+          Set exact quantities so the site auto-shows &quot;Sold Out&quot; and
+          blocks purchase at zero. Online orders decrement the online pool
+          automatically; use <strong className="font-semibold text-[#201d17]">Sold 1</strong>{" "}
+          at a shop right after an in-person sale to keep it in sync.
+        </p>
       </div>
 
       {/* Location tabs */}
@@ -333,9 +324,17 @@ export default async function ManageStockPage({ searchParams }: StockPageProps) 
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[#8d7a5c]">
                 Products
               </p>
-              <p className="text-[0.72rem] font-medium text-[#8d7a5c]">
-                {sorted.length} shown
-              </p>
+              <div className="flex items-center gap-4">
+                <p className="text-[0.72rem] font-medium text-[#8d7a5c]">
+                  {sorted.length} shown
+                </p>
+                <Link
+                  href="/admin/products/new"
+                  className="inline-flex h-9 shrink-0 items-center justify-center rounded-full bg-[#201d17] px-4 text-[0.66rem] font-semibold uppercase tracking-[0.14em] text-white transition hover:bg-[#2f2a22]"
+                >
+                  + Add Product
+                </Link>
+              </div>
             </div>
 
             {sorted.length === 0 ? (

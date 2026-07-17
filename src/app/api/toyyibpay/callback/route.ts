@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { getOrderBySessionId, upsertOrder } from "@/lib/orders";
+import { getOrderBySessionId, upsertOrder, type StoredOrder } from "@/lib/orders";
 import { decrementStockForOrderLines } from "@/lib/product-stock";
+import { sendReceiptEmail } from "@/lib/receipt-email";
 
 export const runtime = "nodejs";
 export const preferredRegion = "sin1";
@@ -33,24 +34,27 @@ export async function POST(request: Request) {
       ? Math.round(parseFloat(amount) * 100)
       : order.totalAmount;
 
-    await upsertOrder(
-      {
-        ...order,
-        paymentIntentId: transactionId ?? refno ?? order.paymentIntentId,
-        paymentStatus: isPaid ? "paid" : isFailed ? "failed" : "pending",
-        checkoutStatus: isPaid ? "complete" : isFailed ? "expired" : "open",
-        totalAmount: totalAmountCents ?? order.totalAmount,
-        updatedAt: new Date().toISOString(),
-      },
-      { preserveAdminFields: true },
-    );
+    const updatedOrder: StoredOrder = {
+      ...order,
+      paymentIntentId: transactionId ?? refno ?? order.paymentIntentId,
+      paymentStatus: isPaid ? "paid" : isFailed ? "failed" : "pending",
+      checkoutStatus: isPaid ? "complete" : isFailed ? "expired" : "open",
+      totalAmount: totalAmountCents ?? order.totalAmount,
+      updatedAt: new Date().toISOString(),
+    };
 
-    // Only decrement once, the first time this order transitions to paid —
-    // ToyyibPay can redeliver the callback, and this must stay idempotent.
+    await upsertOrder(updatedOrder, { preserveAdminFields: true });
+
+    // Only run once, the first time this order transitions to paid — ToyyibPay
+    // can redeliver the callback, and this must stay idempotent.
     if (isPaid && !wasAlreadyPaid) {
       await decrementStockForOrderLines(
         order.lines.map((line) => ({ slug: line.slug, quantity: line.quantity })),
       );
+
+      // Fail-soft: a receipt problem must never make this callback return non-2xx,
+      // or ToyyibPay would redeliver and re-trigger the guard above.
+      await sendReceiptEmail(updatedOrder);
     }
 
     return NextResponse.json({ ok: true });

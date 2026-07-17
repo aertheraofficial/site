@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
-import { recordCompletedOrder } from "@/lib/orders";
+import { getOrderBySessionId, recordCompletedOrder } from "@/lib/orders";
+import { sendReceiptEmail } from "@/lib/receipt-email";
 import { getStripeServer, getStripeWebhookSecret } from "@/lib/stripe";
 
 export const runtime = "nodejs";
@@ -27,11 +28,22 @@ export async function POST(request: Request) {
         limit: 100,
       });
 
-      await recordCompletedOrder({
+      // Capture the prior state before the upsert: Stripe redelivers webhooks, and
+      // the success page records the same order, so this is what keeps the receipt
+      // from being emailed twice for one payment.
+      const existing = await getOrderBySessionId(session.id);
+      const wasAlreadyPaid = existing?.paymentStatus === "paid";
+
+      const order = await recordCompletedOrder({
         session,
         lineItems,
         source: "webhook",
       });
+
+      if (session.payment_status === "paid" && !wasAlreadyPaid) {
+        // Fail-soft: never let a receipt failure turn this into a non-2xx retry loop.
+        await sendReceiptEmail(order);
+      }
     }
 
     return NextResponse.json({ received: true });
