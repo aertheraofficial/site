@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ProductCard } from "@/components/product-card";
 import type { Product } from "@/data/products";
 import {
@@ -27,6 +27,21 @@ export function CatalogBrowser({ listingDescription, products }: CatalogBrowserP
   const [sortBy, setSortBy] = useState("recommended");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const browserProducts = products;
+
+  useEffect(() => {
+    // QR category ordering: /products?category=<slug> lands pre-filtered on that
+    // category, so a scanned category QR opens straight to its product list.
+    const requested = new URLSearchParams(window.location.search).get("category");
+    if (!requested) return;
+    const slugify = (value: string) =>
+      value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    const match = products.find(
+      (product) => slugify(product.categoryLabel) === requested,
+    );
+    if (match) {
+      setSelectedTypes([match.categoryLabel]);
+    }
+  }, [products]);
 
   const productTypes = [...new Set(browserProducts.map((product) => product.categoryLabel))];
   const availabilities = ["Available", "Pre-order", "Sold Out"].filter((availability) =>

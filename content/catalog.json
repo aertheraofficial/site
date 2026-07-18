@@ -5,14 +5,15 @@
       "slug": "body-cleanse-shower-gel-lemongrass-malaya-230ml",
       "name": "Body Cleanse Shower Gel Lemongrass Malaya 230ml",
       "shortName": "Body Cleanse Shower Gel",
-      "categoryLabel": "Body Cleanse Shower Gel",
+      "categoryLabel": "Shower Collection",
       "categorySlugs": [
         "all-products",
+        "shower-collection",
         "personal-care",
         "lemongrass-collection"
       ],
       "size": "230ml",
-      "price": 116,
+      "price": 149,
       "availability": "Pre-order",
       "leadTime": "7-14 working days",
       "excerpt": "Lemongrass Malaya in 230ml as a cleansing gel format for everyday use.",
@@ -408,14 +409,15 @@
       "slug": "body-cleanse-shower-gel-pineapple-tropical-230ml",
       "name": "Body Cleanse Shower Gel Pineapple Tropical 230ml",
       "shortName": "Body Cleanse Shower Gel",
-      "categoryLabel": "Body Cleanse Shower Gel",
+      "categoryLabel": "Shower Collection",
       "categorySlugs": [
         "all-products",
+        "shower-collection",
         "personal-care",
         "pineapple-collection"
       ],
       "size": "230ml",
-      "price": 116,
+      "price": 149,
       "availability": "Pre-order",
       "leadTime": "7-14 working days",
       "excerpt": "Pineapple Tropical in 230ml as a cleansing gel format for everyday use.",
@@ -814,6 +816,7 @@
       "categoryLabel": "Reed Diffuser",
       "categorySlugs": [
         "all-products",
+        "reed-diffuser",
         "lifestyle",
         "lemongrass-collection"
       ],
@@ -882,6 +885,7 @@
       "categoryLabel": "Reed Diffuser",
       "categorySlugs": [
         "all-products",
+        "reed-diffuser",
         "lifestyle",
         "pineapple-collection"
       ],
@@ -950,11 +954,12 @@
       "categoryLabel": "Scented Candle",
       "categorySlugs": [
         "all-products",
+        "scented-candle",
         "lifestyle",
         "lemongrass-collection"
       ],
       "size": "270ml",
-      "price": 249,
+      "price": 149,
       "availability": "Pre-order",
       "leadTime": "7-14 working days",
       "excerpt": "Lemongrass Malaya in 270ml as a candle format built for slower evening use.",
@@ -1018,11 +1023,12 @@
       "categoryLabel": "Scented Candle",
       "categorySlugs": [
         "all-products",
+        "scented-candle",
         "lifestyle",
         "pineapple-collection"
       ],
       "size": "270ml",
-      "price": 249,
+      "price": 149,
       "availability": "Pre-order",
       "leadTime": "7-14 working days",
       "excerpt": "Pineapple Tropical in 270ml as a candle format built for slower evening use.",
@@ -1083,14 +1089,15 @@
       "slug": "essential-oil-lemongrass-malaya-10ml",
       "name": "Essential Oil Lemongrass Malaya 10ml",
       "shortName": "Essential Oil",
-      "categoryLabel": "Essential Oil",
+      "categoryLabel": "Essential Oils",
       "categorySlugs": [
         "all-products",
+        "essential-oils",
         "aromatherapy",
         "lemongrass-collection"
       ],
       "size": "10ml",
-      "price": 99,
+      "price": 129,
       "availability": "In stock",
       "excerpt": "Lemongrass Malaya in 10ml as a concentrated aromatherapy oil.",
       "description": "This product brings the Lemongrass Malaya scent profile into a concentrated aromatherapy oil. It is listed in the latest product draft under Aromatherapy, with a 10ml fill size. The current stock note indicates ready inventory.",
@@ -1146,13 +1153,14 @@
       "slug": "essential-oil-blend-sleep-calm-10ml",
       "name": "Essential Oil Blend Sleep Calm 10ml",
       "shortName": "Essential Oil Blend",
-      "categoryLabel": "Essential Oil Blend",
+      "categoryLabel": "Essential Oils",
       "categorySlugs": [
         "all-products",
+        "essential-oils",
         "aromatherapy"
       ],
       "size": "10ml",
-      "price": 159,
+      "price": 129,
       "availability": "In stock",
       "excerpt": "Sleep Calm in 10ml as a layered essential oil blend.",
       "description": "This product brings the Sleep Calm scent profile into a layered essential oil blend. It is listed in the latest product draft under Aromatherapy, with a 10ml fill size. The current stock note indicates ready inventory.",
@@ -1208,13 +1216,14 @@
       "slug": "essential-oil-blend-soft-aura-10ml",
       "name": "Essential Oil Blend Soft Aura 10ml",
       "shortName": "Essential Oil Blend",
-      "categoryLabel": "Essential Oil Blend",
+      "categoryLabel": "Essential Oils",
       "categorySlugs": [
         "all-products",
+        "essential-oils",
         "aromatherapy"
       ],
       "size": "10ml",
-      "price": 159,
+      "price": 129,
       "availability": "In stock",
       "excerpt": "Soft Aura in 10ml as a layered essential oil blend.",
       "description": "This product brings the Soft Aura scent profile into a layered essential oil blend. It is listed in the latest product draft under Aromatherapy, with a 10ml fill size. The current stock note indicates ready inventory.",
@@ -1332,13 +1341,14 @@
       "slug": "essential-oil-blend-golden-bloom-10ml",
       "name": "Essential Oil Blend Golden Bloom 10ml",
       "shortName": "Essential Oil Blend",
-      "categoryLabel": "Essential Oil Blend",
+      "categoryLabel": "Essential Oils",
       "categorySlugs": [
         "all-products",
+        "essential-oils",
         "aromatherapy"
       ],
       "size": "10ml",
-      "price": 159,
+      "price": 129,
       "availability": "In stock",
       "excerpt": "Golden Bloom in 10ml as a layered essential oil blend.",
       "description": "This product brings the Golden Bloom scent profile into a layered essential oil blend. It is listed in the latest product draft under Aromatherapy, with a 10ml fill size. The current stock note indicates ready inventory.",
@@ -1518,14 +1528,15 @@
       "slug": "scented-spray-lemongrass-malaya-30ml",
       "name": "Scented Spray Lemongrass Malaya 30ml",
       "shortName": "Scented Spray",
-      "categoryLabel": "Scented Spray",
+      "categoryLabel": "Room Spray",
       "categorySlugs": [
         "all-products",
+        "room-spray",
         "lifestyle",
         "lemongrass-collection"
       ],
       "size": "30ml",
-      "price": 107,
+      "price": 129,
       "availability": "Pre-order",
       "leadTime": "7-14 working days",
       "excerpt": "Lemongrass Malaya in 30ml as an easy room and fabric spray.",
@@ -1586,13 +1597,14 @@
       "slug": "scented-spray-stress-relief-30ml",
       "name": "Scented Spray Stress Relief 30ml",
       "shortName": "Scented Spray",
-      "categoryLabel": "Scented Spray",
+      "categoryLabel": "Room Spray",
       "categorySlugs": [
         "all-products",
+        "room-spray",
         "lifestyle"
       ],
       "size": "30ml",
-      "price": 107,
+      "price": 129,
       "availability": "Pre-order",
       "leadTime": "7-14 working days",
       "excerpt": "Stress Relief in 30ml as an easy room and fabric spray.",
@@ -1653,13 +1665,14 @@
       "slug": "scented-spray-sleep-calm-30ml",
       "name": "Scented Spray Sleep Calm 30ml",
       "shortName": "Scented Spray",
-      "categoryLabel": "Scented Spray",
+      "categoryLabel": "Room Spray",
       "categorySlugs": [
         "all-products",
+        "room-spray",
         "lifestyle"
       ],
       "size": "30ml",
-      "price": 107,
+      "price": 129,
       "availability": "In stock",
       "leadTime": "7-14 working days",
       "excerpt": "Sleep Calm in 30ml as an easy room and fabric spray.",
@@ -1720,13 +1733,14 @@
       "slug": "roll-on-essential-oil-jade-tea-10ml",
       "name": "Roll On Essential Oil Jade Tea 10ml",
       "shortName": "Roll On Essential Oil",
-      "categoryLabel": "Roll On Essential Oil",
+      "categoryLabel": "Roll-On",
       "categorySlugs": [
         "all-products",
+        "roll-on",
         "aromatherapy"
       ],
       "size": "10ml",
-      "price": 107,
+      "price": 109,
       "availability": "In stock",
       "excerpt": "Jade Tea in 10ml as a portable pulse-point oil.",
       "description": "This product brings the Jade Tea scent profile into a portable pulse-point oil. It is listed in the latest product draft under Aromatherapy, with a 10ml fill size. The current stock note indicates ready inventory.",
@@ -1781,13 +1795,14 @@
       "slug": "roll-on-essential-oil-stress-relief-10ml",
       "name": "Roll On Essential Oil Stress Relief 10ml",
       "shortName": "Roll On Essential Oil",
-      "categoryLabel": "Roll On Essential Oil",
+      "categoryLabel": "Roll-On",
       "categorySlugs": [
         "all-products",
+        "roll-on",
         "aromatherapy"
       ],
       "size": "10ml",
-      "price": 107,
+      "price": 109,
       "availability": "In stock",
       "excerpt": "Stress Relief in 10ml as a portable pulse-point oil.",
       "description": "This product brings the Stress Relief scent profile into a portable pulse-point oil. It is listed in the latest product draft under Aromatherapy, with a 10ml fill size. The current stock note indicates ready inventory.",
@@ -1843,13 +1858,14 @@
       "slug": "roll-on-essential-oil-happy-10ml",
       "name": "Roll On Essential Oil Happy 10ml",
       "shortName": "Roll On Essential Oil",
-      "categoryLabel": "Roll On Essential Oil",
+      "categoryLabel": "Roll-On",
       "categorySlugs": [
         "all-products",
+        "roll-on",
         "aromatherapy"
       ],
       "size": "10ml",
-      "price": 107,
+      "price": 109,
       "availability": "In stock",
       "excerpt": "Happy in 10ml as a portable pulse-point oil.",
       "description": "This product brings the Happy scent profile into a portable pulse-point oil. It is listed in the latest product draft under Aromatherapy, with a 10ml fill size. The current stock note indicates ready inventory.",
@@ -1904,13 +1920,14 @@
       "slug": "essential-oil-blend-rose-10ml",
       "name": "Essential Oil Blend Rose 10ml",
       "shortName": "Essential Oil Blend",
-      "categoryLabel": "Essential Oil Blend",
+      "categoryLabel": "Essential Oils",
       "categorySlugs": [
         "all-products",
+        "essential-oils",
         "aromatherapy"
       ],
       "size": "10ml",
-      "price": 1115,
+      "price": 399,
       "availability": "In stock",
       "leadTime": "7-14 working days",
       "excerpt": "Rose in 10ml as a layered essential oil blend.",
@@ -2023,6 +2040,410 @@
       ],
       "accent": "#d8a9b8",
       "relatedSlugs": []
+    },
+    {
+      "id": "essential-oil-jade-tea-10ml",
+      "slug": "essential-oil-jade-tea-10ml",
+      "name": "Essential Oil Jade Tea 10ml",
+      "shortName": "Essential Oil",
+      "categoryLabel": "Essential Oils",
+      "categorySlugs": [
+        "all-products",
+        "essential-oils"
+      ],
+      "size": "10ml",
+      "price": 129,
+      "availability": "Pre-order",
+      "excerpt": "Essential Oil Jade Tea 10ml — [PLACEHOLDER — kemas kini butiran sebenar]",
+      "description": "Essential Oil Jade Tea 10ml. [PLACEHOLDER — kemas kini butiran sebenar]",
+      "scentNotes": [
+        "green tea",
+        "fresh herbs"
+      ],
+      "ritual": [
+        "[PLACEHOLDER — kemas kini butiran sebenar]"
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Essential Oils"
+        },
+        {
+          "label": "Size",
+          "value": "10ml"
+        },
+        {
+          "label": "Status",
+          "value": "Pre-order"
+        }
+      ],
+      "image": "/assets/products/main/essential-oil-jade-tea-10ml.png",
+      "gallery": [
+        "/assets/products/main/essential-oil-jade-tea-10ml.png"
+      ],
+      "accent": "#6f8f6a",
+      "relatedSlugs": [
+        "essential-oil-lemongrass-malaya-10ml"
+      ]
+    },
+    {
+      "id": "essential-oil-peppermint-10ml",
+      "slug": "essential-oil-peppermint-10ml",
+      "name": "Essential Oil Peppermint 10ml",
+      "shortName": "Essential Oil",
+      "categoryLabel": "Essential Oils",
+      "categorySlugs": [
+        "all-products",
+        "essential-oils"
+      ],
+      "size": "10ml",
+      "price": 129,
+      "availability": "Pre-order",
+      "excerpt": "Essential Oil Peppermint 10ml — [PLACEHOLDER — kemas kini butiran sebenar]",
+      "description": "Essential Oil Peppermint 10ml. [PLACEHOLDER — kemas kini butiran sebenar]",
+      "scentNotes": [
+        "cool mint",
+        "fresh"
+      ],
+      "ritual": [
+        "[PLACEHOLDER — kemas kini butiran sebenar]"
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Essential Oils"
+        },
+        {
+          "label": "Size",
+          "value": "10ml"
+        },
+        {
+          "label": "Status",
+          "value": "Pre-order"
+        }
+      ],
+      "image": "/assets/products/main/essential-oil-peppermint-10ml.png",
+      "gallery": [
+        "/assets/products/main/essential-oil-peppermint-10ml.png"
+      ],
+      "accent": "#4a9d8e",
+      "relatedSlugs": [
+        "essential-oil-lemongrass-malaya-10ml"
+      ]
+    },
+    {
+      "id": "essential-oil-pineapple-tropical-10ml",
+      "slug": "essential-oil-pineapple-tropical-10ml",
+      "name": "Essential Oil Pineapple Tropical 10ml",
+      "shortName": "Essential Oil",
+      "categoryLabel": "Essential Oils",
+      "categorySlugs": [
+        "all-products",
+        "essential-oils",
+        "pineapple-collection"
+      ],
+      "size": "10ml",
+      "price": 129,
+      "availability": "Pre-order",
+      "excerpt": "Essential Oil Pineapple Tropical 10ml — [PLACEHOLDER — kemas kini butiran sebenar]",
+      "description": "Essential Oil Pineapple Tropical 10ml. [PLACEHOLDER — kemas kini butiran sebenar]",
+      "scentNotes": [
+        "tropical pineapple",
+        "sweet"
+      ],
+      "ritual": [
+        "[PLACEHOLDER — kemas kini butiran sebenar]"
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Essential Oils"
+        },
+        {
+          "label": "Size",
+          "value": "10ml"
+        },
+        {
+          "label": "Status",
+          "value": "Pre-order"
+        }
+      ],
+      "image": "/assets/products/main/essential-oil-pineapple-tropical-10ml.png",
+      "gallery": [
+        "/assets/products/main/essential-oil-pineapple-tropical-10ml.png"
+      ],
+      "accent": "#e0b23c",
+      "relatedSlugs": [
+        "essential-oil-lemongrass-malaya-10ml"
+      ]
+    },
+    {
+      "id": "balm-pineapple",
+      "slug": "balm-pineapple",
+      "name": "Balm Pineapple",
+      "shortName": "Balm",
+      "categoryLabel": "Balm Collection",
+      "categorySlugs": [
+        "all-products",
+        "balm-collection",
+        "pineapple-collection"
+      ],
+      "size": "TBC",
+      "price": 39,
+      "availability": "Pre-order",
+      "excerpt": "Balm Pineapple — [PLACEHOLDER — kemas kini butiran sebenar]",
+      "description": "Balm Pineapple. [PLACEHOLDER — kemas kini butiran sebenar]",
+      "scentNotes": [
+        "tropical pineapple"
+      ],
+      "ritual": [
+        "[PLACEHOLDER — kemas kini butiran sebenar]"
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Balm Collection"
+        },
+        {
+          "label": "Size",
+          "value": "TBC"
+        },
+        {
+          "label": "Status",
+          "value": "Pre-order"
+        }
+      ],
+      "image": "/assets/products/main/balm-pineapple.png",
+      "gallery": [
+        "/assets/products/main/balm-pineapple.png"
+      ],
+      "accent": "#e0b23c",
+      "relatedSlugs": [
+        "balm-lemongrass"
+      ]
+    },
+    {
+      "id": "balm-lemongrass",
+      "slug": "balm-lemongrass",
+      "name": "Balm Lemongrass",
+      "shortName": "Balm",
+      "categoryLabel": "Balm Collection",
+      "categorySlugs": [
+        "all-products",
+        "balm-collection",
+        "lemongrass-collection"
+      ],
+      "size": "TBC",
+      "price": 39,
+      "availability": "Pre-order",
+      "excerpt": "Balm Lemongrass — [PLACEHOLDER — kemas kini butiran sebenar]",
+      "description": "Balm Lemongrass. [PLACEHOLDER — kemas kini butiran sebenar]",
+      "scentNotes": [
+        "lemongrass"
+      ],
+      "ritual": [
+        "[PLACEHOLDER — kemas kini butiran sebenar]"
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Balm Collection"
+        },
+        {
+          "label": "Size",
+          "value": "TBC"
+        },
+        {
+          "label": "Status",
+          "value": "Pre-order"
+        }
+      ],
+      "image": "/assets/products/main/balm-lemongrass.png",
+      "gallery": [
+        "/assets/products/main/balm-lemongrass.png"
+      ],
+      "accent": "#9caf6a",
+      "relatedSlugs": [
+        "balm-pineapple"
+      ]
+    },
+    {
+      "id": "balm-variant-3",
+      "slug": "balm-variant-3",
+      "name": "Balm Variant 3",
+      "shortName": "Balm",
+      "categoryLabel": "Balm Collection",
+      "categorySlugs": [
+        "all-products",
+        "balm-collection"
+      ],
+      "size": "TBC",
+      "price": 69,
+      "availability": "Pre-order",
+      "excerpt": "Balm Variant 3 — [PLACEHOLDER — kemas kini butiran sebenar]",
+      "description": "Balm Variant 3. [PLACEHOLDER — kemas kini butiran sebenar]",
+      "scentNotes": [
+        "TBC"
+      ],
+      "ritual": [
+        "[PLACEHOLDER — kemas kini butiran sebenar]"
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Balm Collection"
+        },
+        {
+          "label": "Size",
+          "value": "TBC"
+        },
+        {
+          "label": "Status",
+          "value": "Pre-order"
+        }
+      ],
+      "image": "/assets/products/main/balm-variant-3.png",
+      "gallery": [
+        "/assets/products/main/balm-variant-3.png"
+      ],
+      "accent": "#b08d57",
+      "relatedSlugs": [
+        "balm-lemongrass"
+      ]
+    },
+    {
+      "id": "balm-variant-4",
+      "slug": "balm-variant-4",
+      "name": "Balm Variant 4",
+      "shortName": "Balm",
+      "categoryLabel": "Balm Collection",
+      "categorySlugs": [
+        "all-products",
+        "balm-collection"
+      ],
+      "size": "TBC",
+      "price": 69,
+      "availability": "Pre-order",
+      "excerpt": "Balm Variant 4 — [PLACEHOLDER — kemas kini butiran sebenar]",
+      "description": "Balm Variant 4. [PLACEHOLDER — kemas kini butiran sebenar]",
+      "scentNotes": [
+        "TBC"
+      ],
+      "ritual": [
+        "[PLACEHOLDER — kemas kini butiran sebenar]"
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Balm Collection"
+        },
+        {
+          "label": "Size",
+          "value": "TBC"
+        },
+        {
+          "label": "Status",
+          "value": "Pre-order"
+        }
+      ],
+      "image": "/assets/products/main/balm-variant-4.png",
+      "gallery": [
+        "/assets/products/main/balm-variant-4.png"
+      ],
+      "accent": "#b08d57",
+      "relatedSlugs": [
+        "balm-pineapple"
+      ]
+    },
+    {
+      "id": "hand-wash-lemongrass-malaya-230ml",
+      "slug": "hand-wash-lemongrass-malaya-230ml",
+      "name": "Hand Wash Lemongrass Malaya 230ml",
+      "shortName": "Hand Wash",
+      "categoryLabel": "Hand Wash",
+      "categorySlugs": [
+        "all-products",
+        "hand-wash",
+        "lemongrass-collection"
+      ],
+      "size": "230ml",
+      "price": 59,
+      "availability": "Pre-order",
+      "excerpt": "Hand Wash Lemongrass Malaya 230ml — [PLACEHOLDER — kemas kini butiran sebenar]",
+      "description": "Hand Wash Lemongrass Malaya 230ml. [PLACEHOLDER — kemas kini butiran sebenar]",
+      "scentNotes": [
+        "lemongrass"
+      ],
+      "ritual": [
+        "[PLACEHOLDER — kemas kini butiran sebenar]"
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Hand Wash"
+        },
+        {
+          "label": "Size",
+          "value": "230ml"
+        },
+        {
+          "label": "Status",
+          "value": "Pre-order"
+        }
+      ],
+      "image": "/assets/products/main/hand-wash-lemongrass-malaya-230ml.png",
+      "gallery": [
+        "/assets/products/main/hand-wash-lemongrass-malaya-230ml.png"
+      ],
+      "accent": "#9caf6a",
+      "relatedSlugs": [
+        "hand-wash-pineapple-tropical-230ml"
+      ]
+    },
+    {
+      "id": "hand-wash-pineapple-tropical-230ml",
+      "slug": "hand-wash-pineapple-tropical-230ml",
+      "name": "Hand Wash Pineapple Tropical 230ml",
+      "shortName": "Hand Wash",
+      "categoryLabel": "Hand Wash",
+      "categorySlugs": [
+        "all-products",
+        "hand-wash",
+        "pineapple-collection"
+      ],
+      "size": "230ml",
+      "price": 59,
+      "availability": "Pre-order",
+      "excerpt": "Hand Wash Pineapple Tropical 230ml — [PLACEHOLDER — kemas kini butiran sebenar]",
+      "description": "Hand Wash Pineapple Tropical 230ml. [PLACEHOLDER — kemas kini butiran sebenar]",
+      "scentNotes": [
+        "tropical pineapple"
+      ],
+      "ritual": [
+        "[PLACEHOLDER — kemas kini butiran sebenar]"
+      ],
+      "details": [
+        {
+          "label": "Department",
+          "value": "Hand Wash"
+        },
+        {
+          "label": "Size",
+          "value": "230ml"
+        },
+        {
+          "label": "Status",
+          "value": "Pre-order"
+        }
+      ],
+      "image": "/assets/products/main/hand-wash-pineapple-tropical-230ml.png",
+      "gallery": [
+        "/assets/products/main/hand-wash-pineapple-tropical-230ml.png"
+      ],
+      "accent": "#e0b23c",
+      "relatedSlugs": [
+        "hand-wash-lemongrass-malaya-230ml"
+      ]
     }
   ]
 }
