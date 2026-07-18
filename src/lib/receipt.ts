@@ -1,6 +1,15 @@
 import { promises as fs } from "fs";
 import path from "path";
-import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
+import {
+  PDFDocument,
+  PDFName,
+  PDFString,
+  StandardFonts,
+  rgb,
+  type PDFFont,
+  type PDFPage,
+  type PDFRef,
+} from "pdf-lib";
 import { siteInfo } from "@/data/site";
 import { formatMoney } from "@/lib/money";
 import type { StoredOrder } from "@/lib/orders";
@@ -89,6 +98,15 @@ export function getReceiptNumber(order: StoredOrder) {
   return `AE-${y}${m}${d}-${suffix || "000000"}`;
 }
 
+/**
+ * wa.me links take the number in full international form, digits only —
+ * no "+", spaces or dashes.
+ */
+export function getWhatsAppUrl() {
+  const digits = siteInfo.phone.replace(/\D/g, "");
+  return digits ? `https://wa.me/${digits}` : null;
+}
+
 function isSstEnabled() {
   const value = process.env.RECEIPT_SST_ENABLED?.toLowerCase();
   return ["1", "true", "yes", "on"].includes(value ?? "");
@@ -142,6 +160,40 @@ export async function generateReceiptPdf(order: StoredOrder): Promise<Uint8Array
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
 
+  // Clickable regions are PDF link annotations; collect them and attach once at
+  // the end, since setting "Annots" replaces the whole array.
+  const annotations: PDFRef[] = [];
+
+  function addLink(x: number, yPos: number, width: number, height: number, url: string) {
+    annotations.push(
+      pdf.context.register(
+        pdf.context.obj({
+          Type: "Annot",
+          Subtype: "Link",
+          Rect: [x, yPos, x + width, yPos + height],
+          Border: [0, 0, 0],
+          A: { Type: "Action", S: "URI", URI: PDFString.of(url) },
+        }),
+      ),
+    );
+  }
+
+  /** Draws text and makes exactly that text clickable. */
+  function drawLinkedText(
+    text: string,
+    x: number,
+    yPos: number,
+    font: PDFFont,
+    size: number,
+    color: ReturnType<typeof rgb>,
+    url: string,
+  ) {
+    const clean = sanitize(text);
+    page.drawText(clean, { x, y: yPos, size, font, color });
+    addLink(x, yPos - 2, font.widthOfTextAtSize(clean, size), size + 3, url);
+  }
+
+  const whatsAppUrl = getWhatsAppUrl();
   let y = PAGE[1] - MARGIN;
 
   pdf.setTitle(`Receipt ${getReceiptNumber(order)}`);
@@ -205,13 +257,40 @@ export async function generateReceiptPdf(order: StoredOrder): Promise<Uint8Array
     page.drawText(line, { x: MARGIN, y, size: 7.5, font: regular, color: MUTED });
     y -= 10;
   }
-  page.drawText(sanitize(`${siteInfo.email}  |  ${siteInfo.phone}`), {
-    x: MARGIN,
+  // Email and phone are drawn as separate runs so each can carry its own link.
+  drawLinkedText(siteInfo.email, MARGIN, y, regular, 7.5, MUTED, `mailto:${siteInfo.email}`);
+  const emailWidth = regular.widthOfTextAtSize(sanitize(siteInfo.email), 7.5);
+  const separator = "  |  ";
+  page.drawText(separator, {
+    x: MARGIN + emailWidth,
     y,
     size: 7.5,
     font: regular,
     color: MUTED,
   });
+
+  const phoneX = MARGIN + emailWidth + regular.widthOfTextAtSize(separator, 7.5);
+  if (whatsAppUrl) {
+    drawLinkedText(siteInfo.phone, phoneX, y, regular, 7.5, MUTED, whatsAppUrl);
+    const phoneWidth = regular.widthOfTextAtSize(sanitize(siteInfo.phone), 7.5);
+    drawLinkedText(
+      "  (WhatsApp)",
+      phoneX + phoneWidth,
+      y,
+      regular,
+      7.5,
+      GREEN,
+      whatsAppUrl,
+    );
+  } else {
+    page.drawText(sanitize(siteInfo.phone), {
+      x: phoneX,
+      y,
+      size: 7.5,
+      font: regular,
+      color: MUTED,
+    });
+  }
   y -= 18;
 
   page.drawLine({
@@ -436,21 +515,33 @@ export async function generateReceiptPdf(order: StoredOrder): Promise<Uint8Array
     color: CREAM,
   });
 
-  const stripColumns: Array<[string, string[]]> = [
+  type StripLine = { text: string; url?: string; color?: ReturnType<typeof rgb> };
+
+  const stripColumns: Array<[string, StripLine[]]> = [
     [
       "Payment",
       [
-        "Paid in full online",
-        order.paymentIntentId ? `Ref: ${order.paymentIntentId}` : issuedText,
+        { text: "Paid in full online" },
+        {
+          text: order.paymentIntentId ? `Ref: ${order.paymentIntentId}` : issuedText,
+        },
       ],
     ],
     [
       order.fulfillmentType === "pickup" ? "Collection" : "Delivery",
       order.fulfillmentType === "pickup"
-        ? ["Collect at our shop.", "We'll notify you when ready."]
-        : ["We're preparing your order.", "Tracking follows once shipped."],
+        ? [{ text: "Collect at our shop." }, { text: "We'll notify you when ready." }]
+        : [{ text: "We're preparing your order." }, { text: "Tracking follows once shipped." }],
     ],
-    ["Need help?", [siteInfo.email, "Quote your receipt no."]],
+    [
+      "Need help?",
+      [
+        { text: siteInfo.email, url: `mailto:${siteInfo.email}` },
+        ...(whatsAppUrl
+          ? [{ text: `WhatsApp ${siteInfo.phone}`, url: whatsAppUrl, color: GREEN }]
+          : []),
+      ],
+    ],
   ];
 
   const stripWidth = (RIGHT - MARGIN) / 3;
@@ -466,13 +557,12 @@ export async function generateReceiptPdf(order: StoredOrder): Promise<Uint8Array
     });
     ty -= 13;
     for (const line of lines) {
-      page.drawText(truncate(line, regular, 8, stripWidth - 24), {
-        x,
-        y: ty,
-        size: 8,
-        font: regular,
-        color: MUTED,
-      });
+      const text = truncate(line.text, regular, 8, stripWidth - 24);
+      if (line.url) {
+        drawLinkedText(text, x, ty, regular, 8, line.color ?? MUTED, line.url);
+      } else {
+        page.drawText(text, { x, y: ty, size: 8, font: regular, color: MUTED });
+      }
       ty -= 11;
     }
   });
@@ -506,6 +596,11 @@ export async function generateReceiptPdf(order: StoredOrder): Promise<Uint8Array
     color: MUTED,
   });
   drawRight(page, getReceiptNumber(order), RIGHT, footerY, regular, 7, SOFT);
+
+  // Attach every collected link region in one go.
+  if (annotations.length > 0) {
+    page.node.set(PDFName.of("Annots"), pdf.context.obj(annotations));
+  }
 
   return pdf.save();
 }

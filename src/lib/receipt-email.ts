@@ -2,7 +2,12 @@ import { Resend } from "resend";
 import { siteInfo } from "@/data/site";
 import { formatMoney } from "@/lib/money";
 import type { StoredOrder } from "@/lib/orders";
-import { generateReceiptPdf, getReceiptFilename, getReceiptNumber } from "@/lib/receipt";
+import {
+  generateReceiptPdf,
+  getReceiptFilename,
+  getReceiptNumber,
+  getWhatsAppUrl,
+} from "@/lib/receipt";
 import { getSiteUrl, isPublicHttpsOrigin } from "@/lib/store-config";
 
 /**
@@ -47,6 +52,7 @@ function buildEmailHtml(order: StoredOrder) {
   const total = order.totalAmount ?? 0;
   const name = order.customerName?.trim() || "there";
   const isPickup = order.fulfillmentType === "pickup";
+  const whatsAppUrl = getWhatsAppUrl();
 
   const rows = order.lines
     .map((line) => {
@@ -126,10 +132,30 @@ function buildEmailHtml(order: StoredOrder) {
                   Receipt no. ${escapeHtml(receiptNumber)}
                 </p>
 
+                ${
+                  whatsAppUrl
+                    ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:20px 0 0;">
+                  <tr>
+                    <td style="border-radius:999px;background:#25D366;">
+                      <a
+                        href="${whatsAppUrl}"
+                        style="display:inline-block;padding:11px 22px;font-family:Helvetica,Arial,sans-serif;font-size:13px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:999px;"
+                      >Chat with us on WhatsApp</a>
+                    </td>
+                  </tr>
+                </table>`
+                    : ""
+                }
+
                 <hr style="border:none;border-top:1px solid #e4dccd;margin:24px 0;" />
                 <p style="margin:0;font-size:11px;line-height:18px;color:#8d7a5c;">
                   ${escapeHtml(siteInfo.company)}<br />
-                  Questions? Reply to this email or contact ${escapeHtml(siteInfo.email)}.
+                  Questions? Reply to this email, email
+                  <a href="mailto:${escapeHtml(siteInfo.email)}" style="color:#4e6146;">${escapeHtml(siteInfo.email)}</a>${
+                    whatsAppUrl
+                      ? `, or <a href="${whatsAppUrl}" style="color:#4e6146;">WhatsApp ${escapeHtml(siteInfo.phone)}</a>`
+                      : ""
+                  }.
                 </p>
               </td>
             </tr>

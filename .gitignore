@@ -70,3 +70,6 @@ next-env.d.ts
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# docs (PDF, nota dev — bukan kod, jangan commit)
+/docs/
