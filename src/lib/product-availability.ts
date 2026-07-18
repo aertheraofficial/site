@@ -2,6 +2,19 @@ import type { Product } from "@/data/products";
 
 type ProductAvailabilityLabel = "Available" | "Pre-order" | "Sold Out";
 
+/**
+ * Tracked-stock display rule: more than this many units in stock shows as
+ * available; 1..threshold shows as Pre-order (still purchasable, restocking);
+ * 0 or fewer is Sold Out.
+ */
+export const PREORDER_THRESHOLD = 10;
+
+function labelForTrackedQuantity(quantity: number): ProductAvailabilityLabel {
+  if (quantity <= 0) return "Sold Out";
+  if (quantity <= PREORDER_THRESHOLD) return "Pre-order";
+  return "Available";
+}
+
 function getInventoryValue(product: Pick<Product, "details">) {
   return (
     product.details.find(
@@ -25,7 +38,7 @@ export function getStorefrontAvailabilityLabel(
 ): ProductAvailabilityLabel {
   // Tracked quantity (from the Manage Stock admin page) is authoritative when set.
   if (typeof product.quantity === "number") {
-    return product.quantity > 0 ? "Available" : "Sold Out";
+    return labelForTrackedQuantity(product.quantity);
   }
 
   if (product.availability === "Sold Out") {

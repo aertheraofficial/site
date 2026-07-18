@@ -1,9 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { recordCounterSaleAction } from "@/app/admin/actions";
 import { formatMoney } from "@/lib/money";
 import { ProductQrScanner } from "@/components/admin/product-qr-scanner";
+
+type MemberMatch = {
+  id: string;
+  fullName: string;
+  phone: string | null;
+  email: string | null;
+};
+
+type SaleReceipt = {
+  receiptUrl: string;
+  whatsAppUrl: string | null;
+  emailedReceipt: boolean;
+};
 
 type PickerProduct = {
   slug: string;
@@ -34,13 +47,53 @@ export function CounterSaleForm({ products, location, locationName }: CounterSal
   const [lines, setLines] = useState<SaleLine[]>([]);
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [memberQuery, setMemberQuery] = useState("");
+  const [memberResults, setMemberResults] = useState<MemberMatch[]>([]);
   const [paymentMethod, setPaymentMethod] =
     useState<(typeof PAYMENT_METHODS)[number]>("Cash");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [lastSale, setLastSale] = useState<SaleReceipt | null>(null);
   const [scanning, setScanning] = useState(false);
   const [scanFeedback, setScanFeedback] = useState("");
+  const memberBoxRef = useRef<HTMLDivElement>(null);
+
+  // Typeahead: look up existing members by name/phone as staff types.
+  useEffect(() => {
+    const query = memberQuery.trim();
+    if (query.length < 2) {
+      setMemberResults([]);
+      return;
+    }
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `/api/admin/members/search?q=${encodeURIComponent(query)}`,
+          { signal: controller.signal },
+        );
+        if (!res.ok) return;
+        const data = (await res.json()) as { members: MemberMatch[] };
+        setMemberResults(data.members ?? []);
+      } catch {
+        /* aborted or offline — ignore */
+      }
+    }, 250);
+    return () => {
+      controller.abort();
+      clearTimeout(timer);
+    };
+  }, [memberQuery]);
+
+  function selectMember(member: MemberMatch) {
+    setCustomerName(member.fullName);
+    setCustomerPhone(member.phone ?? "");
+    setCustomerEmail(member.email ?? "");
+    setMemberQuery("");
+    setMemberResults([]);
+  }
 
   const normalizedSearch = search.trim().toLowerCase();
   const matches = normalizedSearch
@@ -121,12 +174,14 @@ export function CounterSaleForm({ products, location, locationName }: CounterSal
     setSubmitting(true);
     setError("");
     setSuccess("");
+    setLastSale(null);
 
     try {
       const result = await recordCounterSaleAction({
         lines: lines.map((l) => ({ slug: l.slug, quantity: l.quantity })),
         customerName,
         customerPhone,
+        customerEmail,
         paymentMethod,
         location,
       });
@@ -136,10 +191,23 @@ export function CounterSaleForm({ products, location, locationName }: CounterSal
         return;
       }
 
-      setSuccess(`Sale recorded — ${formatMoney(total)} via ${paymentMethod}.`);
+      const emailNote = result.emailedReceipt
+        ? " Receipt emailed."
+        : customerEmail
+          ? " (Email receipt failed — use WhatsApp/Print.)"
+          : "";
+      setSuccess(`Sale recorded — ${formatMoney(total)} via ${paymentMethod}.${emailNote}`);
+      setLastSale({
+        receiptUrl: result.receiptUrl,
+        whatsAppUrl: result.whatsAppUrl,
+        emailedReceipt: result.emailedReceipt,
+      });
       setLines([]);
       setCustomerName("");
       setCustomerPhone("");
+      setCustomerEmail("");
+      setMemberQuery("");
+      setMemberResults([]);
       setPaymentMethod("Cash");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to record this sale.");
@@ -281,6 +349,33 @@ export function CounterSaleForm({ products, location, locationName }: CounterSal
         </div>
 
         <div className="mt-5 space-y-3">
+          <div className="relative" ref={memberBoxRef}>
+            <input
+              type="search"
+              value={memberQuery}
+              onChange={(e) => setMemberQuery(e.target.value)}
+              placeholder="Find member by name or phone"
+              className="w-full rounded-[1.25rem] border border-black/8 bg-[#f7f2ea] px-4 py-2.5 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59] focus:bg-white"
+            />
+            {memberResults.length > 0 ? (
+              <div className="absolute left-0 right-0 top-[calc(100%+0.4rem)] z-20 max-h-60 overflow-y-auto rounded-[1.25rem] border border-black/8 bg-white p-2 shadow-[0_18px_40px_rgba(32,29,23,0.12)]">
+                {memberResults.map((member) => (
+                  <button
+                    key={member.id}
+                    type="button"
+                    onClick={() => selectMember(member)}
+                    className="flex w-full flex-col items-start rounded-[0.85rem] px-4 py-2.5 text-left transition hover:bg-[#f7f2ea]"
+                  >
+                    <span className="text-sm font-medium text-[#201d17]">{member.fullName}</span>
+                    <span className="text-xs text-[#8d7a5c]">
+                      {[member.phone, member.email].filter(Boolean).join(" • ") || "No contact"}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
+
           <input
             type="text"
             value={customerName}
@@ -293,6 +388,13 @@ export function CounterSaleForm({ products, location, locationName }: CounterSal
             value={customerPhone}
             onChange={(e) => setCustomerPhone(e.target.value)}
             placeholder="Phone (optional)"
+            className="w-full rounded-[1.25rem] border border-black/8 bg-[#f7f2ea] px-4 py-2.5 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59] focus:bg-white"
+          />
+          <input
+            type="email"
+            value={customerEmail}
+            onChange={(e) => setCustomerEmail(e.target.value)}
+            placeholder="Email (for receipt)"
             className="w-full rounded-[1.25rem] border border-black/8 bg-[#f7f2ea] px-4 py-2.5 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59] focus:bg-white"
           />
 
@@ -328,6 +430,31 @@ export function CounterSaleForm({ products, location, locationName }: CounterSal
           <p className="mt-4 rounded-[1rem] border border-[#8cc8a4] bg-[#e9f7ee] px-4 py-3 text-sm leading-6 text-[#256542]">
             {success}
           </p>
+        ) : null}
+
+        {lastSale ? (
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {lastSale.whatsAppUrl ? (
+              <a
+                href={lastSale.whatsAppUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-10 items-center justify-center rounded-full border border-[#25a35a] bg-[#eaf7ef] text-[0.72rem] font-semibold text-[#1c7a43]"
+              >
+                Send WhatsApp
+              </a>
+            ) : null}
+            <a
+              href={`${lastSale.receiptUrl}/pdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`inline-flex h-10 items-center justify-center rounded-full border border-black/8 bg-[#f7f2ea] text-[0.72rem] font-semibold text-[#201d17] ${
+                lastSale.whatsAppUrl ? "" : "col-span-2"
+              }`}
+            >
+              Print receipt
+            </a>
+          </div>
         ) : null}
 
         <button

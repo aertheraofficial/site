@@ -17,6 +17,7 @@ import {
 import { randomBytes } from "crypto";
 import {
   type FulfillmentStatus,
+  type StoredOrder,
   getOrdersBySessionIds,
   upsertOrder,
   updateOrderManagement,
@@ -32,6 +33,9 @@ import {
   setProductQuantity,
 } from "@/lib/product-stock";
 import { createAdminProduct, uploadProductImage } from "@/lib/admin-products";
+import { createMember } from "@/lib/members";
+import { sendReceiptEmail } from "@/lib/receipt-email";
+import { getSiteUrl } from "@/lib/store-config";
 import {
   generateSingleSocialAd,
   regenerateSocialDraftVariant,
@@ -364,9 +368,18 @@ export type CounterSalePayload = {
   lines: CounterSaleLine[];
   customerName: string;
   customerPhone: string;
+  customerEmail: string;
   paymentMethod: "Cash" | "Card" | "DuitNow QR" | "Other";
   location: string;
 };
+
+/** Turn a local Malaysian number into wa.me digits (0123... -> 60123...). */
+function toWhatsAppDigits(phone: string): string | null {
+  let digits = phone.replace(/\D/g, "");
+  if (!digits) return null;
+  if (digits.startsWith("0")) digits = `60${digits.slice(1)}`;
+  return digits.length >= 8 ? digits : null;
+}
 
 export async function recordCounterSaleAction(payload: CounterSalePayload) {
   await requireAdminSession("/admin/counter-sale");
@@ -426,18 +439,33 @@ export async function recordCounterSaleAction(payload: CounterSalePayload) {
   const sessionId = `INSTORE-${Date.now()}-${randomBytes(4).toString("hex")}`;
   const now = new Date().toISOString();
 
-  await upsertOrder(
-    {
+  const customerName = payload.customerName.trim() || null;
+  const customerPhone = payload.customerPhone.trim() || null;
+  const customerEmail = payload.customerEmail.trim().toLowerCase() || null;
+
+  // Register / reuse the walk-in member when we have something to remember them by.
+  let customerId: string | null = null;
+  if (customerName && (customerEmail || customerPhone)) {
+    const member = await createMember({
+      fullName: customerName,
+      phone: customerPhone,
+      email: customerEmail,
+      location: payload.location,
+    });
+    customerId = member?.id ?? null;
+  }
+
+  const order: StoredOrder = {
       id: sessionId,
       sessionId,
       paymentIntentId: null,
       createdAt: now,
       updatedAt: now,
       recordedFrom: "admin-walk-in",
-      customerId: null,
-      customerName: payload.customerName.trim() || null,
-      customerEmail: null,
-      customerPhone: payload.customerPhone.trim() || null,
+      customerId,
+      customerName,
+      customerEmail,
+      customerPhone,
       paymentStatus: "paid",
       checkoutStatus: "complete",
       currency: "myr",
@@ -471,9 +499,9 @@ export async function recordCounterSaleAction(payload: CounterSalePayload) {
         subtotalAmount: l.unitAmountCents * l.quantity,
         totalAmount: l.unitAmountCents * l.quantity,
       })),
-    },
-    { preserveAdminFields: false },
-  );
+  };
+
+  await upsertOrder(order, { preserveAdminFields: false });
 
   await decrementStockForOrderLines(
     lineItems.map((l) => ({ slug: l.slug, quantity: l.quantity })),
@@ -484,7 +512,27 @@ export async function recordCounterSaleAction(payload: CounterSalePayload) {
   revalidatePath("/admin/stock");
   revalidatePath("/admin/counter-sale");
 
-  return { ok: true as const, sessionId };
+  // Receipt delivery. Email is fire-and-forget; the sale is already saved.
+  let emailedReceipt = false;
+  if (customerEmail) {
+    emailedReceipt = await sendReceiptEmail(order).catch(() => false);
+  }
+
+  const receiptUrl = `${getSiteUrl()}/receipt/${sessionId}`;
+  const waDigits = customerPhone ? toWhatsAppDigits(customerPhone) : null;
+  const whatsAppUrl = waDigits
+    ? `https://wa.me/${waDigits}?text=${encodeURIComponent(
+        `Terima kasih! Resit pembelian anda di ${getLocationName(payload.location)}: ${receiptUrl}`,
+      )}`
+    : null;
+
+  return {
+    ok: true as const,
+    sessionId,
+    receiptUrl,
+    whatsAppUrl,
+    emailedReceipt,
+  };
 }
 
 export async function generateDhlShipmentBatchAction(formData: FormData) {
