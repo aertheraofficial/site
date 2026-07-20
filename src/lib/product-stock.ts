@@ -1,5 +1,10 @@
 import { products, type Product } from "@/data/products";
 import { getAdminProductBySlug, getAdminProducts } from "@/lib/admin-products";
+import {
+  applyProductOverride,
+  applyProductOverrides,
+  getProductOverrides,
+} from "@/lib/product-overrides";
 import { getSupabaseAdmin, isSupabaseOrderStoreConfigured } from "@/lib/supabase-admin";
 
 export const ONLINE_LOCATION = "online";
@@ -88,30 +93,40 @@ function applyOverrides(list: Product[], overrides: Map<string, StockOverride>) 
 
 /** Customer-facing / catalog use — always the online pool. */
 export async function getProductsWithStock(): Promise<Product[]> {
-  const [overrides, adminProducts] = await Promise.all([
+  const [overrides, adminProducts, productOverrides] = await Promise.all([
     getStockOverrides(ONLINE_LOCATION),
     getAdminProducts(),
+    getProductOverrides(),
   ]);
-  return applyOverrides([...products, ...adminProducts], overrides);
+  // Admin field edits (price/name/…) first, then stock (quantity/availability) wins.
+  const edited = applyProductOverrides([...products, ...adminProducts], productOverrides);
+  return applyOverrides(edited, overrides);
 }
 
 export async function getProductBySlugWithStock(slug: string): Promise<Product | null> {
-  const product =
+  const base =
     products.find((entry) => entry.slug === slug) ?? (await getAdminProductBySlug(slug));
-  if (!product) return null;
+  if (!base) return null;
 
-  const overrides = await getStockOverrides(ONLINE_LOCATION);
+  const [overrides, productOverrides] = await Promise.all([
+    getStockOverrides(ONLINE_LOCATION),
+    getProductOverrides(),
+  ]);
+  const edit = productOverrides.get(slug);
+  const product = edit ? applyProductOverride(base, edit) : base;
   const override = overrides.get(slug);
   return override ? withOverride(product, override) : product;
 }
 
 /** Admin use — stock for a specific shop/warehouse location. */
 export async function getProductsWithStockAtLocation(location: string): Promise<Product[]> {
-  const [overrides, adminProducts] = await Promise.all([
+  const [overrides, adminProducts, productOverrides] = await Promise.all([
     getStockOverrides(location),
     getAdminProducts(),
+    getProductOverrides(),
   ]);
-  return applyOverrides([...products, ...adminProducts], overrides);
+  const edited = applyProductOverrides([...products, ...adminProducts], productOverrides);
+  return applyOverrides(edited, overrides);
 }
 
 /** For checkout: current tracked quantity per slug in the online pool. Null = not tracked. */

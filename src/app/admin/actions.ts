@@ -33,6 +33,7 @@ import {
   setProductQuantity,
 } from "@/lib/product-stock";
 import { createAdminProduct, uploadProductImage } from "@/lib/admin-products";
+import { setProductOverride, type ProductOverride } from "@/lib/product-overrides";
 import { createMember } from "@/lib/members";
 import { sendReceiptEmail } from "@/lib/receipt-email";
 import { getSiteUrl } from "@/lib/store-config";
@@ -363,6 +364,43 @@ export type CounterSaleLine = {
   slug: string;
   quantity: number;
 };
+
+export async function updateProductAction(formData: FormData) {
+  await requireAdminSession("/admin/products");
+
+  const slug = String(formData.get("slug") ?? "").trim();
+  if (!slug) redirect("/admin/products?error=missing-slug");
+
+  const name = String(formData.get("name") ?? "").trim();
+  const newCategoryLabel = String(formData.get("newCategoryLabel") ?? "").trim();
+  const categoryLabel =
+    newCategoryLabel || String(formData.get("categoryLabel") ?? "").trim();
+  const size = String(formData.get("size") ?? "").trim();
+  const price = Number(String(formData.get("price") ?? "").trim());
+  const imageFile = formData.get("image");
+
+  const editPath = `/admin/products/${encodeURIComponent(slug)}/edit`;
+  if (!name || !categoryLabel || !size || !Number.isFinite(price) || price <= 0) {
+    redirect(`${editPath}?error=missing-fields`);
+  }
+
+  const fields: ProductOverride = { name, categoryLabel, size, price };
+  try {
+    if (imageFile instanceof File && imageFile.size > 0) {
+      fields.imageUrl = await uploadProductImage(imageFile);
+    }
+    await setProductOverride(slug, fields);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "save-failed";
+    redirect(`${editPath}?error=${encodeURIComponent(message)}`);
+  }
+
+  revalidatePath("/admin/products");
+  revalidatePath("/products");
+  revalidatePath("/");
+  revalidatePath(`/product-page/${slug}`);
+  redirect("/admin/products?saved=1");
+}
 
 export type CounterSalePayload = {
   lines: CounterSaleLine[];
