@@ -11,6 +11,7 @@ import {
   isLocationId,
 } from "@/lib/product-stock";
 import type { Product } from "@/data/products";
+import { PREORDER_THRESHOLD } from "@/lib/product-availability";
 
 type StockPageProps = {
   searchParams: Promise<{
@@ -23,7 +24,9 @@ type StockPageProps = {
   }>;
 };
 
-const LOW_STOCK_THRESHOLD = 5;
+// Shared with the storefront so "Low Stock" in admin matches "Pre-order" for
+// customers: more than this is In stock, 1..this is Low/Pre-order, 0 is Sold Out.
+const LOW_STOCK_THRESHOLD = PREORDER_THRESHOLD;
 
 type StockState = "sold-out" | "low-stock" | "in-stock" | "pre-order";
 

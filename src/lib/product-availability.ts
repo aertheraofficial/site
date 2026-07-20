@@ -15,48 +15,18 @@ function labelForTrackedQuantity(quantity: number): ProductAvailabilityLabel {
   return "Available";
 }
 
-function getInventoryValue(product: Pick<Product, "details">) {
-  return (
-    product.details.find(
-      (detail) => detail.label.trim().toLowerCase() === "inventory",
-    )?.value ?? ""
-  );
-}
-
-function getInventoryCount(inventoryValue: string) {
-  const numericMatch = inventoryValue.replaceAll(",", "").match(/\d+(?:\.\d+)?/);
-
-  if (!numericMatch) {
-    return null;
-  }
-
-  return Number(numericMatch[0]);
-}
-
 export function getStorefrontAvailabilityLabel(
   product: Pick<Product, "details" | "availability" | "quantity">,
 ): ProductAvailabilityLabel {
-  // Tracked quantity (from the Manage Stock admin page) is authoritative when set.
+  // Only stock set in Manage Stock can show as In stock: more than the
+  // threshold is Available, 1..threshold is Pre-order, 0 is Sold Out.
   if (typeof product.quantity === "number") {
     return labelForTrackedQuantity(product.quantity);
   }
 
-  if (product.availability === "Sold Out") {
-    return "Sold Out";
-  }
-
-  const inventoryValue = getInventoryValue(product);
-  const inventoryCount = getInventoryCount(inventoryValue);
-
-  if (inventoryCount !== null) {
-    return inventoryCount > 0 ? "Available" : "Sold Out";
-  }
-
-  if (inventoryValue.trim()) {
-    return "Pre-order";
-  }
-
-  return product.availability === "In stock" ? "Available" : "Pre-order";
+  // Until admin sets a quantity, a product is Pre-order by default — never shown
+  // as In stock — unless it has been explicitly marked Sold Out.
+  return product.availability === "Sold Out" ? "Sold Out" : "Pre-order";
 }
 
 export function isProductAvailableNow(
