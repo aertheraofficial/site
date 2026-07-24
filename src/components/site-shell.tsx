@@ -14,7 +14,7 @@ import { useAuth } from "@/components/auth-context";
 import { useCart } from "@/components/cart-context";
 import { products } from "@/data/products";
 import { siteInfo } from "@/data/site";
-import { startCheckout } from "@/lib/checkout";
+import { startQrCheckout } from "@/lib/checkout";
 import { formatMoney } from "@/lib/money";
 
 const MY_STATES = [
@@ -149,6 +149,10 @@ export function SiteShell({ children }: { children: ReactNode }) {
   const [searchValue, setSearchValue] = useState("");
   const [cartError, setCartError] = useState("");
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [qrOrder, setQrOrder] = useState<{
+    orderId: string;
+    amount: number;
+  } | null>(null);
   const [fulfillmentType, setFulfillmentType] = useState<"delivery" | "pickup">(
     "delivery",
   );
@@ -241,17 +245,20 @@ export function SiteShell({ children }: { children: ReactNode }) {
     setIsCheckingOut(true);
 
     try {
-      await startCheckout(
+      const result = await startQrCheckout(
         items.map((item) => ({ slug: item.slug, quantity: item.quantity })),
         fulfillmentType,
         fulfillmentType === "delivery" ? deliveryAddress : undefined,
       );
+      setQrOrder(result);
+      closeCart();
     } catch (error) {
       setCartError(
         error instanceof Error
           ? error.message
           : "Unable to start checkout right now.",
       );
+    } finally {
       setIsCheckingOut(false);
     }
   }
@@ -1053,14 +1060,14 @@ export function SiteShell({ children }: { children: ReactNode }) {
                   className="mt-4 inline-flex h-12 w-full items-center justify-center rounded-full bg-[#201d17] px-5 text-sm font-semibold text-white transition hover:opacity-92 disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {isCheckingOut
-                    ? "Redirecting to payment..."
+                    ? "Preparing QR..."
                     : user
-                      ? "Proceed to Payment"
+                      ? "Pay with DuitNow QR"
                       : "Sign in to Checkout"}
                 </button>
                 <p className="mt-3 text-xs leading-6 text-[#6a6258]">
                   {user
-                    ? "Secure payment via ToyyibPay."
+                    ? "Scan the DuitNow QR with any Malaysian banking app to pay."
                     : "You need an account to track your order."}
                 </p>
               </div>
@@ -1068,6 +1075,86 @@ export function SiteShell({ children }: { children: ReactNode }) {
           )}
         </aside>
       </div>
+
+      {qrOrder ? (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 px-4 py-6 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-label="DuitNow QR payment"
+          onClick={() => setQrOrder(null)}
+        >
+          <div
+            className="relative max-h-full w-full max-w-md overflow-y-auto rounded-[1.75rem] bg-white p-6 text-center shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setQrOrder(null)}
+              aria-label="Close payment"
+              className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-[#f2ece2] text-[#201d17] transition hover:bg-[#e6dccd]"
+            >
+              ✕
+            </button>
+
+            <h2 className="text-xl font-bold text-[#201d17]">Scan to Pay</h2>
+            <p className="mt-1 text-sm text-[#6a6258]">
+              Pay with DuitNow QR using any Malaysian banking or e-wallet app.
+            </p>
+
+            <div className="mt-4 rounded-[1.25rem] bg-[#f7f2ea] px-4 py-4">
+              <p className="text-xs uppercase tracking-wide text-[#6a6258]">
+                Amount to pay
+              </p>
+              <p className="text-3xl font-bold text-[#201d17]">
+                {formatMoney(qrOrder.amount / 100)}
+              </p>
+            </div>
+
+            <div className="mt-4 flex justify-center">
+              <Image
+                src="/assets/duitnow-qr.png"
+                alt="Aerthera DuitNow QR code"
+                width={320}
+                height={520}
+                className="h-auto w-[240px] rounded-[1rem]"
+                priority
+              />
+            </div>
+
+            <div className="mt-4 rounded-[1rem] border border-black/8 px-4 py-3 text-left text-sm leading-6">
+              <p className="text-[#6a6258]">Order reference</p>
+              <p className="font-semibold text-[#201d17] break-all">
+                {qrOrder.orderId}
+              </p>
+            </div>
+
+            <ol className="mt-4 space-y-1.5 text-left text-sm leading-6 text-[#4a453d]">
+              <li>1. Open your banking / e-wallet app and choose DuitNow QR.</li>
+              <li>
+                2. Scan the code above and enter the exact amount{" "}
+                <span className="font-semibold">{formatMoney(qrOrder.amount / 100)}</span>.
+              </li>
+              <li>
+                3. Keep the payment receipt and quote your order reference so we
+                can confirm your order.
+              </li>
+            </ol>
+
+            <button
+              type="button"
+              onClick={() => setQrOrder(null)}
+              className="mt-6 inline-flex h-12 w-full items-center justify-center rounded-full bg-[#201d17] px-5 text-sm font-semibold text-white transition hover:opacity-92"
+            >
+              I&apos;ve Paid — Done
+            </button>
+            <p className="mt-3 text-xs leading-6 text-[#6a6258]">
+              Your order is saved as pending and will be confirmed once payment
+              is received.
+            </p>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }

@@ -34,11 +34,16 @@ export async function POST(request: Request) {
       lines?: RawLine[];
       fulfillmentType?: unknown;
       deliveryAddress?: RawDeliveryAddress;
+      paymentMethod?: unknown;
     };
 
     if (!Array.isArray(body.lines) || body.lines.length === 0) {
       return NextResponse.json({ error: "Your cart is empty." }, { status: 400 });
     }
+
+    // "qr" = manual DuitNow QR (customer scans & pays, admin confirms).
+    // Anything else falls back to the ToyyibPay hosted payment page.
+    const paymentMethod = body.paymentMethod === "qr" ? "qr" : "toyyibpay";
 
     const fulfillmentType = body.fulfillmentType === "pickup" ? "pickup" : "delivery";
 
@@ -115,7 +120,6 @@ export async function POST(request: Request) {
 
     const sessionId = `TP-${Date.now()}-${randomBytes(4).toString("hex")}`;
     const siteUrl = new URL(request.url).origin;
-    const { secretKey, categoryCode } = getToyyibPayConfig();
 
     // Resolve customer if they're logged in
     let customerId: string | null = null;
@@ -205,10 +209,23 @@ export async function POST(request: Request) {
       { preserveAdminFields: false },
     );
 
+    // Manual DuitNow QR: order is recorded as pending, customer pays by
+    // scanning the merchant QR, and an admin confirms the payment afterwards.
+    if (paymentMethod === "qr") {
+      return NextResponse.json({
+        mode: "qr",
+        orderId: sessionId,
+        amount: subtotalCents,
+        currency: "myr",
+      });
+    }
+
     const billDescription = lineItems
       .map((l) => `${l.name} x${l.quantity}`)
       .join(", ")
       .slice(0, 100);
+
+    const { secretKey, categoryCode } = getToyyibPayConfig();
 
     const bill = await createToyyibPayBill({
       userSecretKey: secretKey,
@@ -224,7 +241,7 @@ export async function POST(request: Request) {
       billPhone: customerPhone ?? undefined,
     });
 
-    return NextResponse.json({ url: bill.paymentUrl });
+    return NextResponse.json({ mode: "redirect", url: bill.paymentUrl });
   } catch (error) {
     return NextResponse.json(
       {
