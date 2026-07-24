@@ -12,6 +12,7 @@ import {
 } from "@/lib/product-stock";
 import type { Product } from "@/data/products";
 import { PREORDER_THRESHOLD } from "@/lib/product-availability";
+import { StockEditModal } from "./stock-edit-modal";
 
 type StockPageProps = {
   searchParams: Promise<{
@@ -402,12 +403,23 @@ export default async function ManageStockPage({ searchParams }: StockPageProps) 
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex gap-2">
-                              <Link
-                                href={`/admin/products/${product.slug}/edit`}
-                                className="inline-flex h-9 items-center whitespace-nowrap rounded-full bg-[#201d17] px-3.5 text-[0.66rem] font-semibold uppercase tracking-[0.14em] text-white transition hover:bg-[#2f2a22]"
-                              >
-                                Edit
-                              </Link>
+                              <StockEditModal
+                                product={{
+                                  slug: product.slug,
+                                  name: product.name,
+                                  categoryLabel: product.categoryLabel,
+                                  size: product.size,
+                                  price: product.price,
+                                  image: product.image,
+                                }}
+                                categories={allTypes}
+                                returnTo={buildLocationHref(
+                                  activeLocation,
+                                  query,
+                                  activeStatuses,
+                                  activeTypes,
+                                )}
+                              />
                               <form action={quickDecrementStockAction}>
                                 <input type="hidden" name="slug" value={product.slug} />
                                 <input type="hidden" name="location" value={activeLocation} />

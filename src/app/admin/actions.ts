@@ -379,9 +379,20 @@ export async function updateProductAction(formData: FormData) {
   const price = Number(String(formData.get("price") ?? "").trim());
   const imageFile = formData.get("image");
 
+  // Optional caller-supplied return path (e.g. the Manage Stock quick-edit
+  // modal wants to land back on /admin/stock, not the products list).
+  const rawReturnTo = String(formData.get("redirectTo") ?? "").trim();
+  const returnTo = rawReturnTo.startsWith("/admin/") ? rawReturnTo : null;
+  const withParam = (path: string, key: string, value: string) =>
+    `${path}${path.includes("?") ? "&" : "?"}${key}=${encodeURIComponent(value)}`;
+
   const editPath = `/admin/products/${encodeURIComponent(slug)}/edit`;
   if (!name || !categoryLabel || !size || !Number.isFinite(price) || price <= 0) {
-    redirect(`${editPath}?error=missing-fields`);
+    redirect(
+      returnTo
+        ? withParam(returnTo, "error", "missing-fields")
+        : `${editPath}?error=missing-fields`,
+    );
   }
 
   const fields: ProductOverride = { name, categoryLabel, size, price };
@@ -392,14 +403,19 @@ export async function updateProductAction(formData: FormData) {
     await setProductOverride(slug, fields);
   } catch (error) {
     const message = error instanceof Error ? error.message : "save-failed";
-    redirect(`${editPath}?error=${encodeURIComponent(message)}`);
+    redirect(
+      returnTo
+        ? withParam(returnTo, "error", message)
+        : `${editPath}?error=${encodeURIComponent(message)}`,
+    );
   }
 
   revalidatePath("/admin/products");
+  revalidatePath("/admin/stock");
   revalidatePath("/products");
   revalidatePath("/");
   revalidatePath(`/product-page/${slug}`);
-  redirect("/admin/products?saved=1");
+  redirect(returnTo ? withParam(returnTo, "saved", "1") : "/admin/products?saved=1");
 }
 
 export type CounterSalePayload = {
