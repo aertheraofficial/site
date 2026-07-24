@@ -46,7 +46,7 @@ begin
     where con.conrelid = 'public.product_stock'::regclass
       and con.contype in ('p', 'u')
       and (
-        select array_agg(a.attname order by a.attname)
+        select array_agg(a.attname::text order by a.attname::text)
         from unnest(con.conkey) k
         join pg_attribute a on a.attrelid = con.conrelid and a.attnum = k
       ) = array['slug']
