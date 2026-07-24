@@ -3,6 +3,7 @@ import Link from "next/link";
 import { formatMoney } from "@/lib/money";
 import { getStorefrontAvailabilityLabel } from "@/lib/product-availability";
 import { getProductsWithStock } from "@/lib/product-stock";
+import type { Product } from "@/data/products";
 
 type ProductsPageProps = {
   searchParams: Promise<{ q?: string; saved?: string; error?: string }>;
@@ -20,10 +21,29 @@ export default async function AdminProductsPage({ searchParams }: ProductsPagePr
           p.categoryLabel.toLowerCase().includes(query),
       )
     : all;
-  products.sort(
-    (a, b) =>
-      a.categoryLabel.localeCompare(b.categoryLabel) || a.name.localeCompare(b.name),
-  );
+
+  // Group by category ("parent name"): Balm, Essential Oil, ...
+  const groups = new Map<string, Product[]>();
+  for (const product of products) {
+    const key = product.categoryLabel || "Uncategorised";
+    const list = groups.get(key);
+    if (list) list.push(product);
+    else groups.set(key, [product]);
+  }
+  const groupList = [...groups.entries()]
+    .map(([category, list]) => {
+      const sorted = [...list].sort((a, b) => a.name.localeCompare(b.name));
+      const trackedList = sorted.filter((p) => typeof p.quantity === "number");
+      const totalStock = trackedList.reduce((sum, p) => sum + (p.quantity ?? 0), 0);
+      return {
+        category,
+        products: sorted,
+        count: sorted.length,
+        trackedCount: trackedList.length,
+        totalStock,
+      };
+    })
+    .sort((a, b) => a.category.localeCompare(b.category));
 
   return (
     <div>
@@ -36,8 +56,8 @@ export default async function AdminProductsPage({ searchParams }: ProductsPagePr
             Products
           </h2>
           <p className="mt-3 max-w-xl text-sm leading-6 text-[#5d574f]">
-            Edit any product&apos;s price, name, category or photo. Changes go live
-            immediately — no code deploy needed.
+            Grouped by category. Tap a group to expand or collapse. Stock is the
+            tracked quantity — set it in Manage Stock.
           </p>
         </div>
         <Link
@@ -69,58 +89,115 @@ export default async function AdminProductsPage({ searchParams }: ProductsPagePr
         />
       </form>
 
-      <div className="mt-6 overflow-hidden rounded-[1.25rem] border border-black/8 bg-white">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-black/8 bg-[#faf6ef] text-[0.68rem] uppercase tracking-[0.12em] text-[#8d7a5c]">
-            <tr>
-              <th className="px-4 py-3 font-semibold">Product</th>
-              <th className="px-4 py-3 font-semibold">Category</th>
-              <th className="px-4 py-3 font-semibold">Price</th>
-              <th className="px-4 py-3 font-semibold">Status</th>
-              <th className="px-4 py-3" />
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((product) => (
-              <tr key={product.slug} className="border-b border-black/5 last:border-0">
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <Image
-                      src={product.image}
-                      alt=""
-                      width={40}
-                      height={40}
-                      className="h-10 w-10 shrink-0 rounded-lg object-cover"
-                    />
-                    <div className="min-w-0">
-                      <p className="truncate font-medium text-[#201d17]">{product.name}</p>
-                      <p className="text-xs text-[#8d7a5c]">{product.size}</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-[#5d574f]">{product.categoryLabel}</td>
-                <td className="px-4 py-3 font-semibold text-[#201d17]">
-                  {formatMoney(product.price)}
-                </td>
-                <td className="px-4 py-3 text-[#5d574f]">
-                  {getStorefrontAvailabilityLabel(product)}
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <Link
-                    href={`/admin/products/${encodeURIComponent(product.slug)}/edit`}
-                    className="rounded-full border border-black/10 px-4 py-1.5 text-xs font-semibold text-[#201d17] transition hover:bg-[#f7f2ea]"
+      {groupList.length === 0 ? (
+        <p className="mt-6 rounded-[1.25rem] border border-black/8 bg-white px-4 py-8 text-center text-sm text-[#8d7a5c]">
+          No products found.
+        </p>
+      ) : (
+        <div className="mt-6 space-y-4">
+          {groupList.map((group) => (
+            <details
+              key={group.category}
+              open
+              className="group overflow-hidden rounded-[1.25rem] border border-black/8 bg-white"
+            >
+              <summary className="flex cursor-pointer select-none flex-wrap items-center justify-between gap-3 bg-[#faf6ef] px-5 py-4 [&::-webkit-details-marker]:hidden">
+                <div className="flex items-center gap-3">
+                  <svg
+                    className="h-4 w-4 shrink-0 text-[#8d7a5c] transition-transform group-open:rotate-90"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden
                   >
-                    Edit
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {products.length === 0 ? (
-          <p className="px-4 py-8 text-center text-sm text-[#8d7a5c]">No products found.</p>
-        ) : null}
-      </div>
+                    <path d="M7 5l6 5-6 5V5z" />
+                  </svg>
+                  <span className="font-display text-[1.15rem] tracking-[-0.02em] text-[#201d17]">
+                    {group.category}
+                  </span>
+                  <span className="rounded-full bg-[#efe6d9] px-2.5 py-0.5 text-[0.7rem] font-semibold text-[#8d7a5c]">
+                    {group.count} {group.count === 1 ? "product" : "products"}
+                  </span>
+                </div>
+                <span className="text-[0.78rem] font-semibold text-[#5d574f]">
+                  Total stock:{" "}
+                  <span className="text-[#201d17]">{group.totalStock}</span>
+                  {group.trackedCount < group.count ? (
+                    <span className="ml-1 font-normal text-[#8d7a5c]">
+                      ({group.count - group.trackedCount} not tracked)
+                    </span>
+                  ) : null}
+                </span>
+              </summary>
+
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[560px] text-left text-sm">
+                  <thead className="border-y border-black/8 text-[0.68rem] uppercase tracking-[0.12em] text-[#8d7a5c]">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold">Product</th>
+                      <th className="px-4 py-3 font-semibold">Price</th>
+                      <th className="px-4 py-3 font-semibold">Stock</th>
+                      <th className="px-4 py-3 font-semibold">Status</th>
+                      <th className="px-4 py-3" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {group.products.map((product) => {
+                      const isTracked = typeof product.quantity === "number";
+                      return (
+                        <tr
+                          key={product.slug}
+                          className="border-b border-black/5 last:border-0"
+                        >
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-3">
+                              <Image
+                                src={product.image}
+                                alt=""
+                                width={40}
+                                height={40}
+                                className="h-10 w-10 shrink-0 rounded-lg object-cover"
+                              />
+                              <div className="min-w-0">
+                                <p className="truncate font-medium text-[#201d17]">
+                                  {product.name}
+                                </p>
+                                <p className="text-xs text-[#8d7a5c]">{product.size}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 font-semibold text-[#201d17]">
+                            {formatMoney(product.price)}
+                          </td>
+                          <td className="px-4 py-3">
+                            {isTracked ? (
+                              <span className="font-semibold text-[#201d17]">
+                                {product.quantity}
+                              </span>
+                            ) : (
+                              <span className="text-[#b3a894]">—</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-[#5d574f]">
+                            {getStorefrontAvailabilityLabel(product)}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <Link
+                              href={`/admin/products/${encodeURIComponent(product.slug)}/edit`}
+                              className="rounded-full border border-black/10 px-4 py-1.5 text-xs font-semibold text-[#201d17] transition hover:bg-[#f7f2ea]"
+                            >
+                              Edit
+                            </Link>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </details>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
