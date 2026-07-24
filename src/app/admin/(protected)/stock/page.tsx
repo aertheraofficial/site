@@ -52,7 +52,10 @@ function getStockState(product: Product): StockState {
     return "in-stock";
   }
 
-  return product.availability === "Pre-order" ? "pre-order" : "in-stock";
+  // Untracked (no quantity set yet): mirror the storefront — Pre-order by
+  // default, never "In stock", unless it's been explicitly marked Sold Out.
+  // See getStorefrontAvailabilityLabel in product-availability.ts.
+  return product.availability === "Sold Out" ? "sold-out" : "pre-order";
 }
 
 function getStateBadgeClasses(state: StockState) {
