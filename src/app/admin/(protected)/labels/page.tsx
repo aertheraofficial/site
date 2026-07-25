@@ -1,4 +1,5 @@
 import QRCode from "qrcode";
+import { requirePermission } from "@/lib/staff-auth";
 import { getProductsWithStock } from "@/lib/product-stock";
 import { PrintButton } from "./print-button";
 
@@ -19,6 +20,7 @@ async function buildLabels() {
 }
 
 export default async function ProductLabelsPage() {
+  await requirePermission("labels");
   const labels = await buildLabels();
 
   return (

@@ -1,38 +1,34 @@
 import Link from "next/link";
 import { logoutAction } from "@/app/admin/actions";
-import { getAdminUsername, requireAdminSession } from "@/lib/admin-auth";
+import { actorHasPermission, requireActor } from "@/lib/staff-auth";
+import { ADMIN_PAGES } from "@/lib/staff-permissions";
 import { NavDropdown } from "@/components/admin/nav-dropdown";
-
-const NAV_GROUPS: { label: string; items: { href: string; label: string }[] }[] = [
-  {
-    label: "Fulfillment",
-    items: [
-      { href: "/admin/orders", label: "Orders" },
-      { href: "/admin/counter-sale", label: "Counter Sale" },
-    ],
-  },
-  {
-    label: "Catalog",
-    items: [
-      { href: "/admin/products", label: "Products" },
-      { href: "/admin/products/new", label: "Add Product" },
-      { href: "/admin/stock", label: "Manage Stock" },
-      { href: "/admin/labels", label: "Print Labels" },
-    ],
-  },
-  {
-    label: "Marketing",
-    items: [{ href: "/admin/social", label: "Social" }],
-  },
-];
 
 export default async function ProtectedAdminLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  await requireAdminSession();
-  const adminUsername = getAdminUsername();
+  const actor = await requireActor();
+
+  const visiblePages = ADMIN_PAGES.filter((page) =>
+    actorHasPermission(actor, page.key),
+  );
+
+  // Group visible pages by their group label, preserving registry order.
+  const navGroups: { label: string; items: { href: string; label: string }[] }[] = [];
+  for (const page of visiblePages) {
+    let group = navGroups.find((g) => g.label === page.group);
+    if (!group) {
+      group = { label: page.group, items: [] };
+      navGroups.push(group);
+    }
+    group.items.push({ href: page.href, label: page.label });
+  }
+
+  const actorName = actor.type === "admin" ? actor.name : actor.staff.fullName;
+  const actorRole =
+    actor.type === "admin" ? "Administrator" : actor.staff.position || "Staff";
 
   return (
     <div className="min-h-screen">
@@ -45,18 +41,26 @@ export default async function ProtectedAdminLayout({
               </p>
               <div className="mt-2 flex flex-wrap items-center gap-3">
                 <h1 className="font-display text-[2rem] leading-none tracking-[-0.05em] text-[#201d17]">
-                  Order Management
+                  Dashboard
                 </h1>
                 <span className="rounded-full border border-black/8 bg-white px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#6a6258]">
-                  {adminUsername}
+                  {actorName} · {actorRole}
                 </span>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              {NAV_GROUPS.map((group) => (
+              {navGroups.map((group) => (
                 <NavDropdown key={group.label} label={group.label} items={group.items} />
               ))}
+              {actor.type === "staff" ? (
+                <Link
+                  href="/admin/profile"
+                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-black/8 px-5 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#201d17] transition hover:bg-black/4"
+                >
+                  My Profile
+                </Link>
+              ) : null}
               <Link
                 href="/products"
                 className="inline-flex min-h-11 items-center justify-center rounded-full border border-black/8 px-5 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#201d17] transition hover:bg-black/4"

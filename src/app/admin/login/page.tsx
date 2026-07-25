@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { loginAction } from "@/app/admin/actions";
-import { hasAdminSession, isAdminConfigured } from "@/lib/admin-auth";
+import { isAdminConfigured } from "@/lib/admin-auth";
+import { getActor } from "@/lib/staff-auth";
 
 type AdminLoginPageProps = {
   searchParams: Promise<{
@@ -18,8 +19,8 @@ const LOGIN_ERRORS: Record<string, string> = {
 export default async function AdminLoginPage({
   searchParams,
 }: AdminLoginPageProps) {
-  if (await hasAdminSession()) {
-    redirect("/admin/orders");
+  if (await getActor()) {
+    redirect("/admin");
   }
 
   const { error, next } = await searchParams;

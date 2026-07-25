@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requirePermission } from "@/lib/staff-auth";
 import { CounterSaleForm } from "@/components/admin/counter-sale-form";
 import { SHOP_LOCATIONS, getProductsWithStockAtLocation } from "@/lib/product-stock";
 
@@ -7,6 +8,7 @@ type CounterSalePageProps = {
 };
 
 export default async function CounterSalePage({ searchParams }: CounterSalePageProps) {
+  await requirePermission("counter-sale");
   const { location } = await searchParams;
   const activeLocation =
     SHOP_LOCATIONS.find((loc) => loc.id === location)?.id ?? SHOP_LOCATIONS[0].id;

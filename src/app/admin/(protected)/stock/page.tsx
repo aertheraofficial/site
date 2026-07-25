@@ -13,6 +13,7 @@ import {
 import type { Product } from "@/data/products";
 import { PREORDER_THRESHOLD } from "@/lib/product-availability";
 import { StockEditModal } from "./stock-edit-modal";
+import { requirePermission } from "@/lib/staff-auth";
 
 type StockPageProps = {
   searchParams: Promise<{
@@ -95,6 +96,7 @@ function buildLocationHref(
 }
 
 export default async function ManageStockPage({ searchParams }: StockPageProps) {
+  await requirePermission("stock");
   const { q, status, location, type, saved, error } = await searchParams;
   const query = q?.trim() ?? "";
   const normalizedQuery = query.toLowerCase();

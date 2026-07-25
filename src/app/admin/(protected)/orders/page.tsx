@@ -2,6 +2,7 @@ import Link from "next/link";
 import { generateDhlShipmentBatchAction } from "@/app/admin/actions";
 import { isDhlEcommerceConfigured } from "@/lib/dhl-ecommerce";
 import { formatMoney } from "@/lib/money";
+import { requirePermission } from "@/lib/staff-auth";
 import {
   type FulfillmentStatus,
   type FulfillmentType,
@@ -155,6 +156,7 @@ function getDhlSelectionState(order: StoredOrder) {
 export default async function AdminOrdersPage({
   searchParams,
 }: OrdersPageProps) {
+  await requirePermission("orders");
   const { q, status, type, error, shipmentError } = await searchParams;
   const query = q?.trim() ?? "";
   const normalizedQuery = query.toLowerCase();

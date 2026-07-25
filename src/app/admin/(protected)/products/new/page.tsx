@@ -1,4 +1,5 @@
 import { createAdminProductAction } from "@/app/admin/actions";
+import { requirePermission } from "@/lib/staff-auth";
 import { getProductsWithStock } from "@/lib/product-stock";
 
 type NewProductPageProps = {
@@ -11,6 +12,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 };
 
 export default async function NewProductPage({ searchParams }: NewProductPageProps) {
+  await requirePermission("products");
   const { error } = await searchParams;
   const message = error ? (ERROR_MESSAGES[error] ?? error) : null;
 

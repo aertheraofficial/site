@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requirePermission } from "@/lib/staff-auth";
 import { notFound } from "next/navigation";
 import { updateOrderManagementAction } from "@/app/admin/actions";
 import { formatMoney } from "@/lib/money";
@@ -33,6 +34,7 @@ export default async function AdminOrderDetailPage({
   params,
   searchParams,
 }: OrderDetailPageProps) {
+  await requirePermission("orders");
   const [{ sessionId }, { saved }] = await Promise.all([params, searchParams]);
   const order = await getOrderBySessionId(sessionId);
 

@@ -6,9 +6,26 @@ import {
   clearAdminSession,
   createAdminSession,
   isAdminConfigured,
-  requireAdminSession,
   validateAdminCredentials,
 } from "@/lib/admin-auth";
+import {
+  authenticateStaff,
+  clearStaffSession,
+  createStaffSession,
+  hashPassword,
+  requireAdminActor,
+  requirePermission,
+} from "@/lib/staff-auth";
+import {
+  createStaff,
+  getStaffById,
+  setStaffPassword,
+  updateStaff,
+  upsertPayslip,
+  type StaffWriteInput,
+} from "@/lib/staff";
+import { calcPayroll } from "@/lib/payroll";
+import { ASSIGNABLE_PAGES, isPageKey, type PageKey } from "@/lib/staff-permissions";
 import {
   createDhlShipmentBatch,
   getDhlTrackingPortalUrl,
@@ -137,18 +154,28 @@ export async function loginAction(formData: FormData) {
     redirect("/admin/login?error=unconfigured");
   }
 
-  if (!validateAdminCredentials(username, password)) {
-    redirect(
-      `/admin/login?error=invalid&next=${encodeURIComponent(nextPath)}`,
-    );
+  if (validateAdminCredentials(username, password)) {
+    await clearStaffSession();
+    await createAdminSession();
+    redirect(nextPath);
   }
 
-  await createAdminSession();
-  redirect(nextPath);
+  // Not the master admin — try a staff account.
+  const staffId = await authenticateStaff(username, password);
+  if (staffId) {
+    await clearAdminSession();
+    await createStaffSession(staffId);
+    // Staff may not have access to the requested page; the index routes them
+    // to their first allowed page (or their profile).
+    redirect(nextPath === "/admin/orders" ? "/admin" : nextPath);
+  }
+
+  redirect(`/admin/login?error=invalid&next=${encodeURIComponent(nextPath)}`);
 }
 
 export async function logoutAction() {
   await clearAdminSession();
+  await clearStaffSession();
   redirect("/admin/login?error=logged-out");
 }
 
@@ -162,7 +189,7 @@ export async function updateOrderManagementAction(formData: FormData) {
     redirect("/admin/orders?error=missing-order");
   }
 
-  await requireAdminSession(`/admin/orders/${encodeURIComponent(sessionId)}`);
+  await requirePermission("orders", `/admin/orders/${encodeURIComponent(sessionId)}`);
 
   const nextStatus =
     typeof formData.get("fulfillmentStatus") === "string"
@@ -242,7 +269,7 @@ function stockReturnPath(location: string) {
 }
 
 export async function setProductQuantityAction(formData: FormData) {
-  await requireAdminSession("/admin/stock");
+  await requirePermission("stock", "/admin/stock");
 
   const slug = getRequiredSlug(formData);
   const location = getRequiredLocation(formData);
@@ -269,7 +296,7 @@ export async function setProductQuantityAction(formData: FormData) {
 }
 
 export async function quickDecrementStockAction(formData: FormData) {
-  await requireAdminSession("/admin/stock");
+  await requirePermission("stock", "/admin/stock");
 
   const slug = getRequiredSlug(formData);
   const location = getRequiredLocation(formData);
@@ -289,7 +316,7 @@ export async function quickDecrementStockAction(formData: FormData) {
 }
 
 export async function markProductPreorderAction(formData: FormData) {
-  await requireAdminSession("/admin/stock");
+  await requirePermission("stock", "/admin/stock");
 
   const slug = getRequiredSlug(formData);
   const location = getRequiredLocation(formData);
@@ -309,7 +336,7 @@ export async function markProductPreorderAction(formData: FormData) {
 }
 
 export async function createAdminProductAction(formData: FormData) {
-  await requireAdminSession("/admin/products/new");
+  await requirePermission("products", "/admin/products/new");
 
   const name = String(formData.get("name") ?? "").trim();
   const newCategoryLabel = String(formData.get("newCategoryLabel") ?? "").trim();
@@ -366,7 +393,7 @@ export type CounterSaleLine = {
 };
 
 export async function updateProductAction(formData: FormData) {
-  await requireAdminSession("/admin/products");
+  await requirePermission("products", "/admin/products");
 
   const slug = String(formData.get("slug") ?? "").trim();
   if (!slug) redirect("/admin/products?error=missing-slug");
@@ -436,7 +463,7 @@ function toWhatsAppDigits(phone: string): string | null {
 }
 
 export async function recordCounterSaleAction(payload: CounterSalePayload) {
-  await requireAdminSession("/admin/counter-sale");
+  await requirePermission("counter-sale", "/admin/counter-sale");
 
   if (!isLocationId(payload.location) || payload.location === "online") {
     return { ok: false as const, error: "Choose which shop this sale happened at." };
@@ -591,7 +618,7 @@ export async function recordCounterSaleAction(payload: CounterSalePayload) {
 
 export async function generateDhlShipmentBatchAction(formData: FormData) {
   const returnTo = sanitizeNextPath(formData.get("returnTo"));
-  await requireAdminSession(returnTo);
+  await requirePermission("orders", returnTo);
 
   if (!isDhlEcommerceConfigured()) {
     redirect(
@@ -670,7 +697,7 @@ export async function generateDhlShipmentBatchAction(formData: FormData) {
 }
 
 export async function generateSocialCalendarAction(formData: FormData) {
-  await requireAdminSession("/admin/social");
+  await requirePermission("social", "/admin/social");
 
   const productSlug =
     typeof formData.get("productSlug") === "string"
@@ -701,7 +728,7 @@ export async function generateSocialCalendarAction(formData: FormData) {
 }
 
 export async function generateReviewPublishSocialAdAction(formData: FormData) {
-  await requireAdminSession("/admin/social");
+  await requirePermission("social", "/admin/social");
 
   const productSlug =
     typeof formData.get("productSlug") === "string"
@@ -781,8 +808,164 @@ export async function generateReviewPublishSocialAdAction(formData: FormData) {
   redirect("/admin/social?published=1");
 }
 
+// --- Staff & payroll ---
+
+function textField(formData: FormData, key: string): string {
+  const value = formData.get(key);
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function textOrNullField(formData: FormData, key: string): string | null {
+  const value = textField(formData, key);
+  return value ? value : null;
+}
+
+function numberField(formData: FormData, key: string): number {
+  const value = Number(textField(formData, key));
+  return Number.isFinite(value) ? value : 0;
+}
+
+function readPermissions(formData: FormData): PageKey[] {
+  const raw = formData.getAll("permissions").map(String);
+  return raw.filter(
+    (key): key is PageKey =>
+      isPageKey(key) && ASSIGNABLE_PAGES.some((page) => page.key === key),
+  );
+}
+
+function readStaffFields(formData: FormData): Omit<StaffWriteInput, "isActive"> & {
+  isActive: boolean;
+} {
+  const baseSalaryText = textField(formData, "baseSalary");
+  return {
+    username: textField(formData, "username").toLowerCase(),
+    fullName: textField(formData, "fullName"),
+    position: textOrNullField(formData, "position"),
+    phone: textOrNullField(formData, "phone"),
+    email: textOrNullField(formData, "email"),
+    icNumber: textOrNullField(formData, "icNumber"),
+    bankName: textOrNullField(formData, "bankName"),
+    bankAccount: textOrNullField(formData, "bankAccount"),
+    joinDate: textOrNullField(formData, "joinDate"),
+    baseSalary: baseSalaryText ? numberField(formData, "baseSalary") : null,
+    permissions: readPermissions(formData),
+    isActive: textField(formData, "isActive") !== "false",
+  };
+}
+
+export async function createStaffAction(formData: FormData) {
+  await requireAdminActor("/admin/staff");
+
+  const fields = readStaffFields(formData);
+  const password = textField(formData, "password");
+
+  if (!fields.username || !fields.fullName || password.length < 6) {
+    redirect("/admin/staff/new?error=missing-fields");
+  }
+
+  let newId = "";
+  try {
+    const staff = await createStaff({
+      ...fields,
+      passwordHash: hashPassword(password),
+    });
+    newId = staff.id;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to create staff.";
+    redirect(`/admin/staff/new?error=${encodeURIComponent(message)}`);
+  }
+
+  revalidatePath("/admin/staff");
+  redirect(`/admin/staff/${newId}?saved=1`);
+}
+
+export async function updateStaffAction(formData: FormData) {
+  await requireAdminActor("/admin/staff");
+
+  const id = textField(formData, "id");
+  if (!id) redirect("/admin/staff?error=missing-staff");
+
+  const fields = readStaffFields(formData);
+  const password = textField(formData, "password");
+
+  if (!fields.username || !fields.fullName) {
+    redirect(`/admin/staff/${id}?error=missing-fields`);
+  }
+  if (password && password.length < 6) {
+    redirect(`/admin/staff/${id}?error=weak-password`);
+  }
+
+  try {
+    await updateStaff(id, fields);
+    if (password) {
+      await setStaffPassword(id, hashPassword(password));
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to update staff.";
+    redirect(`/admin/staff/${id}?error=${encodeURIComponent(message)}`);
+  }
+
+  revalidatePath("/admin/staff");
+  revalidatePath(`/admin/staff/${id}`);
+  redirect(`/admin/staff/${id}?saved=1`);
+}
+
+export async function createPayslipAction(formData: FormData) {
+  await requireAdminActor("/admin/staff");
+
+  const staffId = textField(formData, "staffId");
+  if (!staffId) redirect("/admin/staff?error=missing-staff");
+
+  const staff = await getStaffById(staffId);
+  if (!staff) redirect("/admin/staff?error=missing-staff");
+
+  const periodMonth = Math.min(
+    12,
+    Math.max(1, Math.round(numberField(formData, "periodMonth"))),
+  );
+  const periodYear = Math.round(numberField(formData, "periodYear"));
+  if (!periodYear || periodYear < 2000) {
+    redirect(`/admin/staff/${staffId}?error=bad-period`);
+  }
+
+  const result = calcPayroll({
+    basic: numberField(formData, "basic"),
+    allowances: numberField(formData, "allowances"),
+    pcb: numberField(formData, "pcb"),
+    otherDeductions: numberField(formData, "otherDeductions"),
+  });
+
+  let payslipId = "";
+  try {
+    const payslip = await upsertPayslip({
+      staffId,
+      periodMonth,
+      periodYear,
+      basic: result.basic,
+      allowances: result.allowances,
+      epfEmployee: result.epfEmployee,
+      epfEmployer: result.epfEmployer,
+      socsoEmployee: result.socsoEmployee,
+      eisEmployee: result.eisEmployee,
+      pcb: result.pcb,
+      otherDeductions: result.otherDeductions,
+      gross: result.gross,
+      net: result.net,
+      notes: textOrNullField(formData, "notes"),
+      issued: textField(formData, "issued") === "true",
+    });
+    payslipId = payslip.id;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to save payslip.";
+    redirect(`/admin/staff/${staffId}?error=${encodeURIComponent(message)}`);
+  }
+
+  revalidatePath(`/admin/staff/${staffId}`);
+  redirect(`/admin/payslips/${payslipId}`);
+}
+
 export async function generateReviewCreateMetaAdAction(formData: FormData) {
-  await requireAdminSession("/admin/social");
+  await requirePermission("social", "/admin/social");
 
   const productSlug =
     typeof formData.get("productSlug") === "string"
@@ -871,7 +1054,7 @@ export async function generateReviewCreateMetaAdAction(formData: FormData) {
 }
 
 export async function updateSocialDraftStatusAction(formData: FormData) {
-  await requireAdminSession("/admin/social");
+  await requirePermission("social", "/admin/social");
 
   const draftId =
     typeof formData.get("draftId") === "string" ? String(formData.get("draftId")) : "";
@@ -904,7 +1087,7 @@ export async function updateSocialDraftStatusAction(formData: FormData) {
 }
 
 export async function regenerateSocialDraftAction(formData: FormData) {
-  await requireAdminSession("/admin/social");
+  await requirePermission("social", "/admin/social");
 
   const draftId =
     typeof formData.get("draftId") === "string" ? String(formData.get("draftId")) : "";
@@ -925,7 +1108,7 @@ export async function regenerateSocialDraftAction(formData: FormData) {
 }
 
 export async function publishSocialDraftToMetaAction(formData: FormData) {
-  await requireAdminSession("/admin/social");
+  await requirePermission("social", "/admin/social");
 
   const draftId =
     typeof formData.get("draftId") === "string" ? String(formData.get("draftId")) : "";

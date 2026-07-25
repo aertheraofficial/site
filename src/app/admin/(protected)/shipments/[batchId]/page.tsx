@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requirePermission } from "@/lib/staff-auth";
 import { notFound } from "next/navigation";
 import {
   getShippingBatch,
@@ -21,6 +22,7 @@ export default async function AdminShipmentBatchPage({
   params,
   searchParams,
 }: ShipmentBatchPageProps) {
+  await requirePermission("orders");
   const [{ batchId }, { created }] = await Promise.all([params, searchParams]);
   const batch = await getShippingBatch(batchId);
 

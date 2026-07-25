@@ -4,12 +4,14 @@ import { formatMoney } from "@/lib/money";
 import { getStorefrontAvailabilityLabel } from "@/lib/product-availability";
 import { getProductsWithStock } from "@/lib/product-stock";
 import type { Product } from "@/data/products";
+import { requirePermission } from "@/lib/staff-auth";
 
 type ProductsPageProps = {
   searchParams: Promise<{ q?: string; saved?: string; error?: string }>;
 };
 
 export default async function AdminProductsPage({ searchParams }: ProductsPageProps) {
+  await requirePermission("products");
   const { q, saved, error } = await searchParams;
   const query = (q ?? "").trim().toLowerCase();
 

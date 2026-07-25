@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { updateProductAction } from "@/app/admin/actions";
+import { requirePermission } from "@/lib/staff-auth";
 import { getProductBySlugWithStock, getProductsWithStock } from "@/lib/product-stock";
 
 type EditProductPageProps = {
@@ -20,6 +21,7 @@ export default async function EditProductPage({
   params,
   searchParams,
 }: EditProductPageProps) {
+  await requirePermission("products");
   const { slug } = await params;
   const { error } = await searchParams;
   const product = await getProductBySlugWithStock(slug);
