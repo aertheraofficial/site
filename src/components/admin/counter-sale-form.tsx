@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { recordCounterSaleAction } from "@/app/admin/actions";
 import { formatMoney } from "@/lib/money";
@@ -58,6 +59,7 @@ export function CounterSaleForm({ products, location, locationName }: CounterSal
   const [lastSale, setLastSale] = useState<SaleReceipt | null>(null);
   const [scanning, setScanning] = useState(false);
   const [scanFeedback, setScanFeedback] = useState("");
+  const [showQr, setShowQr] = useState(false);
   const memberBoxRef = useRef<HTMLDivElement>(null);
 
   // Typeahead: look up existing members by name/phone as staff types.
@@ -418,8 +420,71 @@ export function CounterSaleForm({ products, location, locationName }: CounterSal
                 </button>
               ))}
             </div>
+            {paymentMethod === "DuitNow QR" ? (
+              <button
+                type="button"
+                onClick={() => setShowQr(true)}
+                className="mt-2 h-9 w-full rounded-full border border-[#b38a59] bg-[#faf1df] text-[0.72rem] font-semibold text-[#8b5e1d] transition hover:bg-[#f3e6cf]"
+              >
+                Show DuitNow QR to customer
+              </button>
+            ) : null}
           </div>
         </div>
+
+        {showQr ? (
+          <div
+            className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 px-4 py-6 backdrop-blur-sm"
+            role="dialog"
+            aria-modal="true"
+            aria-label="DuitNow QR"
+            onClick={() => setShowQr(false)}
+          >
+            <div
+              className="relative w-full max-w-sm rounded-[1.5rem] bg-white p-6 text-center shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => setShowQr(false)}
+                aria-label="Close"
+                className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-[#f2ece2] text-[#201d17] transition hover:bg-[#e6dccd]"
+              >
+                ✕
+              </button>
+              <h3 className="text-lg font-bold text-[#201d17]">Scan to Pay</h3>
+              {total > 0 ? (
+                <p className="mt-1 text-sm text-[#6a6258]">
+                  Amount:{" "}
+                  <span className="font-semibold text-[#201d17]">
+                    {formatMoney(total)}
+                  </span>
+                </p>
+              ) : null}
+              <div className="mt-4 flex justify-center">
+                <Image
+                  src="/assets/duitnow-qr.png"
+                  alt="Aerthera DuitNow QR"
+                  width={320}
+                  height={520}
+                  className="h-auto w-[240px] rounded-[1rem]"
+                  priority
+                />
+              </div>
+              <p className="mt-3 text-xs leading-5 text-[#6a6258]">
+                Ask the customer to scan with any Malaysian banking / e-wallet app,
+                then confirm payment received before recording the sale.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowQr(false)}
+                className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-full bg-[#201d17] px-5 text-sm font-semibold text-white transition hover:opacity-92"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        ) : null}
 
         {error ? (
           <p className="mt-4 rounded-[1rem] border border-[#e6b4b4] bg-[#fff0ef] px-4 py-3 text-sm leading-6 text-[#9b3d32]">
