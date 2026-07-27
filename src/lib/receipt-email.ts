@@ -8,7 +8,7 @@ import {
   getReceiptNumber,
   getWhatsAppUrl,
 } from "@/lib/receipt";
-import { getSiteUrl, isPublicHttpsOrigin } from "@/lib/store-config";
+import { getPublicSiteUrl } from "@/lib/store-config";
 
 /**
  * Emails the PDF receipt to the customer after a confirmed payment.
@@ -34,9 +34,7 @@ function getFromAddress() {
  * whenever the configured origin isn't a public HTTPS one (i.e. in dev).
  */
 function getLogoUrl() {
-  const origin = getSiteUrl();
-  const publicOrigin = isPublicHttpsOrigin(origin) ? origin : "https://www.aerthera.com";
-  return `${publicOrigin}/assets/brand/logo-lockup.jpeg`;
+  return `${getPublicSiteUrl()}/assets/brand/logo-lockup.jpeg`;
 }
 
 function escapeHtml(value: string) {
@@ -70,6 +68,22 @@ function buildEmailHtml(order: StoredOrder) {
         </tr>`;
     })
     .join("");
+
+  // Counter discount, shown between the lines and the total so the customer can
+  // see the price they were given.
+  const subtotal = order.subtotalAmount ?? 0;
+  const discount = order.discountPercent
+    ? Math.round((subtotal * order.discountPercent) / 100)
+    : 0;
+  const discountRow =
+    discount > 0
+      ? `<tr>
+                    <td style="padding:10px 0 0;font-size:14px;color:#8b5e1d;">Discount ${order.discountPercent}%</td>
+                    <td style="padding:10px 0 0;font-size:14px;color:#8b5e1d;text-align:right;white-space:nowrap;">
+                      -${escapeHtml(formatMoney(discount / 100))}
+                    </td>
+                  </tr>`
+      : "";
 
   return `<!doctype html>
 <html>
@@ -112,6 +126,7 @@ function buildEmailHtml(order: StoredOrder) {
 
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0 0;">
                   ${rows}
+                  ${discountRow}
                   <tr>
                     <td style="padding:14px 0 0;font-size:15px;font-weight:700;color:#201d17;">Total paid</td>
                     <td style="padding:14px 0 0;font-size:17px;font-weight:700;color:#201d17;text-align:right;">
@@ -167,24 +182,38 @@ function buildEmailHtml(order: StoredOrder) {
 </html>`;
 }
 
+export type ReceiptEmailResult = {
+  sent: boolean;
+  /** Where it went (or was meant to go), so staff can spot a mistyped address. */
+  address: string | null;
+  /** Short, staff-readable reason when `sent` is false. */
+  reason: string | null;
+};
+
 /**
- * Generates and emails the receipt. Returns true only if Resend accepted it.
+ * Generates and emails the receipt. `sent` is true only if Resend accepted it.
  * Never throws — callers are payment webhooks.
  */
-export async function sendReceiptEmail(order: StoredOrder): Promise<boolean> {
-  try {
-    const to = order.customerEmail?.trim();
+export async function sendReceiptEmail(
+  order: StoredOrder,
+): Promise<ReceiptEmailResult> {
+  const to = order.customerEmail?.trim() || null;
 
+  try {
     if (!to) {
       console.warn(`Receipt skipped for ${order.sessionId}: no customer email.`);
-      return false;
+      return { sent: false, address: null, reason: "No email address was entered." };
     }
 
     if (!isReceiptEmailConfigured()) {
       console.warn(
         `Receipt skipped for ${order.sessionId}: RESEND_API_KEY is not configured.`,
       );
-      return false;
+      return {
+        sent: false,
+        address: to,
+        reason: "Email sending is not configured on this server (RESEND_API_KEY).",
+      };
     }
 
     const pdfBytes = await generateReceiptPdf(order);
@@ -205,12 +234,16 @@ export async function sendReceiptEmail(order: StoredOrder): Promise<boolean> {
 
     if (error) {
       console.error(`Receipt email failed for ${order.sessionId}:`, error);
-      return false;
+      return { sent: false, address: to, reason: error.message || "Rejected by Resend." };
     }
 
-    return true;
+    return { sent: true, address: to, reason: null };
   } catch (error) {
     console.error(`Receipt email failed for ${order.sessionId}:`, error);
-    return false;
+    return {
+      sent: false,
+      address: to,
+      reason: error instanceof Error ? error.message : "Unknown error.",
+    };
   }
 }

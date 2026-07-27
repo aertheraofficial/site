@@ -1,4 +1,10 @@
+import {
+  publishSocialDraftToMetaAction,
+  regenerateSocialDraftAction,
+  updateSocialDraftStatusAction,
+} from "@/app/admin/actions";
 import { getSocialBrandContext } from "@/lib/social/brand";
+import { requirePermission } from "@/lib/staff-auth";
 import { readSocialContent, type SocialPostStatus } from "@/lib/social/store";
 import { SocialAgentForm } from "./social-agent-form";
 
@@ -6,6 +12,9 @@ type SocialPageProps = {
   searchParams: Promise<{
     published?: string;
     adCreated?: string;
+    created?: string;
+    saved?: string;
+    regenerated?: string;
     error?: string;
   }>;
 };
@@ -34,7 +43,8 @@ function getStatusClasses(status: SocialPostStatus) {
 }
 
 export default async function AdminSocialPage({ searchParams }: SocialPageProps) {
-  const { published, adCreated, error } = await searchParams;
+  await requirePermission("social");
+  const { published, adCreated, created, saved, regenerated, error } = await searchParams;
   const [store, brandContext] = await Promise.all([
     readSocialContent(),
     Promise.resolve(getSocialBrandContext()),
@@ -43,10 +53,11 @@ export default async function AdminSocialPage({ searchParams }: SocialPageProps)
     (draft) => draft.status === "manual_posted" || draft.status === "published",
   ).length;
   const productOptions = brandContext.productFacts;
-  const latestDraft =
-    [...store.drafts].sort((left, right) =>
-      right.createdAt.localeCompare(left.createdAt),
-    )[0] ?? null;
+  const queueDrafts = [...store.drafts].sort((left, right) =>
+    right.createdAt.localeCompare(left.createdAt),
+  );
+  const latestDraft = queueDrafts[0] ?? null;
+  const campaignsById = new Map(store.campaigns.map((campaign) => [campaign.id, campaign]));
 
   return (
     <div className="space-y-6">
@@ -109,6 +120,21 @@ export default async function AdminSocialPage({ searchParams }: SocialPageProps)
             Paid ad generated, reviewed, and created in Meta as paused.
           </p>
         ) : null}
+        {created ? (
+          <p className="mt-6 rounded-[1.25rem] border border-[#8cc8a4] bg-[#e9f7ee] px-4 py-3 text-sm leading-6 text-[#256542]">
+            Draft added to the approval queue below.
+          </p>
+        ) : null}
+        {saved ? (
+          <p className="mt-6 rounded-[1.25rem] border border-[#8cc8a4] bg-[#e9f7ee] px-4 py-3 text-sm leading-6 text-[#256542]">
+            Draft status updated.
+          </p>
+        ) : null}
+        {regenerated ? (
+          <p className="mt-6 rounded-[1.25rem] border border-[#8cc8a4] bg-[#e9f7ee] px-4 py-3 text-sm leading-6 text-[#256542]">
+            Draft regenerated and sent back for review.
+          </p>
+        ) : null}
         {error ? (
           <p
             data-testid="social-feedback-error"
@@ -126,6 +152,14 @@ export default async function AdminSocialPage({ searchParams }: SocialPageProps)
               ? "Meta ad creation failed. See the latest result below for details."
               : error === "meta-publish-failed"
               ? "Meta publishing failed. See the latest result below for details."
+              : error === "missing-draft"
+              ? "That draft could not be found. It may have already been removed."
+              : error === "flags-block-approval"
+              ? "This draft has reviewer flags and cannot be approved until they are resolved. Regenerate it instead."
+              : error === "flags-block-publish"
+              ? "This draft has reviewer flags and cannot be published until they are resolved."
+              : error === "publish-needs-approval"
+              ? "Approve this draft before publishing it to Meta."
               : error}
           </p>
         ) : null}
@@ -215,6 +249,148 @@ export default async function AdminSocialPage({ searchParams }: SocialPageProps)
                 </div>
               ) : null}
             </article>
+          )}
+        </div>
+      </section>
+
+      <section
+        data-testid="social-approval-queue"
+        className="rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_20px_60px_rgba(32,29,23,0.05)] sm:p-7"
+      >
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[#8d7a5c]">
+              Approval Queue
+            </p>
+            <h2 className="mt-3 font-display text-[2.5rem] leading-[0.95] tracking-[-0.05em] text-[#201d17]">
+              Review and manage drafts
+            </h2>
+          </div>
+          <a
+            href="/admin/social/export"
+            className="inline-flex h-11 items-center justify-center rounded-full border border-black/10 bg-white px-5 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#201d17] transition hover:bg-[#f7f2ea]"
+          >
+            Export CSV
+          </a>
+        </div>
+
+        <div className="mt-8 space-y-4">
+          {queueDrafts.length === 0 ? (
+            <div className="rounded-[1.75rem] border border-dashed border-black/10 bg-[#f7f2ea] px-6 py-10 text-center text-sm leading-7 text-[#5d574f]">
+              No drafts yet.
+            </div>
+          ) : (
+            queueDrafts.map((draft) => {
+              const campaign = campaignsById.get(draft.campaignId);
+              const canApprove = draft.status === "needs_review" && draft.reviewerFlags.length === 0;
+              const canReject = draft.status === "needs_review" || draft.status === "approved";
+              const canPublish =
+                (draft.platform === "facebook" || draft.platform === "instagram") &&
+                (draft.status === "approved" || draft.status === "scheduled") &&
+                draft.reviewerFlags.length === 0;
+              const canMarkManualPosted = draft.status === "approved" || draft.status === "scheduled";
+
+              return (
+                <article
+                  key={draft.id}
+                  data-testid="social-queue-item"
+                  className="rounded-[1.75rem] border border-black/8 bg-[#fcfaf6] p-5 shadow-[0_16px_48px_rgba(32,29,23,0.04)] sm:p-6"
+                >
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className={`inline-flex rounded-full border px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] ${getStatusClasses(draft.status)}`}>
+                      {draft.status.replace("_", " ")}
+                    </span>
+                    <span className="rounded-full border border-black/8 bg-white px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#6a6258]">
+                      {draft.platform}
+                    </span>
+                    <span className="rounded-full border border-black/8 bg-white px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#6a6258]">
+                      {formatDateTime(draft.scheduledFor)}
+                    </span>
+                    {campaign ? (
+                      <span className="text-sm text-[#8d7a5c]">{campaign.title}</span>
+                    ) : null}
+                  </div>
+
+                  <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-[#201d17]">
+                    {draft.caption}
+                  </p>
+                  {draft.hashtags.length > 0 ? (
+                    <p className="mt-2 text-sm leading-6 text-[#8d7a5c]">
+                      {draft.hashtags.join(" ")}
+                    </p>
+                  ) : null}
+
+                  {draft.reviewerFlags.length > 0 ? (
+                    <div className="mt-4 rounded-[1.25rem] border border-[#e6b4b4] bg-[#fff0ef] px-4 py-3 text-sm leading-6 text-[#9b3d32]">
+                      {draft.reviewerFlags.join(" ")}
+                    </div>
+                  ) : null}
+
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    {canApprove ? (
+                      <form action={updateSocialDraftStatusAction}>
+                        <input type="hidden" name="draftId" value={draft.id} />
+                        <input type="hidden" name="status" value="approved" />
+                        <button
+                          type="submit"
+                          className="inline-flex h-10 items-center justify-center rounded-full bg-[#201d17] px-5 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-white transition hover:opacity-92"
+                        >
+                          Approve
+                        </button>
+                      </form>
+                    ) : null}
+
+                    {canReject ? (
+                      <form action={updateSocialDraftStatusAction}>
+                        <input type="hidden" name="draftId" value={draft.id} />
+                        <input type="hidden" name="status" value="rejected" />
+                        <button
+                          type="submit"
+                          className="inline-flex h-10 items-center justify-center rounded-full border border-black/10 bg-white px-5 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[#201d17] transition hover:bg-[#f7f2ea]"
+                        >
+                          Reject
+                        </button>
+                      </form>
+                    ) : null}
+
+                    <form action={regenerateSocialDraftAction}>
+                      <input type="hidden" name="draftId" value={draft.id} />
+                      <button
+                        type="submit"
+                        className="inline-flex h-10 items-center justify-center rounded-full border border-black/10 bg-white px-5 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[#201d17] transition hover:bg-[#f7f2ea]"
+                      >
+                        Regenerate
+                      </button>
+                    </form>
+
+                    {canPublish ? (
+                      <form action={publishSocialDraftToMetaAction}>
+                        <input type="hidden" name="draftId" value={draft.id} />
+                        <button
+                          type="submit"
+                          className="inline-flex h-10 items-center justify-center rounded-full border border-black/10 bg-white px-5 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[#201d17] transition hover:bg-[#f7f2ea]"
+                        >
+                          Publish via Meta
+                        </button>
+                      </form>
+                    ) : null}
+
+                    {canMarkManualPosted ? (
+                      <form action={updateSocialDraftStatusAction}>
+                        <input type="hidden" name="draftId" value={draft.id} />
+                        <input type="hidden" name="status" value="manual_posted" />
+                        <button
+                          type="submit"
+                          className="inline-flex h-10 items-center justify-center rounded-full border border-black/10 bg-white px-5 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[#201d17] transition hover:bg-[#f7f2ea]"
+                        >
+                          Mark manually posted
+                        </button>
+                      </form>
+                    ) : null}
+                  </div>
+                </article>
+              );
+            })
           )}
         </div>
       </section>

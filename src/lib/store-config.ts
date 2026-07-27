@@ -87,6 +87,30 @@ export function getSiteUrl() {
   );
 }
 
+/** Live site, used when the configured origin is localhost (i.e. running admin locally). */
+const FALLBACK_PUBLIC_SITE_URL = "https://www.aerthera.com";
+
+/**
+ * Origin for links that leave the building — receipt links sent by WhatsApp or
+ * email, images in emails. A localhost origin is useless to a customer, so any
+ * non-public origin falls back to the live site.
+ */
+export function getPublicSiteUrl() {
+  const configured = getSiteUrl();
+
+  if (isPublicHttpsOrigin(configured)) {
+    return configured;
+  }
+
+  const explicit = process.env.PUBLIC_SITE_URL?.trim();
+
+  if (explicit && isPublicHttpsOrigin(explicit)) {
+    return new URL(explicit).origin;
+  }
+
+  return FALLBACK_PUBLIC_SITE_URL;
+}
+
 /**
  * Origin Meta uses to fetch product images and link targets (Instagram requires a public HTTPS URL).
  * When admin runs locally, set this to your deployed site (e.g. https://yourdomain.com) while

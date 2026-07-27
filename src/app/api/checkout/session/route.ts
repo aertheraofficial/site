@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import { randomBytes } from "crypto";
 import { createToyyibPayBill, getToyyibPayConfig } from "@/lib/toyyibpay";
 import { upsertOrder } from "@/lib/orders";
-import { getProductBySlugWithStock, getQuantitiesForSlugs } from "@/lib/product-stock";
+import {
+  getProductBySlugWithStock,
+  getQuantitiesForSlugs,
+  ONLINE_LOCATION,
+} from "@/lib/product-stock";
 import { getSupabaseAdmin, isSupabaseOrderStoreConfigured } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
@@ -159,6 +163,10 @@ export async function POST(request: Request) {
         updatedAt: now,
         recordedFrom: "webhook",
         customerId,
+        memberId: null,
+        location: ONLINE_LOCATION,
+        soldById: null,
+        soldByName: null,
         customerName,
         customerEmail,
         customerPhone,
@@ -196,6 +204,7 @@ export async function POST(request: Request) {
         shippingBatchId: null,
         courierShipmentId: null,
         shippingLabelGeneratedAt: null,
+        discountPercent: null,
         lines: lineItems.map((l) => ({
           slug: l.slug,
           description: l.name,

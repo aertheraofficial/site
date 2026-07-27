@@ -2,15 +2,17 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { recordCounterSaleAction } from "@/app/admin/actions";
+import { recordCounterSaleAction, searchCustomersAction } from "@/app/admin/actions";
 import { formatMoney } from "@/lib/money";
 import { ProductQrScanner } from "@/components/admin/product-qr-scanner";
 
-type MemberMatch = {
+type CustomerMatch = {
   id: string;
   fullName: string;
   phone: string | null;
   email: string | null;
+  isMember: boolean;
+  orderCount: number;
 };
 
 type SaleReceipt = {
@@ -37,6 +39,10 @@ type SaleLine = {
 
 const PAYMENT_METHODS = ["Cash", "Card", "DuitNow QR", "Other"] as const;
 
+/** Mirrors DISCOUNT_PERCENTS in @/lib/orders, which the server re-checks.
+ * Not imported: that module pulls fs + the Supabase service key into the bundle. */
+const DISCOUNT_PERCENTS = [10, 30, 50] as const;
+
 type CounterSaleFormProps = {
   products: PickerProduct[];
   location: string;
@@ -50,51 +56,58 @@ export function CounterSaleForm({ products, location, locationName }: CounterSal
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [memberQuery, setMemberQuery] = useState("");
-  const [memberResults, setMemberResults] = useState<MemberMatch[]>([]);
+  const [memberResults, setMemberResults] = useState<CustomerMatch[]>([]);
+  const [memberSearchNote, setMemberSearchNote] = useState("");
   const [paymentMethod, setPaymentMethod] =
     useState<(typeof PAYMENT_METHODS)[number]>("Cash");
+  const [discountPercent, setDiscountPercent] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [emailNotice, setEmailNotice] = useState<{ ok: boolean; text: string } | null>(
+    null,
+  );
   const [lastSale, setLastSale] = useState<SaleReceipt | null>(null);
   const [scanning, setScanning] = useState(false);
   const [scanFeedback, setScanFeedback] = useState("");
   const [showQr, setShowQr] = useState(false);
   const memberBoxRef = useRef<HTMLDivElement>(null);
 
-  // Typeahead: look up existing members by name/phone as staff types.
+  // Typeahead over everyone who has ever bought or registered, by name/phone/email.
   useEffect(() => {
     const query = memberQuery.trim();
     if (query.length < 2) {
       setMemberResults([]);
+      setMemberSearchNote("");
       return;
     }
-    const controller = new AbortController();
+    let cancelled = false;
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(
-          `/api/admin/members/search?q=${encodeURIComponent(query)}`,
-          { signal: controller.signal },
-        );
-        if (!res.ok) return;
-        const data = (await res.json()) as { members: MemberMatch[] };
-        setMemberResults(data.members ?? []);
+        const customers = await searchCustomersAction(query);
+        if (cancelled) return;
+        setMemberResults(customers);
+        setMemberSearchNote(customers.length === 0 ? "No customer found." : "");
       } catch {
-        /* aborted or offline — ignore */
+        if (!cancelled) {
+          setMemberResults([]);
+          setMemberSearchNote("Customer lookup unavailable.");
+        }
       }
     }, 250);
     return () => {
-      controller.abort();
+      cancelled = true;
       clearTimeout(timer);
     };
   }, [memberQuery]);
 
-  function selectMember(member: MemberMatch) {
-    setCustomerName(member.fullName);
-    setCustomerPhone(member.phone ?? "");
-    setCustomerEmail(member.email ?? "");
+  function selectMember(customer: CustomerMatch) {
+    setCustomerName(customer.fullName);
+    setCustomerPhone(customer.phone ?? "");
+    setCustomerEmail(customer.email ?? "");
     setMemberQuery("");
     setMemberResults([]);
+    setMemberSearchNote("");
   }
 
   const normalizedSearch = search.trim().toLowerCase();
@@ -104,7 +117,13 @@ export function CounterSaleForm({ products, location, locationName }: CounterSal
         .slice(0, 8)
     : [];
 
-  const total = lines.reduce((sum, l) => sum + l.price * l.quantity, 0);
+  const subtotal = lines.reduce((sum, l) => sum + l.price * l.quantity, 0);
+  // Rounded in cents, the way the server records it, so the counter never
+  // quotes a ringgit the receipt disagrees with.
+  const discountAmount = discountPercent
+    ? Math.round(subtotal * 100 * discountPercent / 100) / 100
+    : 0;
+  const total = subtotal - discountAmount;
 
   function addProduct(product: PickerProduct) {
     setSearch("");
@@ -173,9 +192,18 @@ export function CounterSaleForm({ products, location, locationName }: CounterSal
   async function completeSale() {
     if (lines.length === 0 || submitting) return;
 
+    // Catch a malformed address before the sale goes through — a receipt sent to
+    // a typo is silently lost, and the counter is the only chance to fix it.
+    const email = customerEmail.trim();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      setError(`"${email}" does not look like a valid email address. Fix it or clear it.`);
+      return;
+    }
+
     setSubmitting(true);
     setError("");
     setSuccess("");
+    setEmailNotice(null);
     setLastSale(null);
 
     try {
@@ -186,6 +214,7 @@ export function CounterSaleForm({ products, location, locationName }: CounterSal
         customerEmail,
         paymentMethod,
         location,
+        discountPercent,
       });
 
       if (!result.ok) {
@@ -193,12 +222,26 @@ export function CounterSaleForm({ products, location, locationName }: CounterSal
         return;
       }
 
-      const emailNote = result.emailedReceipt
-        ? " Receipt emailed."
-        : customerEmail
-          ? " (Email receipt failed — use WhatsApp/Print.)"
-          : "";
-      setSuccess(`Sale recorded — ${formatMoney(total)} via ${paymentMethod}.${emailNote}`);
+      setSuccess(
+        `Sale recorded — ${formatMoney(total)} via ${paymentMethod}${
+          discountPercent ? ` (${discountPercent}% off)` : ""
+        }.`,
+      );
+      setEmailNotice(
+        result.emailedReceipt
+          ? {
+              ok: true,
+              text: `Receipt emailed to ${result.receiptEmailAddress ?? customerEmail}`,
+            }
+          : customerEmail
+            ? {
+                ok: false,
+                text: `Receipt NOT emailed to ${result.receiptEmailAddress ?? customerEmail}${
+                  result.receiptEmailError ? ` — ${result.receiptEmailError}` : ""
+                }. Check the address is spelt right, then use WhatsApp or Print.`,
+              }
+            : null,
+      );
       setLastSale({
         receiptUrl: result.receiptUrl,
         whatsAppUrl: result.whatsAppUrl,
@@ -210,7 +253,9 @@ export function CounterSaleForm({ products, location, locationName }: CounterSal
       setCustomerEmail("");
       setMemberQuery("");
       setMemberResults([]);
+      setMemberSearchNote("");
       setPaymentMethod("Cash");
+      setDiscountPercent(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to record this sale.");
     } finally {
@@ -345,9 +390,59 @@ export function CounterSaleForm({ products, location, locationName }: CounterSal
           Selling at: {locationName}
         </p>
 
-        <div className="mt-4 flex items-center justify-between text-sm">
+        {discountPercent ? (
+          <div className="mt-4 space-y-1.5 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-[#6a6258]">Subtotal</span>
+              <span className="text-[#201d17]">{formatMoney(subtotal)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[#8b5e1d]">Discount {discountPercent}%</span>
+              <span className="text-[#8b5e1d]">−{formatMoney(discountAmount)}</span>
+            </div>
+          </div>
+        ) : null}
+
+        <div
+          className={`flex items-center justify-between text-sm ${
+            discountPercent ? "mt-2 border-t border-black/8 pt-2" : "mt-4"
+          }`}
+        >
           <span className="text-[#6a6258]">Total</span>
           <span className="text-lg font-semibold text-[#201d17]">{formatMoney(total)}</span>
+        </div>
+
+        <div className="mt-4">
+          <p className="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#8d7a5c]">
+            Discount
+          </p>
+          <div className="grid grid-cols-4 gap-2">
+            <button
+              type="button"
+              onClick={() => setDiscountPercent(null)}
+              className={`h-9 rounded-full border text-[0.72rem] font-semibold transition ${
+                discountPercent === null
+                  ? "border-[#201d17] bg-[#201d17] text-white"
+                  : "border-black/8 bg-[#f7f2ea] text-[#201d17] hover:bg-black/4"
+              }`}
+            >
+              None
+            </button>
+            {DISCOUNT_PERCENTS.map((percent) => (
+              <button
+                key={percent}
+                type="button"
+                onClick={() => setDiscountPercent(percent)}
+                className={`h-9 rounded-full border text-[0.72rem] font-semibold transition ${
+                  discountPercent === percent
+                    ? "border-[#201d17] bg-[#201d17] text-white"
+                    : "border-black/8 bg-[#f7f2ea] text-[#201d17] hover:bg-black/4"
+                }`}
+              >
+                {percent}%
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="mt-5 space-y-3">
@@ -361,20 +456,35 @@ export function CounterSaleForm({ products, location, locationName }: CounterSal
             />
             {memberResults.length > 0 ? (
               <div className="absolute left-0 right-0 top-[calc(100%+0.4rem)] z-20 max-h-60 overflow-y-auto rounded-[1.25rem] border border-black/8 bg-white p-2 shadow-[0_18px_40px_rgba(32,29,23,0.12)]">
-                {memberResults.map((member) => (
+                {memberResults.map((customer) => (
                   <button
-                    key={member.id}
+                    key={customer.id}
                     type="button"
-                    onClick={() => selectMember(member)}
+                    onClick={() => selectMember(customer)}
                     className="flex w-full flex-col items-start rounded-[0.85rem] px-4 py-2.5 text-left transition hover:bg-[#f7f2ea]"
                   >
-                    <span className="text-sm font-medium text-[#201d17]">{member.fullName}</span>
+                    <span className="text-sm font-medium text-[#201d17]">
+                      {customer.fullName}
+                    </span>
                     <span className="text-xs text-[#8d7a5c]">
-                      {[member.phone, member.email].filter(Boolean).join(" • ") || "No contact"}
+                      {[
+                        customer.phone,
+                        customer.email,
+                        customer.orderCount > 0
+                          ? `${customer.orderCount} past ${
+                              customer.orderCount === 1 ? "sale" : "sales"
+                            }`
+                          : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" • ") || "No contact"}
                     </span>
                   </button>
                 ))}
               </div>
+            ) : null}
+            {memberResults.length === 0 && memberSearchNote ? (
+              <p className="mt-1.5 px-1 text-xs text-[#8d7a5c]">{memberSearchNote}</p>
             ) : null}
           </div>
 
@@ -494,6 +604,17 @@ export function CounterSaleForm({ products, location, locationName }: CounterSal
         {success ? (
           <p className="mt-4 rounded-[1rem] border border-[#8cc8a4] bg-[#e9f7ee] px-4 py-3 text-sm leading-6 text-[#256542]">
             {success}
+          </p>
+        ) : null}
+        {emailNotice ? (
+          <p
+            className={`mt-2 rounded-[1rem] border px-4 py-3 text-sm leading-6 ${
+              emailNotice.ok
+                ? "border-[#8cc8a4] bg-[#e9f7ee] text-[#256542]"
+                : "border-[#e6b4b4] bg-[#fff0ef] text-[#9b3d32]"
+            }`}
+          >
+            {emailNotice.text}
           </p>
         ) : null}
 

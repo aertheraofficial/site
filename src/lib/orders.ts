@@ -1,6 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import type Stripe from "stripe";
+import { ALL_LOCATIONS, ONLINE_LOCATION } from "@/lib/product-stock";
 import { getOrderStoragePath } from "@/lib/store-config";
 import {
   getSupabaseAdmin,
@@ -32,7 +33,16 @@ export type StoredOrder = {
   createdAt: string;
   updatedAt: string;
   recordedFrom: "webhook" | "success-page" | "admin-walk-in";
+  /** Authenticated storefront account (auth.users). Null for walk-ins. */
   customerId: string | null;
+  /** Walk-in member registered at the counter (`members` table). */
+  memberId: string | null;
+  /** Shop the sale belongs to (`SHOP_LOCATIONS` id), or "online". */
+  location: string | null;
+  /** Staff id that rang the sale up ("admin" for the master account). */
+  soldById: string | null;
+  /** Staff name as it was at the time of sale. */
+  soldByName: string | null;
   customerName: string | null;
   customerEmail: string | null;
   customerPhone: string | null;
@@ -67,6 +77,12 @@ export type StoredOrder = {
   shippingBatchId: string | null;
   courierShipmentId: string | null;
   shippingLabelGeneratedAt: string | null;
+  /**
+   * Counter discount applied to the whole sale (10, 30 or 50). Null when the
+   * sale was at full price. `subtotalAmount` stays the undiscounted figure and
+   * `totalAmount` is what the customer actually paid.
+   */
+  discountPercent: number | null;
   lines: StoredOrderLine[];
 };
 
@@ -86,6 +102,8 @@ type AdminMeta = Pick<
   | "shippingBatchId"
   | "courierShipmentId"
   | "shippingLabelGeneratedAt"
+  // Rides in the same JSON blob so counter discounts need no new column.
+  | "discountPercent"
 >;
 
 type ShippingAddressRecord = NonNullable<StoredOrder["shippingAddress"]> & {
@@ -112,6 +130,10 @@ type SupabaseOrderRow = {
   updated_at: string;
   recorded_from: "webhook" | "success-page" | "admin-walk-in";
   customer_id: string | null;
+  member_id: string | null;
+  location: string | null;
+  sold_by: string | null;
+  sold_by_name: string | null;
   customer_name: string | null;
   customer_email: string | null;
   customer_phone: string | null;
@@ -131,11 +153,53 @@ type SupabaseOrderRow = {
 const DEFAULT_FULFILLMENT_STATUS: FulfillmentStatus = "unfulfilled";
 const DEFAULT_FULFILLMENT_TYPE: FulfillmentType = "delivery";
 
-const ORDER_SELECT_COLUMNS =
-  "order_id, session_id, payment_intent_id, ordered_at, updated_at, recorded_from, customer_id, customer_name, customer_email, customer_phone, payment_status, checkout_status, currency, subtotal_amount, shipping_amount, tax_amount, total_amount, fulfillment_type, shipping_name, shipping_address, order_lines(order_session_id, line_position, product_slug, description, quantity, currency, unit_amount, subtotal_amount, total_amount)";
+const ORDER_COLUMNS_TAIL =
+  "customer_name, customer_email, customer_phone, payment_status, checkout_status, currency, subtotal_amount, shipping_amount, tax_amount, total_amount, fulfillment_type, shipping_name, shipping_address, order_lines(order_session_id, line_position, product_slug, description, quantity, currency, unit_amount, subtotal_amount, total_amount)";
+
+const ORDER_SELECT_COLUMNS = `order_id, session_id, payment_intent_id, ordered_at, updated_at, recorded_from, customer_id, member_id, location, sold_by, sold_by_name, ${ORDER_COLUMNS_TAIL}`;
+
+const ORDER_SELECT_COLUMNS_WITHOUT_COUNTER_FIELDS = `order_id, session_id, payment_intent_id, ordered_at, updated_at, recorded_from, customer_id, ${ORDER_COLUMNS_TAIL}`;
+
+/** Columns added by supabase/add_order_counter_fields.sql. */
+const COUNTER_COLUMNS = ["member_id", "location", "sold_by", "sold_by_name"] as const;
+
+/**
+ * Deploys run ahead of migrations, so the first query that hits a database
+ * without those columns flips this off rather than failing the order.
+ */
+let counterColumnsAvailable = true;
+
+// Returned as a plain string: letting the Supabase client parse the column list
+// into a result type blows past the TypeScript union limit for this table.
+function orderSelectColumns(): string {
+  return counterColumnsAvailable
+    ? ORDER_SELECT_COLUMNS
+    : ORDER_SELECT_COLUMNS_WITHOUT_COUNTER_FIELDS;
+}
+
+function isMissingCounterColumn(message: string | undefined) {
+  return Boolean(message && COUNTER_COLUMNS.some((column) => message.includes(column)));
+}
 
 function isFulfillmentType(value: unknown): value is FulfillmentType {
   return value === "delivery" || value === "pickup" || value === "in-store";
+}
+
+/**
+ * Orders taken before `location` existed only recorded the shop inside the
+ * free-text note ("Counter sale at Destina Putrajaya — paid via Cash"), so the
+ * shop filter would drop them. Recover the id from that sentence.
+ */
+function locationFromNotes(notes: string | null): string | null {
+  if (!notes) return null;
+
+  const match = ALL_LOCATIONS.find((location) => notes.includes(location.name));
+  return match ? match.id : null;
+}
+
+/** Same fallback for the staff name, written as "Sold by <name>." in the note. */
+function soldByNameFromNotes(notes: string | null): string | null {
+  return notes?.match(/Sold by ([^.]+)\./)?.[1]?.trim() ?? null;
 }
 
 function resolveOrdersFilePath() {
@@ -161,6 +225,7 @@ function createDefaultAdminMeta(): AdminMeta {
     shippingBatchId: null,
     courierShipmentId: null,
     shippingLabelGeneratedAt: null,
+    discountPercent: null,
   };
 }
 
@@ -186,6 +251,21 @@ function normalizeNumber(value: unknown) {
 
   const parsed = Number(trimmed);
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+/** Discounts the counter is allowed to give. */
+export const DISCOUNT_PERCENTS = [10, 30, 50] as const;
+
+export type DiscountPercent = (typeof DISCOUNT_PERCENTS)[number];
+
+export function isDiscountPercent(value: unknown): value is DiscountPercent {
+  return DISCOUNT_PERCENTS.some((percent) => percent === value);
+}
+
+/** Anything that is not one of the offered discounts counts as full price. */
+function normalizeDiscountPercent(value: unknown) {
+  const parsed = normalizeNumber(value);
+  return isDiscountPercent(parsed) ? parsed : null;
 }
 
 function isFulfillmentStatus(value: unknown): value is FulfillmentStatus {
@@ -232,6 +312,7 @@ function parseAdminMeta(value: unknown): AdminMeta {
       typeof source.shippingLabelGeneratedAt === "string"
         ? normalizeText(source.shippingLabelGeneratedAt)
         : null,
+    discountPercent: normalizeDiscountPercent(source.discountPercent),
   };
 }
 
@@ -289,7 +370,8 @@ function embedAdminMeta(
     adminMeta.packageDescription ||
     adminMeta.shippingBatchId ||
     adminMeta.courierShipmentId ||
-    adminMeta.shippingLabelGeneratedAt;
+    adminMeta.shippingLabelGeneratedAt ||
+    adminMeta.discountPercent !== null;
 
   if (hasAdminValues) {
     return {
@@ -330,6 +412,14 @@ async function readOrdersFromFile() {
 
       return {
         ...candidate,
+        memberId: normalizeText(candidate.memberId),
+        location:
+          normalizeText(candidate.location) ??
+          locationFromNotes(normalizeText(candidate.internalNotes)),
+        soldById: normalizeText(candidate.soldById),
+        soldByName:
+          normalizeText(candidate.soldByName) ??
+          soldByNameFromNotes(normalizeText(candidate.internalNotes)),
         fulfillmentType: isFulfillmentType(candidate.fulfillmentType)
           ? candidate.fulfillmentType
           : DEFAULT_FULFILLMENT_TYPE,
@@ -349,6 +439,7 @@ async function readOrdersFromFile() {
         shippingBatchId: normalizeText(candidate.shippingBatchId),
         courierShipmentId: normalizeText(candidate.courierShipmentId),
         shippingLabelGeneratedAt: normalizeText(candidate.shippingLabelGeneratedAt),
+        discountPercent: normalizeDiscountPercent(candidate.discountPercent),
       } as StoredOrder;
     });
   } catch {
@@ -377,6 +468,7 @@ function toSupabaseOrderRow(order: StoredOrder): SupabaseOrderRow {
     shippingBatchId: order.shippingBatchId,
     courierShipmentId: order.courierShipmentId,
     shippingLabelGeneratedAt: order.shippingLabelGeneratedAt,
+    discountPercent: order.discountPercent,
   };
 
   return {
@@ -387,6 +479,10 @@ function toSupabaseOrderRow(order: StoredOrder): SupabaseOrderRow {
     updated_at: order.updatedAt,
     recorded_from: order.recordedFrom,
     customer_id: order.customerId,
+    member_id: order.memberId,
+    location: order.location,
+    sold_by: order.soldById,
+    sold_by_name: order.soldByName,
     customer_name: order.customerName,
     customer_email: order.customerEmail,
     customer_phone: order.customerPhone,
@@ -428,6 +524,10 @@ function fromSupabaseOrderRow(row: SupabaseOrderRow): StoredOrder {
     updatedAt: row.updated_at,
     recordedFrom: row.recorded_from,
     customerId: row.customer_id,
+    memberId: row.member_id ?? null,
+    location: row.location ?? locationFromNotes(adminMeta.internalNotes),
+    soldById: row.sold_by ?? null,
+    soldByName: row.sold_by_name ?? soldByNameFromNotes(adminMeta.internalNotes),
     customerName: row.customer_name,
     customerEmail: row.customer_email,
     customerPhone: row.customer_phone,
@@ -502,41 +602,52 @@ function mergeOrders(
     shippingLabelGeneratedAt: preserveAdminFields
       ? existing.shippingLabelGeneratedAt
       : incoming.shippingLabelGeneratedAt,
+    // The discount belongs to the sale, not to admin edits — a webhook replay
+    // must never wipe what the counter gave.
+    discountPercent: incoming.discountPercent ?? existing.discountPercent,
     updatedAt: new Date().toISOString(),
   } satisfies StoredOrder;
 }
 
-async function readOrdersFromSupabase() {
+async function readOrdersFromSupabase(): Promise<StoredOrder[]> {
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from("orders")
-    .select(
-      ORDER_SELECT_COLUMNS,
-    )
+    .select(orderSelectColumns())
     .order("ordered_at", { ascending: false });
 
   if (error) {
+    if (counterColumnsAvailable && isMissingCounterColumn(error.message)) {
+      counterColumnsAvailable = false;
+      return readOrdersFromSupabase();
+    }
     throw new Error(`Unable to read orders from Supabase: ${error.message}`);
   }
 
-  return (data ?? []).map((row) => fromSupabaseOrderRow(row as SupabaseOrderRow));
+  return (data ?? []).map((row) =>
+    fromSupabaseOrderRow(row as unknown as SupabaseOrderRow),
+  );
 }
 
-async function getOrderBySessionIdFromSupabase(sessionId: string) {
+async function getOrderBySessionIdFromSupabase(
+  sessionId: string,
+): Promise<StoredOrder | null> {
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from("orders")
-    .select(
-      ORDER_SELECT_COLUMNS,
-    )
+    .select(orderSelectColumns())
     .eq("session_id", sessionId)
     .maybeSingle();
 
   if (error) {
+    if (counterColumnsAvailable && isMissingCounterColumn(error.message)) {
+      counterColumnsAvailable = false;
+      return getOrderBySessionIdFromSupabase(sessionId);
+    }
     throw new Error(`Unable to load order from Supabase: ${error.message}`);
   }
 
-  return data ? fromSupabaseOrderRow(data as SupabaseOrderRow) : null;
+  return data ? fromSupabaseOrderRow(data as unknown as SupabaseOrderRow) : null;
 }
 
 async function upsertOrderToSupabase(
@@ -547,11 +658,23 @@ async function upsertOrderToSupabase(
   const mergedOrder = mergeOrders(order, existing, preserveAdminFields);
   const supabase = getSupabaseAdmin();
 
+  const row = toSupabaseOrderRow(mergedOrder);
+
+  if (!counterColumnsAvailable) {
+    for (const column of COUNTER_COLUMNS) {
+      delete (row as Partial<SupabaseOrderRow>)[column];
+    }
+  }
+
   const { error: orderError } = await supabase
     .from("orders")
-    .upsert(toSupabaseOrderRow(mergedOrder), { onConflict: "session_id" });
+    .upsert(row, { onConflict: "session_id" });
 
   if (orderError) {
+    if (counterColumnsAvailable && isMissingCounterColumn(orderError.message)) {
+      counterColumnsAvailable = false;
+      return upsertOrderToSupabase(order, preserveAdminFields);
+    }
     throw new Error(`Unable to store order in Supabase: ${orderError.message}`);
   }
 
@@ -606,8 +729,14 @@ export async function upsertOrder(
   if (isSupabaseOrderStoreConfigured()) {
     try {
       return await upsertOrderToSupabase(normalizedOrder, preserveAdminFields);
-    } catch {
+    } catch (error) {
       // Fall back to file storage until the Supabase schema is fully applied.
+      // Loud on purpose: a swallowed failure here means the order is invisible
+      // to /admin/orders and the customer's receipt link 404s.
+      console.error(
+        `Order ${normalizedOrder.sessionId} could not be stored in Supabase, falling back to file storage:`,
+        error,
+      );
     }
   }
 
@@ -631,12 +760,18 @@ export async function upsertOrder(
 export async function getOrderBySessionId(sessionId: string) {
   if (isSupabaseOrderStoreConfigured()) {
     try {
-      return await getOrderBySessionIdFromSupabase(sessionId);
+      const order = await getOrderBySessionIdFromSupabase(sessionId);
+      if (order) {
+        return order;
+      }
     } catch {
-      return null;
+      // fall through to the file store
     }
   }
 
+  // Also check the file store when Supabase is configured: orders written while
+  // a Supabase write was failing live only here, and their receipt links must
+  // still resolve instead of 404ing.
   const orders = await readOrdersFromFile();
   return orders.find((order) => order.sessionId === sessionId) ?? null;
 }
@@ -769,6 +904,10 @@ export async function recordCompletedOrder(params: {
     updatedAt: new Date().toISOString(),
     recordedFrom: source,
     customerId: null,
+    memberId: null,
+    location: ONLINE_LOCATION,
+    soldById: null,
+    soldByName: null,
     customerName: customer?.name ?? null,
     customerEmail: customer?.email ?? null,
     customerPhone: customer?.phone ?? null,

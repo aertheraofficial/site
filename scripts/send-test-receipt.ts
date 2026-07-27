@@ -27,6 +27,10 @@ function buildSample(to: string): StoredOrder {
     updatedAt: new Date().toISOString(),
     recordedFrom: "webhook",
     customerId: null,
+    memberId: null,
+    location: null,
+    soldById: null,
+    soldByName: null,
     customerName: "Amin Azuwar",
     customerEmail: to,
     customerPhone: "+60 12-345 6789",
@@ -61,6 +65,7 @@ function buildSample(to: string): StoredOrder {
     shippingBatchId: null,
     courierShipmentId: null,
     shippingLabelGeneratedAt: null,
+    discountPercent: null,
     lines: [
       {
         slug: "reed-diffuser-lemongrass-malaya-230ml",

@@ -61,6 +61,41 @@ export async function searchMembers(query: string, limit = 8): Promise<Member[]>
   return (data as MemberRow[]).map(toMember);
 }
 
+/** Every registered walk-in member, newest first. Empty when Supabase is off. */
+export async function listMembers(limit = 500): Promise<Member[]> {
+  if (!isSupabaseOrderStoreConfigured()) return [];
+
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("members")
+    .select("id, full_name, phone, email, location, created_at")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error("Member list failed:", error.message);
+    return [];
+  }
+  return (data as MemberRow[]).map(toMember);
+}
+
+export async function getMemberById(id: string): Promise<Member | null> {
+  if (!isSupabaseOrderStoreConfigured()) return null;
+
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("members")
+    .select("id, full_name, phone, email, location, created_at")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Member lookup failed:", error.message);
+    return null;
+  }
+  return data ? toMember(data as MemberRow) : null;
+}
+
 export type NewMemberInput = {
   fullName: string;
   phone?: string | null;

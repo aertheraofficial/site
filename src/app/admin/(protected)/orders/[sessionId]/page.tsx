@@ -418,6 +418,18 @@ export default async function AdminOrderDetailPage({
                     : "Included"}
                 </span>
               </p>
+              {order.discountPercent ? (
+                <p className="flex items-center justify-between gap-4">
+                  <span>Discount {order.discountPercent}%</span>
+                  <span className="text-[#8b5e1d]">
+                    −
+                    {formatMoney(
+                      Math.round(((order.subtotalAmount ?? 0) * order.discountPercent) / 100) /
+                        100,
+                    )}
+                  </span>
+                </p>
+              ) : null}
               <p className="flex items-center justify-between gap-4">
                 <span>Shipping</span>
                 <span className="text-[#201d17]">

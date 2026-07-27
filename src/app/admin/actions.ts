@@ -36,6 +36,7 @@ import {
   type FulfillmentStatus,
   type StoredOrder,
   getOrdersBySessionIds,
+  isDiscountPercent,
   upsertOrder,
   updateOrderManagement,
 } from "@/lib/orders";
@@ -52,8 +53,10 @@ import {
 import { createAdminProduct, uploadProductImage } from "@/lib/admin-products";
 import { setProductOverride, type ProductOverride } from "@/lib/product-overrides";
 import { createMember } from "@/lib/members";
-import { sendReceiptEmail } from "@/lib/receipt-email";
-import { getSiteUrl } from "@/lib/store-config";
+import { searchCustomerBook, type CustomerMatch } from "@/lib/customers";
+import { buildWhatsAppShareUrl } from "@/lib/receipt";
+import { sendReceiptEmail, type ReceiptEmailResult } from "@/lib/receipt-email";
+import { getPublicSiteUrl } from "@/lib/store-config";
 import {
   generateSingleSocialAd,
   regenerateSocialDraftVariant,
@@ -452,18 +455,31 @@ export type CounterSalePayload = {
   customerEmail: string;
   paymentMethod: "Cash" | "Card" | "DuitNow QR" | "Other";
   location: string;
+  /** 10, 30 or 50 — anything else is treated as full price. */
+  discountPercent: number | null;
 };
 
-/** Turn a local Malaysian number into wa.me digits (0123... -> 60123...). */
-function toWhatsAppDigits(phone: string): string | null {
-  let digits = phone.replace(/\D/g, "");
-  if (!digits) return null;
-  if (digits.startsWith("0")) digits = `60${digits.slice(1)}`;
-  return digits.length >= 8 ? digits : null;
+/**
+ * Counter typeahead for existing customers.
+ *
+ * A server action rather than a route handler: the admin/staff session cookies
+ * are scoped to `path=/admin`, so a fetch to `/api/...` never carries them and
+ * every lookup came back 401 (the counter simply showed no results).
+ *
+ * It searches the customer book, not the `members` table: most people who have
+ * bought were never registered as members, so a name-only search over `members`
+ * missed them.
+ */
+export async function searchCustomersAction(query: string): Promise<CustomerMatch[]> {
+  await requirePermission("counter-sale", "/admin/counter-sale");
+
+  return searchCustomerBook(query);
 }
 
 export async function recordCounterSaleAction(payload: CounterSalePayload) {
-  await requirePermission("counter-sale", "/admin/counter-sale");
+  const actor = await requirePermission("counter-sale", "/admin/counter-sale");
+  const soldById = actor.type === "admin" ? "admin" : actor.staff.id;
+  const soldByName = actor.type === "admin" ? actor.name : actor.staff.fullName;
 
   if (!isLocationId(payload.location) || payload.location === "online") {
     return { ok: false as const, error: "Choose which shop this sale happened at." };
@@ -517,6 +533,15 @@ export async function recordCounterSaleAction(payload: CounterSalePayload) {
     0,
   );
 
+  // Subtotal stays the list price so the receipt can show what was taken off.
+  const discountPercent = isDiscountPercent(payload.discountPercent)
+    ? payload.discountPercent
+    : null;
+  const discountCents = discountPercent
+    ? Math.round((subtotalCents * discountPercent) / 100)
+    : 0;
+  const totalCents = subtotalCents - discountCents;
+
   const sessionId = `INSTORE-${Date.now()}-${randomBytes(4).toString("hex")}`;
   const now = new Date().toISOString();
 
@@ -525,7 +550,9 @@ export async function recordCounterSaleAction(payload: CounterSalePayload) {
   const customerEmail = payload.customerEmail.trim().toLowerCase() || null;
 
   // Register / reuse the walk-in member when we have something to remember them by.
-  let customerId: string | null = null;
+  // This id belongs in member_id — customer_id is a FK to auth.users, and a
+  // members id there fails the constraint and drops the whole order.
+  let memberId: string | null = null;
   if (customerName && (customerEmail || customerPhone)) {
     const member = await createMember({
       fullName: customerName,
@@ -533,7 +560,7 @@ export async function recordCounterSaleAction(payload: CounterSalePayload) {
       email: customerEmail,
       location: payload.location,
     });
-    customerId = member?.id ?? null;
+    memberId = member?.id ?? null;
   }
 
   const order: StoredOrder = {
@@ -543,7 +570,11 @@ export async function recordCounterSaleAction(payload: CounterSalePayload) {
       createdAt: now,
       updatedAt: now,
       recordedFrom: "admin-walk-in",
-      customerId,
+      customerId: null,
+      memberId,
+      location: payload.location,
+      soldById,
+      soldByName,
       customerName,
       customerEmail,
       customerPhone,
@@ -553,7 +584,8 @@ export async function recordCounterSaleAction(payload: CounterSalePayload) {
       subtotalAmount: subtotalCents,
       shippingAmount: null,
       taxAmount: null,
-      totalAmount: subtotalCents,
+      totalAmount: totalCents,
+      discountPercent,
       fulfillmentType: "in-store",
       shippingName: null,
       shippingAddress: null,
@@ -561,7 +593,9 @@ export async function recordCounterSaleAction(payload: CounterSalePayload) {
       trackingNumber: null,
       trackingCarrier: null,
       trackingUrl: null,
-      internalNotes: `Counter sale at ${getLocationName(payload.location)} — paid via ${payload.paymentMethod}.`,
+      internalNotes: `Counter sale at ${getLocationName(payload.location)} — paid via ${payload.paymentMethod}.${
+        discountPercent ? ` Discount ${discountPercent}%.` : ""
+      } Sold by ${soldByName}.`,
       fulfilledAt: now,
       packageWeightGrams: null,
       packageLengthCm: null,
@@ -594,25 +628,37 @@ export async function recordCounterSaleAction(payload: CounterSalePayload) {
   revalidatePath("/admin/counter-sale");
 
   // Receipt delivery. Email is fire-and-forget; the sale is already saved.
-  let emailedReceipt = false;
+  // The address and the failure reason go back to the counter so staff can see
+  // a typo (or a server misconfiguration) instead of a bare "failed".
+  let receiptEmail: ReceiptEmailResult = {
+    sent: false,
+    address: null,
+    reason: null,
+  };
+
   if (customerEmail) {
-    emailedReceipt = await sendReceiptEmail(order).catch(() => false);
+    receiptEmail = await sendReceiptEmail(order).catch((error) => ({
+      sent: false,
+      address: customerEmail,
+      reason: error instanceof Error ? error.message : "Unknown error.",
+    }));
   }
 
-  const receiptUrl = `${getSiteUrl()}/receipt/${sessionId}`;
-  const waDigits = customerPhone ? toWhatsAppDigits(customerPhone) : null;
-  const whatsAppUrl = waDigits
-    ? `https://wa.me/${waDigits}?text=${encodeURIComponent(
-        `Terima kasih! Resit pembelian anda di ${getLocationName(payload.location)}: ${receiptUrl}`,
-      )}`
-    : null;
+  // Customer-facing link: never localhost, even when admin runs on a laptop.
+  const receiptUrl = `${getPublicSiteUrl()}/receipt/${sessionId}`;
+  const whatsAppUrl = buildWhatsAppShareUrl(
+    customerPhone,
+    `Terima kasih! Resit pembelian anda di ${getLocationName(payload.location)}: ${receiptUrl}`,
+  );
 
   return {
     ok: true as const,
     sessionId,
     receiptUrl,
     whatsAppUrl,
-    emailedReceipt,
+    emailedReceipt: receiptEmail.sent,
+    receiptEmailAddress: receiptEmail.address,
+    receiptEmailError: receiptEmail.reason,
   };
 }
 

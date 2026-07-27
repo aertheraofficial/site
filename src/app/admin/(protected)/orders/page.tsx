@@ -2,6 +2,7 @@ import Link from "next/link";
 import { generateDhlShipmentBatchAction } from "@/app/admin/actions";
 import { isDhlEcommerceConfigured } from "@/lib/dhl-ecommerce";
 import { formatMoney } from "@/lib/money";
+import { ALL_LOCATIONS, ONLINE_LOCATION, getLocationName } from "@/lib/product-stock";
 import { requirePermission } from "@/lib/staff-auth";
 import {
   type FulfillmentStatus,
@@ -15,10 +16,16 @@ type OrdersPageProps = {
     q?: string;
     status?: string;
     type?: string;
+    shop?: string;
     error?: string;
     shipmentError?: string;
   }>;
 };
+
+const SHOP_FILTERS = [
+  { value: "all", label: "All shops" },
+  ...ALL_LOCATIONS.map((location) => ({ value: location.id, label: location.name })),
+] as const;
 
 const STATUS_FILTERS = [
   { value: "all", label: "All" },
@@ -55,7 +62,12 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-function buildOrdersHref(status: string, query: string, type: string = "all") {
+function buildOrdersHref(
+  status: string,
+  query: string,
+  type: string = "all",
+  shop: string = "all",
+) {
   const params = new URLSearchParams();
 
   if (status !== "all") {
@@ -64,6 +76,10 @@ function buildOrdersHref(status: string, query: string, type: string = "all") {
 
   if (type !== "all") {
     params.set("type", type);
+  }
+
+  if (shop !== "all") {
+    params.set("shop", shop);
   }
 
   if (query) {
@@ -157,14 +173,17 @@ export default async function AdminOrdersPage({
   searchParams,
 }: OrdersPageProps) {
   await requirePermission("orders");
-  const { q, status, type, error, shipmentError } = await searchParams;
+  const { q, status, type, shop, error, shipmentError } = await searchParams;
   const query = q?.trim() ?? "";
   const normalizedQuery = query.toLowerCase();
   const activeStatus = isFulfillmentStatus(status) ? status : "all";
   const activeType = isFulfillmentType(type) ? type : "all";
+  const activeShop = SHOP_FILTERS.some((filter) => filter.value === shop)
+    ? (shop as string)
+    : "all";
   const orders = await readOrders();
   const dhlConfigured = isDhlEcommerceConfigured();
-  const returnTo = buildOrdersHref(activeStatus, query, activeType);
+  const returnTo = buildOrdersHref(activeStatus, query, activeType, activeShop);
 
   const filteredOrders = orders.filter((order) => {
     if (activeStatus !== "all" && order.fulfillmentStatus !== activeStatus) {
@@ -172,6 +191,10 @@ export default async function AdminOrdersPage({
     }
 
     if (activeType !== "all" && order.fulfillmentType !== activeType) {
+      return false;
+    }
+
+    if (activeShop !== "all" && (order.location ?? ONLINE_LOCATION) !== activeShop) {
       return false;
     }
 
@@ -192,6 +215,8 @@ export default async function AdminOrdersPage({
       order.shippingBatchId,
       order.packageDescription,
       order.internalNotes,
+      order.soldByName,
+      order.location ? getLocationName(order.location) : null,
       ...order.lines.map((line) => line.description),
     ]
       .filter(Boolean)
@@ -279,6 +304,20 @@ export default async function AdminOrdersPage({
           </div>
 
           <form className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_200px_200px] xl:min-w-[680px]">
+            <label className="block sm:col-span-3">
+              <span className="sr-only">Shop</span>
+              <select
+                name="shop"
+                defaultValue={activeShop}
+                className="w-full rounded-[1.25rem] border border-black/8 bg-[#f7f2ea] px-4 py-3 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59] focus:bg-white"
+              >
+                {SHOP_FILTERS.map((filter) => (
+                  <option key={filter.value} value={filter.value}>
+                    {filter.label}
+                  </option>
+                ))}
+              </select>
+            </label>
             <label className="block">
               <span className="sr-only">Search orders</span>
               <input
@@ -335,12 +374,45 @@ export default async function AdminOrdersPage({
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">
+          {SHOP_FILTERS.map((filter) => {
+            const isActive = filter.value === activeShop;
+            const shopOrders = orders.filter(
+              (order) =>
+                filter.value === "all" ||
+                (order.location ?? ONLINE_LOCATION) === filter.value,
+            );
+            const shopRevenue = shopOrders.reduce(
+              (sum, order) =>
+                sum + (order.paymentStatus === "paid" ? (order.totalAmount ?? 0) : 0),
+              0,
+            );
+
+            return (
+              <Link
+                key={filter.value}
+                href={buildOrdersHref(activeStatus, query, activeType, filter.value)}
+                className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-full border px-4 text-[0.72rem] font-semibold uppercase tracking-[0.18em] transition ${
+                  isActive
+                    ? "border-[#201d17] bg-[#201d17] text-white"
+                    : "border-black/8 bg-[#f7f2ea] text-[#201d17] hover:bg-white"
+                }`}
+              >
+                {filter.label}
+                <span className={isActive ? "opacity-70" : "text-[#8d7a5c]"}>
+                  {shopOrders.length} · {formatMoney(shopRevenue / 100)}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-3">
           {STATUS_FILTERS.map((filter) => {
             const isActive = filter.value === activeStatus;
             return (
               <Link
                 key={filter.value}
-                href={buildOrdersHref(filter.value, query, activeType)}
+                href={buildOrdersHref(filter.value, query, activeType, activeShop)}
                 className={`inline-flex min-h-10 items-center justify-center rounded-full border px-4 text-[0.72rem] font-semibold uppercase tracking-[0.18em] transition ${
                   isActive
                     ? "border-[#201d17] bg-[#201d17] text-white"
@@ -445,6 +517,16 @@ export default async function AdminOrdersPage({
                             {order.fulfillmentType === "in-store" ? (
                               <span className="rounded-full border border-[#a8cbe0] bg-[#eaf4fa] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#2a5f7a]">
                                 Counter Sale
+                              </span>
+                            ) : null}
+                            {order.location && order.location !== ONLINE_LOCATION ? (
+                              <span className="rounded-full border border-[#d6c2a0] bg-[#f8f1e4] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#8b5e1d]">
+                                {getLocationName(order.location)}
+                              </span>
+                            ) : null}
+                            {order.soldByName ? (
+                              <span className="rounded-full border border-black/8 bg-white px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#6a6258]">
+                                Sold by {order.soldByName}
                               </span>
                             ) : null}
                             <span className="rounded-full border border-black/8 bg-white px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#6a6258]">

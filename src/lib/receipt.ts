@@ -107,6 +107,20 @@ export function getWhatsAppUrl() {
   return digits ? `https://wa.me/${digits}` : null;
 }
 
+/** Turn a local Malaysian number into wa.me digits (0123... -> 60123...). */
+export function toWhatsAppDigits(phone: string): string | null {
+  let digits = phone.replace(/\D/g, "");
+  if (!digits) return null;
+  if (digits.startsWith("0")) digits = `60${digits.slice(1)}`;
+  return digits.length >= 8 ? digits : null;
+}
+
+/** Chat link to a customer's number, pre-filled with `message`. */
+export function buildWhatsAppShareUrl(phone: string | null, message: string) {
+  const digits = phone ? toWhatsAppDigits(phone) : null;
+  return digits ? `https://wa.me/${digits}?text=${encodeURIComponent(message)}` : null;
+}
+
 function isSstEnabled() {
   const value = process.env.RECEIPT_SST_ENABLED?.toLowerCase();
   return ["1", "true", "yes", "on"].includes(value ?? "");
@@ -449,11 +463,29 @@ export async function generateReceiptPdf(order: StoredOrder): Promise<Uint8Array
   const subtotal = order.subtotalAmount ?? computedSubtotal;
   const shipping = order.shippingAmount ?? 0;
   const tax = order.taxAmount ?? 0;
-  const total = order.totalAmount ?? subtotal + shipping + tax;
+  const total =
+    order.totalAmount ??
+    subtotal +
+      shipping +
+      tax -
+      (order.discountPercent ? Math.round((subtotal * order.discountPercent) / 100) : 0);
 
   const rows: Array<{ label: string; value: string; size: number; font: PDFFont }> = [
     { label: "Subtotal", value: money(subtotal), size: 9, font: regular },
   ];
+  // Counter discount: subtotal is the list price, so show what came off it or
+  // the totals will not add up on the printed receipt.
+  const discount = order.discountPercent
+    ? Math.round((subtotal * order.discountPercent) / 100)
+    : 0;
+  if (discount > 0) {
+    rows.push({
+      label: `Discount ${order.discountPercent}%`,
+      value: `-${money(discount)}`,
+      size: 9,
+      font: regular,
+    });
+  }
   if (shipping > 0) {
     rows.push({ label: "Shipping", value: money(shipping), size: 9, font: regular });
   }

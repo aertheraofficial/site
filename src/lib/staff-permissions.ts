@@ -7,6 +7,7 @@
 export type PageKey =
   | "orders"
   | "counter-sale"
+  | "customers"
   | "products"
   | "stock"
   | "labels"
@@ -28,6 +29,12 @@ export const ADMIN_PAGES: AdminPage[] = [
     key: "counter-sale",
     label: "Counter Sale",
     href: "/admin/counter-sale",
+    group: "Fulfillment",
+  },
+  {
+    key: "customers",
+    label: "Customers",
+    href: "/admin/customers",
     group: "Fulfillment",
   },
   { key: "products", label: "Products", href: "/admin/products", group: "Catalog" },
