@@ -3,11 +3,30 @@ import { redirect } from "next/navigation";
 import { requireActor } from "@/lib/staff-auth";
 import { listPayslipsForStaff } from "@/lib/staff";
 import { formatMoney } from "@/lib/money";
+import { readOrders } from "@/lib/orders";
+import { getLocationName } from "@/lib/product-stock";
 import { formatPeriod } from "@/lib/payroll";
 
 type ProfilePageProps = {
   searchParams: Promise<{ denied?: string }>;
 };
+
+/** Malaysian shop day, so "today" matches the day the staff member worked. */
+const dayKey = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Kuala_Lumpur",
+  dateStyle: "short",
+});
+
+const monthKey = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Kuala_Lumpur",
+  year: "numeric",
+  month: "2-digit",
+});
+
+const timeOfDay = new Intl.DateTimeFormat("en-MY", {
+  timeZone: "Asia/Kuala_Lumpur",
+  timeStyle: "short",
+});
 
 export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   const actor = await requireActor("/admin/profile");
@@ -20,6 +39,23 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   const payslips = (await listPayslipsForStaff(staff.id)).filter(
     (slip) => slip.issuedAt,
   );
+
+  // What this staff member has sold — their own sales only, so the till total
+  // of everyone else's work is not mistaken for theirs.
+  const now = new Date();
+  const today = dayKey.format(now);
+  const thisMonth = monthKey.format(now);
+  const mySales = (await readOrders())
+    .filter((order) => order.soldById === staff.id)
+    .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+  const todaySales = mySales.filter(
+    (order) => dayKey.format(new Date(order.createdAt)) === today,
+  );
+  const monthSales = mySales.filter(
+    (order) => monthKey.format(new Date(order.createdAt)) === thisMonth,
+  );
+  const sumOf = (orders: typeof mySales) =>
+    orders.reduce((total, order) => total + (order.totalAmount ?? 0), 0);
 
   return (
     <div>
@@ -51,6 +87,79 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
               : "—"
           }
         />
+      </section>
+
+      <section className="mt-10">
+        <h3 className="font-display text-[1.4rem] tracking-[-0.03em] text-[#201d17]">
+          My Sales
+        </h3>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <Stat
+            label="Today"
+            count={todaySales.length}
+            amountCents={sumOf(todaySales)}
+          />
+          <Stat
+            label="This month"
+            count={monthSales.length}
+            amountCents={sumOf(monthSales)}
+          />
+          <Stat
+            label="All time"
+            count={mySales.length}
+            amountCents={sumOf(mySales)}
+          />
+        </div>
+
+        {mySales.length > 0 ? (
+          <ul className="mt-4 divide-y divide-black/5 overflow-hidden rounded-[1.25rem] border border-black/8 bg-white">
+            {mySales.slice(0, 12).map((order) => (
+              <li
+                key={order.sessionId}
+                className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 text-sm"
+              >
+                <span className="text-[#5d574f]">
+                  {dayKey.format(new Date(order.createdAt))}
+                  {" · "}
+                  {timeOfDay.format(new Date(order.createdAt))}
+                  {" · "}
+                  <span className="text-[#201d17]">
+                    {order.customerName ?? "Walk-in"}
+                  </span>
+                  {order.location ? (
+                    <span className="text-[#8d7a5c]">
+                      {" · "}
+                      {getLocationName(order.location)}
+                    </span>
+                  ) : null}
+                  {order.discountPercent ? (
+                    <span className="text-[#8b5e1d]">
+                      {" · "}
+                      {order.discountPercent}% off
+                    </span>
+                  ) : null}
+                </span>
+                <span className="flex items-center gap-3">
+                  <span className="font-semibold text-[#201d17]">
+                    {formatMoney((order.totalAmount ?? 0) / 100)}
+                  </span>
+                  <Link
+                    href={`/receipt/${order.sessionId}`}
+                    target="_blank"
+                    className="text-xs font-semibold text-[#8d7a5c] underline-offset-2 hover:underline"
+                  >
+                    Receipt
+                  </Link>
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-4 text-sm text-[#8d7a5c]">
+            No sales recorded under your name yet.
+          </p>
+        )}
       </section>
 
       <section className="mt-10">
@@ -97,6 +206,30 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           </p>
         )}
       </section>
+    </div>
+  );
+}
+
+function Stat({
+  label,
+  count,
+  amountCents,
+}: {
+  label: string;
+  count: number;
+  amountCents: number;
+}) {
+  return (
+    <div className="rounded-[1.25rem] border border-black/8 bg-white px-5 py-4">
+      <p className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-[#8d7a5c]">
+        {label}
+      </p>
+      <p className="mt-1 text-xl font-semibold text-[#201d17]">
+        {formatMoney(amountCents / 100)}
+      </p>
+      <p className="text-xs text-[#8d7a5c]">
+        {count} {count === 1 ? "sale" : "sales"}
+      </p>
     </div>
   );
 }
