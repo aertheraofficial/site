@@ -77,3 +77,7 @@ next-env.d.ts
 
 # docs (PDF, nota dev — bukan kod, jangan commit)
 /docs/
+
+# Studio demo output (generated images, not source)
+.studio-demo/
+.screenshots/
