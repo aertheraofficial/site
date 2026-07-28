@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { requirePermission } from "@/lib/staff-auth";
 import { describeStudioSetup } from "@/lib/social/studio-scenes";
+import { getProductsWithStock } from "@/lib/product-stock";
 import { SceneComposer } from "./scene-composer";
 
 export const metadata: Metadata = { title: "Social Studio" };
@@ -8,6 +9,17 @@ export const metadata: Metadata = { title: "Social Studio" };
 export default async function SocialStudioPage() {
   await requirePermission("social", "/admin/social/studio");
   const setup = describeStudioSetup();
+
+  // The catalog, so staff can compose from a product the shop already sells
+  // instead of hunting for the photo on their phone.
+  const products = (await getProductsWithStock())
+    .filter((product) => product.image)
+    .map((product) => ({
+      slug: product.slug,
+      name: product.name,
+      size: product.size,
+      image: product.image,
+    }));
 
   // Both halves are needed and they fail for different reasons, so say which
   // one is missing rather than a single unhelpful "not configured".
@@ -26,9 +38,10 @@ export default async function SocialStudioPage() {
           Product scenes
         </h3>
         <p className="mt-3 max-w-2xl text-sm leading-7 text-[#5d574f]">
-          Upload a plain product photo and get a styled shot back. Kimi reads the
-          label and writes the art direction; Gemini composites the product into
-          the scene, keeping its shape and printed text unchanged.
+          Pick a product you already sell — or upload a plain photo — and get a
+          styled shot back. Kimi reads the label and writes the art direction;
+          Gemini composites the product into the scene, keeping its shape and
+          printed text unchanged.
         </p>
       </div>
 
@@ -42,7 +55,7 @@ export default async function SocialStudioPage() {
           </ul>
         </div>
       ) : (
-        <SceneComposer />
+        <SceneComposer products={products} />
       )}
     </div>
   );

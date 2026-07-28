@@ -1,6 +1,9 @@
 "use server";
 
+import { promises as fs } from "fs";
+import path from "path";
 import { requirePermission } from "@/lib/staff-auth";
+import { getProductBySlugWithStock } from "@/lib/product-stock";
 import { isKimiConfigured } from "@/lib/social/kimi";
 import { isOrientation } from "@/lib/social/orientation";
 import { isCaptionPlatform } from "@/lib/social/platform-rules";
@@ -107,6 +110,41 @@ function slugifyForFile(value: string) {
 }
 
 /**
+ * Fetch a catalog product's own photo.
+ *
+ * Static catalog images are site-relative ("/assets/..."), so they are read off
+ * disk rather than fetched over HTTP — a server calling back into itself needs
+ * an absolute origin it does not reliably know, and would fail on a cold start.
+ * Admin-added products point at Supabase storage and are fetched.
+ */
+async function loadCatalogPhoto(slug: string) {
+  const product = await getProductBySlugWithStock(slug);
+  if (!product?.image) {
+    throw new Error("That product has no photo to work from.");
+  }
+
+  if (/^https?:\/\//i.test(product.image)) {
+    const response = await fetch(product.image);
+    if (!response.ok) {
+      throw new Error("Could not load that product's photo.");
+    }
+    const mimeType = response.headers.get("content-type") ?? "image/jpeg";
+    return {
+      productImage: Buffer.from(await response.arrayBuffer()),
+      mimeType: mimeType.split(";")[0].trim(),
+    };
+  }
+
+  const filePath = path.join(process.cwd(), "public", product.image.replace(/^\//, ""));
+  const extension = path.extname(filePath).toLowerCase();
+  return {
+    productImage: await fs.readFile(filePath),
+    mimeType:
+      extension === ".png" ? "image/png" : extension === ".webp" ? "image/webp" : "image/jpeg",
+  };
+}
+
+/**
  * Returns the scene instead of redirecting: the image is the whole point of the
  * screen, and a redirect would throw it away.
  *
@@ -118,20 +156,29 @@ export async function generateSceneAction(
 ): Promise<SceneActionResult> {
   await requirePermission("social", "/admin/social/studio");
 
+  // Two ways in: a slug picked from the catalog, or a file from the device.
+  // The catalog is the common case — the shop already has a photo of every
+  // product it sells, and re-uploading one to a tool that could just fetch it
+  // is busywork.
+  const productSlug = String(formData.get("productSlug") ?? "").trim();
   const file = formData.get("productImage");
-  if (!(file instanceof File) || file.size === 0) {
-    return { ok: false, error: "Choose a product photo first." };
+  const hasUpload = file instanceof File && file.size > 0;
+
+  if (!productSlug && !hasUpload) {
+    return { ok: false, error: "Pick a product, or choose a photo from your device." };
   }
 
-  if (!ACCEPTED_TYPES.includes(file.type)) {
-    return { ok: false, error: "Use a PNG, JPEG or WebP photo." };
-  }
+  if (hasUpload) {
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      return { ok: false, error: "Use a PNG, JPEG or WebP photo." };
+    }
 
-  if (file.size > MAX_UPLOAD_BYTES) {
-    return {
-      ok: false,
-      error: "That photo is over 8 MB. Use a smaller one.",
-    };
+    if (file.size > MAX_UPLOAD_BYTES) {
+      return {
+        ok: false,
+        error: "That photo is over 8 MB. Use a smaller one.",
+      };
+    }
   }
 
   const orientationValue = String(formData.get("orientation") ?? "square");
@@ -140,10 +187,18 @@ export async function generateSceneAction(
   }
 
   try {
-    const productImage = Buffer.from(await file.arrayBuffer());
+    // An upload wins when both are present: staff who just chose a file meant
+    // to use it, whatever is still selected in the product list.
+    const source = hasUpload
+      ? {
+          productImage: Buffer.from(await file.arrayBuffer()),
+          mimeType: file.type,
+        }
+      : await loadCatalogPhoto(productSlug);
+
     const { analysis, scenePrompt, image } = await generateProductScene({
-      productImage,
-      mimeType: file.type,
+      productImage: source.productImage,
+      mimeType: source.mimeType,
       orientation: orientationValue,
       style: String(formData.get("style") ?? "").trim(),
       notes: String(formData.get("notes") ?? "").trim(),

@@ -31,10 +31,19 @@ const ORIENTATION_META: Record<
 
 const MAX_MB = 8;
 
-export function SceneComposer() {
+export type StudioProduct = {
+  slug: string;
+  name: string;
+  size: string;
+  image: string;
+};
+
+export function SceneComposer({ products }: { products: StudioProduct[] }) {
   const [result, setResult] = useState<SceneActionResult | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [slug, setSlug] = useState("");
   const [preview, setPreview] = useState("");
+  const [query, setQuery] = useState("");
   const [orientation, setOrientation] = useState<Orientation>("square");
   const [style, setStyle] = useState(STYLES[0]);
   const [notes, setNotes] = useState("");
@@ -45,7 +54,20 @@ export function SceneComposer() {
   function pick(next: File | null) {
     setResult(null);
     setFile(next);
+    // An upload replaces a chosen product, so only one source is ever live.
+    setSlug("");
     setPreview(next ? URL.createObjectURL(next) : "");
+  }
+
+  function pickProduct(product: StudioProduct) {
+    setResult(null);
+    setFile(null);
+    if (fileRef.current) fileRef.current.value = "";
+    // Tapping the selected product clears it. Decided once, so the slug and the
+    // preview can never disagree about what is chosen.
+    const deselecting = slug === product.slug;
+    setSlug(deselecting ? "" : product.slug);
+    setPreview(deselecting ? "" : product.image);
   }
 
   function onDrop(event: React.DragEvent) {
@@ -57,6 +79,8 @@ export function SceneComposer() {
 
   function reset() {
     pick(null);
+    setSlug("");
+    setQuery("");
     setNotes("");
     setStyle(STYLES[0]);
     setOrientation("square");
@@ -64,9 +88,10 @@ export function SceneComposer() {
   }
 
   function generate() {
-    if (!file) return;
+    if (!file && !slug) return;
     const formData = new FormData();
-    formData.append("productImage", file);
+    if (file) formData.append("productImage", file);
+    if (slug) formData.append("productSlug", slug);
     formData.append("orientation", orientation);
     formData.append("style", style);
     formData.append("notes", notes);
@@ -117,7 +142,7 @@ export function SceneComposer() {
               </>
             ) : (
               <p className="text-sm leading-6 text-[#5d574f]">
-                Drag a photo here, or choose one below.
+                Pick a product below, or drag a photo here.
                 <span className="mt-1 block text-xs text-[#8d7a5c]">
                   JPG, PNG or WebP — up to {MAX_MB} MB
                 </span>
@@ -136,6 +161,64 @@ export function SceneComposer() {
               className="mt-4 w-full rounded-[1.25rem] border border-black/8 bg-white px-4 py-3 text-sm text-[#201d17] file:mr-3 file:rounded-full file:border-0 file:bg-[#201d17] file:px-4 file:py-1.5 file:text-xs file:font-semibold file:uppercase file:tracking-wide file:text-white"
             />
           </div>
+
+          {/*
+            The shop already has a photo of everything it sells, so the common
+            case is choosing one — uploading is for a shot that is not in the
+            catalog yet. Whichever is touched last clears the other, so the
+            action never has to guess which one was meant.
+          */}
+          {products.length > 0 ? (
+            <div>
+              <p className={labelClass}>Or use a product you already sell</p>
+              {products.length > 8 ? (
+                <input
+                  type="search"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Search products"
+                  className="mt-2 w-full rounded-[1.25rem] border border-black/8 bg-white px-4 py-2.5 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59]"
+                />
+              ) : null}
+              <div className="mt-3 grid max-h-64 grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3">
+                {products
+                  .filter((product) =>
+                    product.name.toLowerCase().includes(query.trim().toLowerCase()),
+                  )
+                  .slice(0, 60)
+                  .map((product) => {
+                    const isActive = slug === product.slug;
+                    return (
+                      <button
+                        key={product.slug}
+                        type="button"
+                        onClick={() => pickProduct(product)}
+                        className={`flex items-center gap-2 rounded-[1rem] border p-2 text-left transition ${
+                          isActive
+                            ? "border-[#201d17] bg-[#f7f2ea]"
+                            : "border-black/8 bg-white hover:bg-[#faf6ef]"
+                        }`}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={product.image}
+                          alt=""
+                          className="h-10 w-10 shrink-0 rounded-lg object-cover"
+                        />
+                        <span className="min-w-0">
+                          <span className="block truncate text-xs font-medium text-[#201d17]">
+                            {product.name}
+                          </span>
+                          <span className="block truncate text-[0.68rem] text-[#8d7a5c]">
+                            {product.size}
+                          </span>
+                        </span>
+                      </button>
+                    );
+                  })}
+              </div>
+            </div>
+          ) : null}
 
           <fieldset>
             <legend className={labelClass}>Output size</legend>
