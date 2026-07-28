@@ -339,6 +339,19 @@ export function SceneComposer({ products }: { products: StudioProduct[] }) {
                   alt={`${result.analysis.productName} in a generated scene`}
                   className="w-full"
                 />
+                {/*
+                  Observed, not theoretical: a 230ml diffuser came back reading
+                  220ml. Large type — brand, product name — survives; the small
+                  print does not, and no prompt wording fixes that reliably. A
+                  wrong volume on a public post is a claim about the product,
+                  so this warning sits next to the download button rather than
+                  somewhere it can be scrolled past.
+                */}
+                <p className="border-t border-[#e7d3a8] bg-[#fbf4e6] px-5 py-3 text-sm leading-6 text-[#8b5e1d]">
+                  <strong className="font-semibold">Check the label before posting.</strong>{" "}
+                  AI redraws small print and can change the volume, weight or
+                  ingredient list. Compare it against the real bottle.
+                </p>
                 <div className="flex flex-wrap items-center justify-between gap-3 p-5">
                   <div className="min-w-0">
                     <p className="font-semibold text-[#201d17]">
