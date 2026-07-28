@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
+import { CopyButton } from "@/components/admin/copy-button";
+import { MigrationNeeded } from "@/components/admin/migration-needed";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { formatShopDateTime } from "@/lib/datetime";
+import { isMissingStudioTable } from "@/lib/social/studio-errors";
+import { isKimiConfigured } from "@/lib/social/kimi";
 import { requirePermission } from "@/lib/staff-auth";
 import {
   STUDIO_PLATFORMS,
@@ -14,6 +18,7 @@ import {
   deleteStudioPostAction,
   setStudioPostStatusAction,
 } from "./actions";
+import { CaptionField } from "./caption-field";
 
 export const metadata: Metadata = { title: "Social Posts" };
 
@@ -60,7 +65,15 @@ export default async function SocialPostsPage({ searchParams }: PostsPageProps) 
     );
   }
 
-  const posts = await listStudioPosts();
+  let posts;
+  try {
+    posts = await listStudioPosts();
+  } catch (readError) {
+    if (!isMissingStudioTable(readError)) throw readError;
+    return <MigrationNeeded />;
+  }
+
+  const aiAvailable = isKimiConfigured();
   const scheduled = posts.filter((post) => post.status === "scheduled");
   const published = posts.filter((post) => post.status === "published");
   const message = error ? (ERROR_MESSAGES[error] ?? "Something went wrong.") : null;
@@ -112,7 +125,11 @@ export default async function SocialPostsPage({ searchParams }: PostsPageProps) 
             </span>
           </summary>
 
-          <form action={createStudioPostAction} className="mt-6 space-y-5">
+          <form
+            id="studio-post-form"
+            action={createStudioPostAction}
+            className="mt-6 space-y-5"
+          >
             <div>
               <label htmlFor="post-title" className={labelClass}>
                 Title
@@ -141,18 +158,7 @@ export default async function SocialPostsPage({ searchParams }: PostsPageProps) 
               />
             </div>
 
-            <div>
-              <label htmlFor="post-caption" className={labelClass}>
-                Caption
-              </label>
-              <textarea
-                id="post-caption"
-                name="caption"
-                rows={3}
-                placeholder="The words that go out with the post."
-                className={inputClass}
-              />
-            </div>
+            <CaptionField aiAvailable={aiAvailable} />
 
             <fieldset>
               <legend className={labelClass}>Channels</legend>
@@ -260,6 +266,8 @@ function PostCard({ post }: { post: StudioPost }) {
       </div>
 
       <div className="mt-5 flex flex-wrap gap-3 border-t border-black/8 pt-5">
+        <CopyButton value={post.caption || post.content} />
+
         {post.status === "scheduled" || post.status === "failed" ? (
           <form action={setStudioPostStatusAction}>
             <input type="hidden" name="id" value={post.id} />

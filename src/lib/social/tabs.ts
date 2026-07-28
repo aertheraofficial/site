@@ -25,4 +25,29 @@ export const SOCIAL_TABS: SocialTab[] = [
     label: "Posts",
     description: "Write and schedule organic posts across your channels.",
   },
+  {
+    href: "/admin/social/studio",
+    label: "Studio",
+    description: "Turn a plain product photo into a styled scene, with captions.",
+  },
+  {
+    href: "/admin/social/captions",
+    label: "Captions",
+    description: "One idea, a caption for every network.",
+  },
+  {
+    href: "/admin/social/linktree",
+    label: "Link Tree",
+    description: "The links behind your Instagram bio.",
+  },
+  {
+    href: "/admin/social/analytics",
+    label: "Analytics",
+    description: "Which links people actually tap.",
+  },
+  {
+    href: "/admin/social/settings",
+    label: "Settings",
+    description: "Connections and composer defaults.",
+  },
 ];

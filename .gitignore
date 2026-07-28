@@ -62,6 +62,10 @@ next-env.d.ts
 /data/social-content.json
 .vercel
 .env*.local
+# Any copy or backup of a local env file — a .bak of .env.local
+# holds every secret the real file does.
+.env.local.*
+.env.*.bak*
 
 .vercel
 
