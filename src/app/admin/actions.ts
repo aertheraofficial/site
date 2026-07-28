@@ -32,6 +32,7 @@ import {
   getRole,
   isRoleKey,
   isStaffStatus,
+  type PageKey,
   type StaffStatus,
 } from "@/lib/staff-permissions";
 import {
@@ -885,12 +886,23 @@ function numberField(formData: FormData, key: string): number {
   return Number.isFinite(value) ? value : 0;
 }
 
+/** Only pages an admin is allowed to hand out — never the admin-only ones. */
+function readPermissions(formData: FormData): PageKey[] {
+  return formData
+    .getAll("permissions")
+    .filter((value): value is string => typeof value === "string")
+    .filter((key): key is PageKey =>
+      ASSIGNABLE_PAGES.some((page) => page.key === key),
+    );
+}
+
 function readStaffFields(formData: FormData): Omit<StaffWriteInput, "isActive"> & {
   isActive: boolean;
 } {
   const baseSalaryText = textField(formData, "baseSalary");
   const roleValue = textField(formData, "role");
   const role = isRoleKey(roleValue) ? roleValue : DEFAULT_ROLE;
+  const customPages = formData.get("customPages") !== null;
   const statusValue = textField(formData, "status");
   // An unrecognised status means the least access, never the most.
   const status = isStaffStatus(statusValue) ? statusValue : "pending";
@@ -905,12 +917,15 @@ function readStaffFields(formData: FormData): Omit<StaffWriteInput, "isActive"> 
     bankAccount: textOrNullField(formData, "bankAccount"),
     joinDate: textOrNullField(formData, "joinDate"),
     baseSalary: baseSalaryText ? numberField(formData, "baseSalary") : null,
-    // Pages come from the role, not from tick boxes. Ticking six boxes one by
-    // one is where an admin accidentally hands a cashier the Social account and
-    // the ad budget; choosing "Cashier" cannot do that.
-    permissions: getRole(role).permissions.filter((key) =>
-      ASSIGNABLE_PAGES.some((page) => page.key === key),
-    ),
+    // Pages follow the role by default — choosing "Cashier" cannot half-tick
+    // its way into handing over the Social account and the ad budget. An admin
+    // who ticks "add extra pages" is making that call deliberately, and the
+    // role still decides how much sales data the account can see.
+    permissions: customPages
+      ? readPermissions(formData)
+      : getRole(role).permissions.filter((key) =>
+          ASSIGNABLE_PAGES.some((page) => page.key === key),
+        ),
     role,
     status,
     // Only a role that answers for one shop keeps a shop; clear it otherwise so

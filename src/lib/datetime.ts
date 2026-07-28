@@ -109,6 +109,50 @@ export function shopDateStamp(value: string | Date = new Date()) {
 }
 
 /**
+ * Malaysia has been a fixed UTC+8 with no daylight saving since 1982, so a
+ * literal offset is exact here and avoids a date library. Do not copy this
+ * shortcut to a zone that observes DST.
+ */
+const SHOP_UTC_OFFSET = "+08:00";
+
+/**
+ * Turn what someone typed into `<input type="datetime-local">` into an instant.
+ *
+ * The input hands back a bare wall-clock string ("2026-07-28T21:00") with no
+ * zone. `new Date()` would read that in the *server's* zone, so scheduling a
+ * post for 9pm from the shop would fire at 5am the next morning on a UTC host.
+ * Staff mean shop time, always.
+ */
+export function parseShopLocalDateTime(value: string): string | null {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+
+  // datetime-local omits seconds when they are zero; normalise both shapes.
+  const match = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})(:\d{2})?$/.exec(trimmed);
+  if (!match) return null;
+
+  const date = new Date(`${match[1]}T${match[2]}${match[3] ?? ":00"}${SHOP_UTC_OFFSET}`);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+/**
+ * The inverse: render a stored instant as the wall-clock string a
+ * `datetime-local` input expects, so reopening a scheduled post shows the shop
+ * time that was chosen rather than the UTC equivalent.
+ */
+export function toShopLocalInputValue(value: string | Date | null | undefined) {
+  const date = value == null ? null : toDate(value);
+  if (!date) return "";
+  // en-CA gives ISO-ordered date parts; take the time from the same zone.
+  return `${isoDay.format(date)}T${new Intl.DateTimeFormat("en-GB", {
+    timeZone: SHOP_TIME_ZONE,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date)}`;
+}
+
+/**
  * Today's calendar year and month *in Malaysia*, for defaulting form fields.
  * `new Date().getMonth()` reads the server clock, so on the 1st of the month
  * before 8am local the payroll form would default to the month just closed.

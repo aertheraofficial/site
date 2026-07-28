@@ -156,6 +156,7 @@ export function StaffForm({ action, staff, submitLabel }: StaffFormProps) {
         defaultRole={staff?.role ?? DEFAULT_ROLE}
         defaultShopLocation={staff?.shopLocation ?? ""}
         defaultStatus={staff?.status ?? "pending"}
+        defaultPermissions={staff?.permissions ?? []}
         shops={SHOP_LOCATIONS.map((shop) => ({ id: shop.id, name: shop.name }))}
       />
 
