@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { updateProductAction } from "@/app/admin/actions";
 import { requirePermission } from "@/lib/staff-auth";
 import { getProductBySlugWithStock, getProductsWithStock } from "@/lib/product-stock";
+import { ProductTypeField } from "../../product-type-field";
 
 type EditProductPageProps = {
   params: Promise<{ slug: string }>;
@@ -64,24 +65,10 @@ export default async function EditProductPage({
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="mb-1.5 block text-[0.8rem] font-medium text-[#201d17]">
-              Category <span className="text-red-500">*</span>
-            </label>
-            <select name="categoryLabel" defaultValue={product.categoryLabel} className={inputClass}>
-              {categories.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
-            <input
-              type="text"
-              name="newCategoryLabel"
-              placeholder="Or type a new category"
-              className={`mt-2 ${inputClass}`}
-            />
-          </div>
+          <ProductTypeField
+            categories={categories}
+            defaultValue={product.categoryLabel}
+          />
           <div>
             <label className="mb-1.5 block text-[0.8rem] font-medium text-[#201d17]">
               Size <span className="text-red-500">*</span>

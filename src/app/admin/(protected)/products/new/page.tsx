@@ -1,6 +1,7 @@
 import { createAdminProductAction } from "@/app/admin/actions";
 import { requirePermission } from "@/lib/staff-auth";
 import { getProductsWithStock } from "@/lib/product-stock";
+import { ProductTypeField } from "../product-type-field";
 
 type NewProductPageProps = {
   searchParams: Promise<{ error?: string }>;
@@ -59,31 +60,8 @@ export default async function NewProductPage({ searchParams }: NewProductPagePro
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="mb-1.5 block text-[0.8rem] font-medium text-[#201d17]">
-              Type <span className="text-red-500">*</span>
-            </label>
-            <select
-              name="categoryLabel"
-              defaultValue=""
-              className="w-full rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm text-[#201d17] outline-none transition focus:border-[#a07850] focus:ring-2 focus:ring-[#a07850]/20"
-            >
-              <option value="" disabled>
-                Select existing type…
-              </option>
-              {categories.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
-            <input
-              type="text"
-              name="newCategoryLabel"
-              placeholder="Or type a new type here"
-              className="mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm text-[#201d17] outline-none transition focus:border-[#a07850] focus:ring-2 focus:ring-[#a07850]/20"
-            />
-          </div>
+          <ProductTypeField categories={categories} />
+
           <div>
             <label className="mb-1.5 block text-[0.8rem] font-medium text-[#201d17]">
               Size <span className="text-red-500">*</span>
