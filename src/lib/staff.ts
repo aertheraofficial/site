@@ -384,6 +384,45 @@ export async function updateStaff(id: string, input: StaffWriteInput): Promise<v
   }
 }
 
+/** The fields a staff member is allowed to change about themselves. */
+export type StaffProfileInput = {
+  fullName: string;
+  phone: string | null;
+  email: string | null;
+  icNumber: string | null;
+  bankName: string | null;
+  bankAccount: string | null;
+};
+
+/**
+ * Self-service profile edit.
+ *
+ * Deliberately narrow, and deliberately not `updateStaff`: this runs for the
+ * account being edited, so it must not be able to touch role, status,
+ * permissions, username or salary. Listing the columns here rather than
+ * spreading an input object means a new privileged column cannot quietly become
+ * writable by whoever it belongs to.
+ */
+export async function updateStaffProfile(
+  id: string,
+  input: StaffProfileInput,
+): Promise<void> {
+  const supabase = requireStore();
+  const { error } = await supabase
+    .from("staff")
+    .update({
+      full_name: input.fullName,
+      phone: input.phone,
+      email: input.email,
+      ic_number: input.icNumber,
+      bank_name: input.bankName,
+      bank_account: input.bankAccount,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+  if (error) throw new Error(`Unable to save your details: ${error.message}`);
+}
+
 /**
  * Approve or suspend an account. Separate from updateStaff on purpose: granting
  * access and editing someone's bank details are different decisions, and an

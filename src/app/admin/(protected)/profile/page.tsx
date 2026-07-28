@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { updateMyProfileAction } from "@/app/admin/actions";
 import { requireActor } from "@/lib/staff-auth";
+import { getRole } from "@/lib/staff-permissions";
 import { listPayslipsForStaff } from "@/lib/staff";
 import { formatShopTime, shopDayKey, shopMonthKey } from "@/lib/datetime";
 import { formatMoney } from "@/lib/money";
@@ -9,12 +11,19 @@ import { getLocationName } from "@/lib/product-stock";
 import { formatPeriod } from "@/lib/payroll";
 
 type ProfilePageProps = {
-  searchParams: Promise<{ denied?: string }>;
+  searchParams: Promise<{ denied?: string; saved?: string; error?: string }>;
 };
 
 export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   const actor = await requireActor("/admin/profile");
-  const { denied } = await searchParams;
+  const { denied, saved, error } = await searchParams;
+  const errorMessage = error
+    ? error === "missing-name"
+      ? "Your full name is required."
+      : error === "weak-password"
+        ? "A new password must be at least 6 characters."
+        : error
+    : null;
 
   // The master admin has no personal staff profile.
   if (actor.type === "admin") redirect("/admin/staff");
@@ -56,21 +65,74 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         </p>
       ) : null}
 
-      <section className="mt-8 grid gap-4 rounded-[1.5rem] border border-black/8 bg-white p-6 sm:grid-cols-2">
-        <Detail label="Username" value={`@${staff.username}`} />
-        <Detail label="Phone" value={staff.phone || "—"} />
-        <Detail label="Email" value={staff.email || "—"} />
-        <Detail label="IC number" value={staff.icNumber || "—"} />
-        <Detail label="Join date" value={staff.joinDate || "—"} />
-        <Detail
-          label="Bank"
-          value={
-            staff.bankName
-              ? `${staff.bankName}${staff.bankAccount ? ` · ${staff.bankAccount}` : ""}`
-              : "—"
-          }
-        />
-      </section>
+      {saved ? (
+        <p className="mt-6 max-w-2xl rounded-[1.25rem] border border-[#8cc8a4] bg-[#e9f7ee] px-4 py-3 text-sm text-[#256542]">
+          Your details have been saved.
+        </p>
+      ) : null}
+      {errorMessage ? (
+        <p className="mt-6 max-w-2xl rounded-[1.25rem] border border-[#e6b4b4] bg-[#fff0ef] px-4 py-3 text-sm text-[#9b3d32]">
+          {errorMessage}
+        </p>
+      ) : null}
+
+      {/*
+        Staff maintain their own details. Username, role, access and salary are
+        not on this form and the action cannot write them — only an admin can.
+      */}
+      <form
+        action={updateMyProfileAction}
+        className="mt-8 rounded-[1.5rem] border border-black/8 bg-white p-6"
+      >
+        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#8d7a5c]">
+          My details
+        </p>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <Field
+            label="Full name"
+            name="fullName"
+            defaultValue={staff.fullName}
+            required
+          />
+          <Field label="Phone" name="phone" type="tel" defaultValue={staff.phone ?? ""} />
+          <Field
+            label="Email"
+            name="email"
+            type="email"
+            defaultValue={staff.email ?? ""}
+          />
+          <Field label="IC number" name="icNumber" defaultValue={staff.icNumber ?? ""} />
+          <Field label="Bank name" name="bankName" defaultValue={staff.bankName ?? ""} />
+          <Field
+            label="Bank account no."
+            name="bankAccount"
+            defaultValue={staff.bankAccount ?? ""}
+          />
+          <Field
+            label="New password"
+            name="password"
+            type="password"
+            placeholder="Leave blank to keep"
+          />
+        </div>
+
+        <div className="mt-5 grid gap-4 border-t border-black/8 pt-5 sm:grid-cols-3">
+          <Detail label="Username" value={`@${staff.username}`} />
+          <Detail label="Join date" value={staff.joinDate || "—"} />
+          <Detail label="Role" value={getRole(staff.role).label} />
+        </div>
+        <p className="mt-2 text-xs text-[#8d7a5c]">
+          Ask an admin to change your username, role or access.
+        </p>
+
+        <button
+          type="submit"
+          className="mt-5 rounded-full bg-[#201d17] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-[#2e2a22]"
+        >
+          Save my details
+        </button>
+      </form>
 
       <section className="mt-10">
         <h3 className="font-display text-[1.4rem] tracking-[-0.03em] text-[#201d17]">
@@ -213,6 +275,43 @@ function Stat({
       <p className="text-xs text-[#8d7a5c]">
         {count} {count === 1 ? "sale" : "sales"}
       </p>
+    </div>
+  );
+}
+
+function Field({
+  label,
+  name,
+  defaultValue,
+  type = "text",
+  placeholder,
+  required,
+}: {
+  label: string;
+  name: string;
+  defaultValue?: string;
+  type?: string;
+  placeholder?: string;
+  required?: boolean;
+}) {
+  return (
+    <div>
+      <label
+        htmlFor={`profile-${name}`}
+        className="mb-1.5 block text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[#8d7a5c]"
+      >
+        {label} {required ? <span className="text-red-500">*</span> : null}
+      </label>
+      <input
+        id={`profile-${name}`}
+        type={type}
+        name={name}
+        required={required}
+        placeholder={placeholder}
+        defaultValue={defaultValue}
+        autoComplete={type === "password" ? "new-password" : "off"}
+        className="w-full rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59]"
+      />
     </div>
   );
 }

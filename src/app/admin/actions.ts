@@ -13,6 +13,7 @@ import {
   clearStaffSession,
   createStaffSession,
   hashPassword,
+  requireActor,
   requireAdminActor,
   requirePermission,
 } from "@/lib/staff-auth";
@@ -22,6 +23,7 @@ import {
   setStaffPassword,
   setStaffStatus,
   updateStaff,
+  updateStaffProfile,
   upsertPayslip,
   type StaffWriteInput,
 } from "@/lib/staff";
@@ -992,6 +994,49 @@ export async function updateStaffAction(formData: FormData) {
   revalidatePath("/admin/staff");
   revalidatePath(`/admin/staff/${id}`);
   redirect(`/admin/staff/${id}?saved=1`);
+}
+
+/**
+ * A staff member editing their own details.
+ *
+ * Runs as the account being edited, so it takes the id from the session rather
+ * than the form — a posted id would let anyone edit anyone. Role, status,
+ * permissions, username and salary are not readable from here at all.
+ */
+export async function updateMyProfileAction(formData: FormData) {
+  const actor = await requireActor("/admin/profile");
+  if (actor.type !== "staff") redirect("/admin/staff");
+
+  const fullName = textField(formData, "fullName");
+  if (!fullName) {
+    redirect("/admin/profile?error=missing-name");
+  }
+
+  const password = textField(formData, "password");
+  if (password && password.length < 6) {
+    redirect("/admin/profile?error=weak-password");
+  }
+
+  try {
+    await updateStaffProfile(actor.staff.id, {
+      fullName,
+      phone: textOrNullField(formData, "phone"),
+      email: textOrNullField(formData, "email"),
+      icNumber: textOrNullField(formData, "icNumber"),
+      bankName: textOrNullField(formData, "bankName"),
+      bankAccount: textOrNullField(formData, "bankAccount"),
+    });
+    if (password) {
+      await setStaffPassword(actor.staff.id, hashPassword(password));
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to save.";
+    redirect(`/admin/profile?error=${encodeURIComponent(message)}`);
+  }
+
+  revalidatePath("/admin/profile");
+  revalidatePath("/admin/staff");
+  redirect("/admin/profile?saved=1");
 }
 
 /**
