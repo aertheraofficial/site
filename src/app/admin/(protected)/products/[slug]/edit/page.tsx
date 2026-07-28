@@ -1,10 +1,10 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { updateProductAction } from "@/app/admin/actions";
 import { requirePermission } from "@/lib/staff-auth";
 import { getProductBySlugWithStock, getProductsWithStock } from "@/lib/product-stock";
 import { ProductTypeField } from "../../product-type-field";
+import { ProductPhotoField } from "../../product-photo-field";
 
 type EditProductPageProps = {
   params: Promise<{ slug: string }>;
@@ -93,20 +93,10 @@ export default async function EditProductPage({
         </div>
 
         <div>
-          <label className="mb-1.5 block text-[0.8rem] font-medium text-[#201d17]">
-            Product photo
-          </label>
-          <div className="flex items-center gap-3">
-            <Image
-              src={product.image}
-              alt=""
-              width={48}
-              height={48}
-              className="h-12 w-12 rounded-lg object-cover"
-            />
-            <input type="file" name="image" accept="image/*" className={inputClass} />
-          </div>
-          <p className="mt-1 text-xs text-[#8d7a5c]">Leave empty to keep the current photo.</p>
+          <ProductPhotoField currentImageUrl={product.image} />
+          <p className="mt-1.5 text-xs text-[#8d7a5c]">
+            Biarkan kosong untuk kekalkan gambar sekarang.
+          </p>
         </div>
 
         <div className="flex gap-3">

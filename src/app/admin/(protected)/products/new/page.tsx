@@ -2,6 +2,7 @@ import { createAdminProductAction } from "@/app/admin/actions";
 import { requirePermission } from "@/lib/staff-auth";
 import { getProductsWithStock } from "@/lib/product-stock";
 import { ProductTypeField } from "../product-type-field";
+import { ProductPhotoField } from "../product-photo-field";
 
 type NewProductPageProps = {
   searchParams: Promise<{ error?: string }>;
@@ -115,18 +116,7 @@ export default async function NewProductPage({ searchParams }: NewProductPagePro
           />
         </div>
 
-        <div>
-          <label className="mb-1.5 block text-[0.8rem] font-medium text-[#201d17]">
-            Product photo <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="file"
-            name="image"
-            accept="image/*"
-            required
-            className="w-full rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm text-[#201d17] outline-none transition file:mr-3 file:rounded-full file:border-0 file:bg-[#201d17] file:px-4 file:py-1.5 file:text-xs file:font-semibold file:uppercase file:tracking-wide file:text-white"
-          />
-        </div>
+        <ProductPhotoField required />
 
         <button
           type="submit"
