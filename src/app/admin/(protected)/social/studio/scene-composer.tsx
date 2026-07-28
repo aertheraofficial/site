@@ -292,7 +292,9 @@ export function SceneComposer({ products }: { products: StudioProduct[] }) {
             <button
               type="button"
               onClick={generate}
-              disabled={!file || pending}
+              // Either source will do — a picked product is as good as an
+              // upload. Matches the guard in generate().
+              disabled={(!file && !slug) || pending}
               className="inline-flex min-h-12 flex-1 items-center justify-center gap-3 rounded-full bg-[#201d17] px-6 text-[0.76rem] font-semibold uppercase tracking-[0.2em] text-white transition hover:opacity-92 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {pending ? (
@@ -303,7 +305,7 @@ export function SceneComposer({ products }: { products: StudioProduct[] }) {
               ) : null}
               {pending ? "Making the scene…" : "Generate Scene"}
             </button>
-            {file || result ? (
+            {file || slug || result ? (
               <button
                 type="button"
                 onClick={reset}
