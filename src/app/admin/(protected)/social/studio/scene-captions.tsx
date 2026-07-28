@@ -179,20 +179,48 @@ export function SceneCaptions({ analysis, scenePrompt }: SceneCaptionsProps) {
                 {current.charCount} characters
               </span>
             </div>
-            <button
-              type="button"
-              onClick={() => run(current.platform)}
-              disabled={busy !== null}
-              className="text-xs font-semibold text-[#8d7a5c] underline underline-offset-2 transition hover:text-[#201d17] disabled:opacity-50"
-            >
-              Write again
-            </button>
+            <div className="flex items-center gap-4">
+              {/*
+                Posting is done by hand, so this is the step staff take on every
+                post. Dragging to select a caption out of a card is what it
+                replaces — and on a phone that selection is close to unusable.
+              */}
+              <button
+                type="button"
+                onClick={() => copy(current.caption, "caption")}
+                className="text-xs font-semibold text-[#8d7a5c] underline underline-offset-2 transition hover:text-[#201d17]"
+              >
+                {copied === "caption" ? "Copied" : "Copy caption"}
+              </button>
+              <button
+                type="button"
+                onClick={() => run(current.platform)}
+                disabled={busy !== null}
+                className="text-xs font-semibold text-[#8d7a5c] underline underline-offset-2 transition hover:text-[#201d17] disabled:opacity-50"
+              >
+                Write again
+              </button>
+            </div>
           </div>
 
           <div className="mt-4 rounded-[1.25rem] border border-black/8 bg-white p-4">
             <p className="whitespace-pre-wrap text-sm leading-7 text-[#201d17]">
               {current.caption}
             </p>
+            <button
+              type="button"
+              onClick={() =>
+                copy(
+                  current.hashtags.length > 0
+                    ? `${current.caption}\n\n${current.hashtags.join(" ")}`
+                    : current.caption,
+                  "all",
+                )
+              }
+              className="mt-3 inline-flex h-9 items-center rounded-full border border-black/10 bg-[#f7f2ea] px-4 text-xs font-semibold text-[#201d17] transition hover:bg-black/4"
+            >
+              {copied === "all" ? "Copied ✓" : "Copy caption + hashtags"}
+            </button>
           </div>
 
           {current.hashtags.length > 0 ? (
