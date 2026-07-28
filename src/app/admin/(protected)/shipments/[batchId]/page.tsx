@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requirePermission } from "@/lib/staff-auth";
 import { notFound } from "next/navigation";
+import { formatShopDateTime } from "@/lib/datetime";
 import {
   getShippingBatch,
   getShippingBatchDocumentHref,
@@ -10,13 +11,6 @@ type ShipmentBatchPageProps = {
   params: Promise<{ batchId: string }>;
   searchParams: Promise<{ created?: string }>;
 };
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("en-MY", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
 
 export default async function AdminShipmentBatchPage({
   params,
@@ -51,7 +45,7 @@ export default async function AdminShipmentBatchPage({
             DHL Shipment Batch
           </h2>
           <p className="mt-2 text-sm leading-7 text-[#5d574f]">
-            Batch {batch.id} · {formatDate(batch.createdAt)}
+            Batch {batch.id} · {formatShopDateTime(batch.createdAt)}
           </p>
         </div>
 
@@ -127,7 +121,7 @@ export default async function AdminShipmentBatchPage({
             </p>
             <p className="mt-3 text-sm leading-6 text-[#201d17]">
               {batch.pickupStartDateTime && batch.pickupEndDateTime
-                ? `${formatDate(batch.pickupStartDateTime)} to ${formatDate(batch.pickupEndDateTime)}`
+                ? `${formatShopDateTime(batch.pickupStartDateTime)} to ${formatShopDateTime(batch.pickupEndDateTime)}`
                 : "Not returned by DHL"}
             </p>
           </article>

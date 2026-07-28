@@ -15,7 +15,7 @@ import {
   isStaffStoreConfigured,
   type StaffRecord,
 } from "@/lib/staff";
-import type { PageKey } from "@/lib/staff-permissions";
+import { getRole, type PageKey } from "@/lib/staff-permissions";
 
 const STAFF_COOKIE_NAME = "aerthera_staff_session";
 const STAFF_SESSION_MAX_AGE = 60 * 60 * 24 * 14;
@@ -102,7 +102,9 @@ export async function authenticateStaff(
   if (!isStaffStoreConfigured()) return null;
   try {
     const auth = await getStaffAuthByUsername(username);
-    if (!auth || !auth.isActive) return null;
+    // Only an approved account may log in. A pending sign-up has a real
+    // password but no access until an admin says so.
+    if (!auth || auth.status !== "active") return null;
     if (!verifyPassword(password, auth.passwordHash)) return null;
     return auth.id;
   } catch {
@@ -123,8 +125,10 @@ export async function getActor(): Promise<Actor | null> {
   const staffId = await getStaffIdFromCookie();
   if (!staffId) return null;
   try {
+    // Checked on every request, not just at login, so suspending an account
+    // ends the session that is already open rather than waiting for it to expire.
     const staff = await getStaffById(staffId);
-    if (staff && staff.isActive) return { type: "staff", staff };
+    if (staff && staff.status === "active") return { type: "staff", staff };
   } catch {
     // fall through
   }
@@ -133,6 +137,50 @@ export async function getActor(): Promise<Actor | null> {
 
 export function actorHasPermission(actor: Actor, key: PageKey): boolean {
   return actor.type === "admin" || actor.staff.permissions.includes(key);
+}
+
+/**
+ * How much of the sales data this actor may see.
+ *
+ * Page permissions alone were not enough: a cashier who was granted the
+ * Customers page could read every customer's lifetime spend, including the ones
+ * their colleagues served. The role decides the scope, and the pages enforce it,
+ * so an over-generous tick box can no longer leak the whole book.
+ */
+export type ActorScope =
+  | { kind: "all" }
+  | { kind: "shop"; location: string }
+  | { kind: "own"; staffId: string };
+
+export function getActorScope(actor: Actor): ActorScope {
+  if (actor.type === "admin") return { kind: "all" };
+
+  const role = getRole(actor.staff.role);
+
+  if (role.scope === "all") return { kind: "all" };
+
+  // A supervisor with no shop assigned would otherwise see everything, so fall
+  // back to their own sales rather than opening it up.
+  if (role.scope === "shop" && actor.staff.shopLocation) {
+    return { kind: "shop", location: actor.staff.shopLocation };
+  }
+
+  return { kind: "own", staffId: actor.staff.id };
+}
+
+/** Whether a single order is inside this actor's scope. */
+export function scopeAllowsOrder(
+  scope: ActorScope,
+  order: { soldById: string | null; location: string | null },
+): boolean {
+  switch (scope.kind) {
+    case "all":
+      return true;
+    case "shop":
+      return order.location === scope.location;
+    case "own":
+      return order.soldById === scope.staffId;
+  }
 }
 
 export function isAdminActor(actor: Actor): boolean {

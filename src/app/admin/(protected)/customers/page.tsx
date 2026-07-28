@@ -1,26 +1,18 @@
 import Link from "next/link";
 import {
   filterCustomers,
+  filterCustomersByShop,
   filterCustomersBySeller,
   listCustomers,
 } from "@/lib/customers";
+import { formatShopDate } from "@/lib/datetime";
 import { formatMoney } from "@/lib/money";
-import { requirePermission } from "@/lib/staff-auth";
+import { getActorScope, requirePermission } from "@/lib/staff-auth";
 import { isSupabaseOrderStoreConfigured } from "@/lib/supabase-admin";
 
 type CustomersPageProps = {
   searchParams: Promise<{ q?: string; sold?: string }>;
 };
-
-const dateFormat = new Intl.DateTimeFormat("en-MY", {
-  dateStyle: "medium",
-});
-
-function formatDate(value: string | null) {
-  if (!value) return "—";
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "—" : dateFormat.format(date);
-}
 
 export default async function CustomersPage({ searchParams }: CustomersPageProps) {
   const actor = await requirePermission("customers", "/admin/customers");
@@ -39,7 +31,16 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
     );
   }
 
-  const all = await listCustomers();
+  // What this actor is allowed to see at all, before the "Sold by me" filter
+  // they choose themselves. A cashier granted this page still only ever sees
+  // the customers they served.
+  const scope = getActorScope(actor);
+  const all =
+    scope.kind === "all"
+      ? await listCustomers()
+      : scope.kind === "shop"
+        ? filterCustomersByShop(await listCustomers(), scope.location)
+        : filterCustomersBySeller(await listCustomers(), scope.staffId);
   const scoped = mineOnly ? filterCustomersBySeller(all, viewerId) : all;
   const customers = filterCustomers(scoped, q);
   const totalSpent = scoped.reduce((sum, customer) => sum + customer.totalSpentCents, 0);
@@ -159,7 +160,7 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
                     <p className="font-medium text-[#201d17]">{customer.fullName}</p>
                     <p className="text-xs text-[#8d7a5c]">
                       {customer.isMember
-                        ? `Member since ${formatDate(customer.joinedAt)}`
+                        ? `Member since ${formatShopDate(customer.joinedAt)}`
                         : "Online / guest"}
                       {customer.location ? ` · ${customer.location}` : ""}
                     </p>
@@ -173,7 +174,7 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
                     {formatMoney(customer.totalSpentCents / 100)}
                   </td>
                   <td className="px-4 py-3 text-[#5d574f]">
-                    {formatDate(customer.lastOrderAt)}
+                    {formatShopDate(customer.lastOrderAt)}
                     {customer.soldBy.length > 0 ? (
                       <p className="text-xs text-[#8d7a5c]">
                         Sold by {customer.soldBy.map((staff) => staff.name).join(", ")}

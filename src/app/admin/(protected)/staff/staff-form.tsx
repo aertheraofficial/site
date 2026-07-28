@@ -1,4 +1,6 @@
-import { ASSIGNABLE_PAGES } from "@/lib/staff-permissions";
+import { DEFAULT_ROLE } from "@/lib/staff-permissions";
+import { SHOP_LOCATIONS } from "@/lib/product-stock";
+import { StaffRoleFields } from "./staff-role-fields";
 import type { StaffRecord } from "@/lib/staff";
 
 const inputClass =
@@ -13,8 +15,6 @@ type StaffFormProps = {
 
 export function StaffForm({ action, staff, submitLabel }: StaffFormProps) {
   const isEdit = Boolean(staff);
-  // New staff default to Counter Sale access (their main duty).
-  const defaultPermissions = staff?.permissions ?? ["counter-sale"];
 
   return (
     <form action={action} className="mt-8 max-w-2xl space-y-5">
@@ -152,45 +152,12 @@ export function StaffForm({ action, staff, submitLabel }: StaffFormProps) {
         </div>
       </div>
 
-      <fieldset className="rounded-2xl border border-black/10 p-4">
-        <legend className="px-2 text-[0.8rem] font-semibold text-[#201d17]">
-          Page access
-        </legend>
-        <p className="mb-3 px-1 text-xs text-[#8d7a5c]">
-          Tick the admin pages this staff can open and use.
-        </p>
-        <div className="grid gap-2.5 sm:grid-cols-2">
-          {ASSIGNABLE_PAGES.map((page) => (
-            <label
-              key={page.key}
-              className="flex items-center gap-2.5 rounded-xl border border-black/8 px-3 py-2.5 text-sm text-[#201d17]"
-            >
-              <input
-                type="checkbox"
-                name="permissions"
-                value={page.key}
-                defaultChecked={defaultPermissions.includes(page.key)}
-                className="h-4 w-4 accent-[#201d17]"
-              />
-              <span>{page.label}</span>
-            </label>
-          ))}
-        </div>
-      </fieldset>
-
-      {isEdit ? (
-        <div>
-          <label className={labelClass}>Account status</label>
-          <select
-            name="isActive"
-            defaultValue={staff?.isActive ? "true" : "false"}
-            className={inputClass}
-          >
-            <option value="true">Active — can log in</option>
-            <option value="false">Disabled — cannot log in</option>
-          </select>
-        </div>
-      ) : null}
+      <StaffRoleFields
+        defaultRole={staff?.role ?? DEFAULT_ROLE}
+        defaultShopLocation={staff?.shopLocation ?? ""}
+        defaultStatus={staff?.status ?? "pending"}
+        shops={SHOP_LOCATIONS.map((shop) => ({ id: shop.id, name: shop.name }))}
+      />
 
       <div className="flex gap-3 pt-2">
         <button

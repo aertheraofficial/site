@@ -1,30 +1,32 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCustomerById } from "@/lib/customers";
+import { formatShopDateTime } from "@/lib/datetime";
 import { formatMoney } from "@/lib/money";
-import { requirePermission } from "@/lib/staff-auth";
+import {
+  getActorScope,
+  requirePermission,
+  scopeAllowsOrder,
+} from "@/lib/staff-auth";
 
 type CustomerDetailProps = {
   params: Promise<{ id: string }>;
 };
 
-const dateTimeFormat = new Intl.DateTimeFormat("en-MY", {
-  dateStyle: "medium",
-  timeStyle: "short",
-});
-
-function formatDateTime(value: string | null) {
-  if (!value) return "—";
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "—" : dateTimeFormat.format(date);
-}
-
 export default async function CustomerDetailPage({ params }: CustomerDetailProps) {
-  await requirePermission("customers", "/admin/customers");
+  const actor = await requirePermission("customers", "/admin/customers");
   const { id } = await params;
   const customer = await getCustomerById(id);
 
-  if (!customer) {
+  const scope = getActorScope(actor);
+  // A customer is visible only through the receipts this actor may see, and the
+  // record is then trimmed to those receipts — otherwise a cashier could read a
+  // colleague's sale simply by opening the shared customer.
+  const receipts = customer?.receipts.filter((receipt) =>
+    scopeAllowsOrder(scope, { soldById: receipt.soldById, location: receipt.location }),
+  );
+
+  if (!customer || !receipts || (scope.kind !== "all" && receipts.length === 0)) {
     notFound();
   }
 
@@ -66,7 +68,7 @@ export default async function CustomerDetailPage({ params }: CustomerDetailProps
       </div>
 
       <div className="mt-6 space-y-3">
-        {customer.receipts.map((receipt) => (
+        {receipts.map((receipt) => (
           <div
             key={receipt.sessionId}
             className="rounded-[1.25rem] border border-black/8 bg-white p-5"
@@ -75,7 +77,7 @@ export default async function CustomerDetailPage({ params }: CustomerDetailProps
               <div>
                 <p className="font-semibold text-[#201d17]">{receipt.receiptNumber}</p>
                 <p className="mt-1 text-xs text-[#8d7a5c]">
-                  {formatDateTime(receipt.createdAt)} ·{" "}
+                  {formatShopDateTime(receipt.createdAt)} ·{" "}
                   {receipt.recordedFrom === "admin-walk-in" ? "Counter sale" : "Online"} ·{" "}
                   {receipt.itemCount} {receipt.itemCount === 1 ? "item" : "items"}
                   {receipt.soldByName ? ` · Sold by ${receipt.soldByName}` : ""}
@@ -133,7 +135,7 @@ export default async function CustomerDetailPage({ params }: CustomerDetailProps
           </div>
         ))}
 
-        {customer.receipts.length === 0 ? (
+        {receipts.length === 0 ? (
           <p className="rounded-[1.25rem] border border-dashed border-black/10 bg-[#f7f2ea] px-5 py-8 text-center text-sm text-[#8d7a5c]">
             No receipts yet for this customer.
           </p>

@@ -20,12 +20,20 @@ import {
   createStaff,
   getStaffById,
   setStaffPassword,
+  setStaffStatus,
   updateStaff,
   upsertPayslip,
   type StaffWriteInput,
 } from "@/lib/staff";
 import { calcPayroll } from "@/lib/payroll";
-import { ASSIGNABLE_PAGES, isPageKey, type PageKey } from "@/lib/staff-permissions";
+import {
+  ASSIGNABLE_PAGES,
+  DEFAULT_ROLE,
+  getRole,
+  isRoleKey,
+  isStaffStatus,
+  type StaffStatus,
+} from "@/lib/staff-permissions";
 import {
   createDhlShipmentBatch,
   getDhlTrackingPortalUrl,
@@ -57,6 +65,10 @@ import { searchCustomerBook, type CustomerMatch } from "@/lib/customers";
 import { buildWhatsAppShareUrl } from "@/lib/receipt";
 import { sendReceiptEmail, type ReceiptEmailResult } from "@/lib/receipt-email";
 import { getPublicSiteUrl } from "@/lib/store-config";
+import {
+  isStaffSelfRegistrationEnabled,
+  isValidStaffInviteCode,
+} from "@/lib/staff-signup";
 import {
   generateSingleSocialAd,
   regenerateSocialDraftVariant,
@@ -586,6 +598,8 @@ export async function recordCounterSaleAction(payload: CounterSalePayload) {
       taxAmount: null,
       totalAmount: totalCents,
       discountPercent,
+      // Assigned by upsertOrder, so a reprint always shows the number issued.
+      receiptNumber: null,
       fulfillmentType: "in-store",
       shippingName: null,
       shippingAddress: null,
@@ -871,18 +885,15 @@ function numberField(formData: FormData, key: string): number {
   return Number.isFinite(value) ? value : 0;
 }
 
-function readPermissions(formData: FormData): PageKey[] {
-  const raw = formData.getAll("permissions").map(String);
-  return raw.filter(
-    (key): key is PageKey =>
-      isPageKey(key) && ASSIGNABLE_PAGES.some((page) => page.key === key),
-  );
-}
-
 function readStaffFields(formData: FormData): Omit<StaffWriteInput, "isActive"> & {
   isActive: boolean;
 } {
   const baseSalaryText = textField(formData, "baseSalary");
+  const roleValue = textField(formData, "role");
+  const role = isRoleKey(roleValue) ? roleValue : DEFAULT_ROLE;
+  const statusValue = textField(formData, "status");
+  // An unrecognised status means the least access, never the most.
+  const status = isStaffStatus(statusValue) ? statusValue : "pending";
   return {
     username: textField(formData, "username").toLowerCase(),
     fullName: textField(formData, "fullName"),
@@ -894,8 +905,20 @@ function readStaffFields(formData: FormData): Omit<StaffWriteInput, "isActive"> 
     bankAccount: textOrNullField(formData, "bankAccount"),
     joinDate: textOrNullField(formData, "joinDate"),
     baseSalary: baseSalaryText ? numberField(formData, "baseSalary") : null,
-    permissions: readPermissions(formData),
-    isActive: textField(formData, "isActive") !== "false",
+    // Pages come from the role, not from tick boxes. Ticking six boxes one by
+    // one is where an admin accidentally hands a cashier the Social account and
+    // the ad budget; choosing "Cashier" cannot do that.
+    permissions: getRole(role).permissions.filter((key) =>
+      ASSIGNABLE_PAGES.some((page) => page.key === key),
+    ),
+    role,
+    status,
+    // Only a role that answers for one shop keeps a shop; clear it otherwise so
+    // a demoted supervisor cannot keep shop-wide sight through a stale value.
+    shopLocation: getRole(role).needsShop
+      ? textOrNullField(formData, "shopLocation")
+      : null,
+    isActive: status === "active",
   };
 }
 
@@ -954,6 +977,94 @@ export async function updateStaffAction(formData: FormData) {
   revalidatePath("/admin/staff");
   revalidatePath(`/admin/staff/${id}`);
   redirect(`/admin/staff/${id}?saved=1`);
+}
+
+/**
+ * Public staff sign-up.
+ *
+ * Unauthenticated on purpose — the applicant has no account yet. Three things
+ * keep that safe: the feature is off unless switched on, the invite code is
+ * re-checked here rather than trusted from the page that rendered the form, and
+ * the account is created `pending`, which cannot log in until an admin approves
+ * it and chooses what type of staff they are.
+ */
+export async function submitStaffApplicationAction(formData: FormData) {
+  if (!isStaffSelfRegistrationEnabled()) {
+    redirect("/");
+  }
+
+  const code = textField(formData, "code");
+  if (!isValidStaffInviteCode(code)) {
+    redirect("/");
+  }
+
+  const username = textField(formData, "username").toLowerCase();
+  const fullName = textField(formData, "fullName");
+  const password = textField(formData, "password");
+  const back = `/join?code=${encodeURIComponent(code)}`;
+
+  if (!username || !fullName || password.length < 6) {
+    redirect(`${back}&error=missing-fields`);
+  }
+
+  try {
+    await createStaff({
+      username,
+      fullName,
+      position: textOrNullField(formData, "position"),
+      phone: textOrNullField(formData, "phone"),
+      email: textOrNullField(formData, "email"),
+      icNumber: textOrNullField(formData, "icNumber"),
+      bankName: textOrNullField(formData, "bankName"),
+      bankAccount: textOrNullField(formData, "bankAccount"),
+      joinDate: null,
+      baseSalary: null,
+      // No pages and no access until an admin decides. An applicant never
+      // chooses their own role.
+      permissions: [],
+      role: DEFAULT_ROLE,
+      status: "pending",
+      shopLocation: null,
+      isActive: false,
+      passwordHash: hashPassword(password),
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to apply.";
+    redirect(`${back}&error=${encodeURIComponent(message)}`);
+  }
+
+  revalidatePath("/admin/staff");
+  redirect(`${back}&submitted=1`);
+}
+
+/**
+ * Approve, suspend or re-suspend an account.
+ *
+ * Deliberately separate from updateStaffAction: granting someone access and
+ * correcting their bank details are different decisions, and an admin editing
+ * a phone number should not be able to hand out access by accident.
+ */
+export async function setStaffStatusAction(formData: FormData) {
+  const actor = await requireAdminActor("/admin/staff");
+
+  const id = textField(formData, "id");
+  const next = textField(formData, "status");
+
+  if (!id || !isStaffStatus(next)) {
+    redirect("/admin/staff?error=missing-staff");
+  }
+
+  try {
+    await setStaffStatus(id, next as StaffStatus, actor.type === "admin" ? actor.name : "admin");
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unable to update account status.";
+    redirect(`/admin/staff?error=${encodeURIComponent(message)}`);
+  }
+
+  revalidatePath("/admin/staff");
+  revalidatePath(`/admin/staff/${id}`);
+  redirect(`/admin/staff?status=${next}`);
 }
 
 export async function createPayslipAction(formData: FormData) {

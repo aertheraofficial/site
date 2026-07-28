@@ -257,6 +257,13 @@ export function filterCustomersBySeller(customers: CustomerRecord[], soldById: s
   );
 }
 
+/** Only the customers served at a given shop. */
+export function filterCustomersByShop(customers: CustomerRecord[], location: string) {
+  return customers.filter((customer) =>
+    customer.receipts.some((receipt) => receipt.location === location),
+  );
+}
+
 export type CustomerMatch = {
   id: string;
   fullName: string;

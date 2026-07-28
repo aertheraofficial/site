@@ -11,8 +11,9 @@ import {
   type PDFRef,
 } from "pdf-lib";
 import { siteInfo } from "@/data/site";
+import { formatReceiptDate } from "@/lib/datetime";
 import { formatMoney } from "@/lib/money";
-import type { StoredOrder } from "@/lib/orders";
+import { receiptSuffix, type StoredOrder } from "@/lib/orders";
 
 /**
  * Branded PDF receipt for a paid order.
@@ -85,18 +86,31 @@ function wrap(text: string, font: PDFFont, size: number, maxWidth: number) {
 }
 
 /**
+ * Receipt numbers issued before they were stored on the order were derived from
+ * the server clock, which is UTC in production. Pinning the fallback to UTC
+ * keeps every receipt already printed, emailed or filed by a customer matching
+ * what the admin sees today; only orders stored from now on carry the shop-dated
+ * number. Do not "fix" this to Asia/Kuala_Lumpur — it would renumber history.
+ */
+const legacyStamp = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "UTC",
+  dateStyle: "short",
+});
+
+/**
  * Deterministic receipt number — the same order always yields the same number,
  * so a redelivered webhook can never mint a second receipt for one payment.
  */
 export function getReceiptNumber(order: StoredOrder) {
+  if (order.receiptNumber) {
+    return order.receiptNumber;
+  }
+
   const date = new Date(order.createdAt);
   const stamp = Number.isNaN(date.getTime()) ? new Date() : date;
-  const y = stamp.getFullYear();
-  const m = String(stamp.getMonth() + 1).padStart(2, "0");
-  const d = String(stamp.getDate()).padStart(2, "0");
-  const suffix = order.sessionId.replace(/[^A-Za-z0-9]/g, "").slice(-6).toUpperCase();
-  return `AE-${y}${m}${d}-${suffix || "000000"}`;
+  return `AE-${legacyStamp.format(stamp).replaceAll("-", "")}-${receiptSuffix(order.sessionId)}`;
 }
+
 
 /**
  * wa.me links take the number in full international form, digits only —
@@ -318,11 +332,7 @@ export async function generateReceiptPdf(order: StoredOrder): Promise<Uint8Array
   // ---- Meta (left) + Bill to (right) ---------------------------------------
   const issued = new Date(order.createdAt);
   const issuedDate = Number.isNaN(issued.getTime()) ? new Date() : issued;
-  const issuedText = issuedDate.toLocaleDateString("en-MY", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  const issuedText = formatReceiptDate(issuedDate);
 
   const metaRows: Array<[string, string]> = [
     ["Receipt No.", getReceiptNumber(order)],

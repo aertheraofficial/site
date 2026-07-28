@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireActor } from "@/lib/staff-auth";
 import { listPayslipsForStaff } from "@/lib/staff";
+import { formatShopTime, shopDayKey, shopMonthKey } from "@/lib/datetime";
 import { formatMoney } from "@/lib/money";
 import { readOrders } from "@/lib/orders";
 import { getLocationName } from "@/lib/product-stock";
@@ -10,23 +11,6 @@ import { formatPeriod } from "@/lib/payroll";
 type ProfilePageProps = {
   searchParams: Promise<{ denied?: string }>;
 };
-
-/** Malaysian shop day, so "today" matches the day the staff member worked. */
-const dayKey = new Intl.DateTimeFormat("en-CA", {
-  timeZone: "Asia/Kuala_Lumpur",
-  dateStyle: "short",
-});
-
-const monthKey = new Intl.DateTimeFormat("en-CA", {
-  timeZone: "Asia/Kuala_Lumpur",
-  year: "numeric",
-  month: "2-digit",
-});
-
-const timeOfDay = new Intl.DateTimeFormat("en-MY", {
-  timeZone: "Asia/Kuala_Lumpur",
-  timeStyle: "short",
-});
 
 export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   const actor = await requireActor("/admin/profile");
@@ -42,17 +26,16 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
 
   // What this staff member has sold — their own sales only, so the till total
   // of everyone else's work is not mistaken for theirs.
-  const now = new Date();
-  const today = dayKey.format(now);
-  const thisMonth = monthKey.format(now);
+  const today = shopDayKey();
+  const thisMonth = shopMonthKey();
   const mySales = (await readOrders())
     .filter((order) => order.soldById === staff.id)
     .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
   const todaySales = mySales.filter(
-    (order) => dayKey.format(new Date(order.createdAt)) === today,
+    (order) => shopDayKey(order.createdAt) === today,
   );
   const monthSales = mySales.filter(
-    (order) => monthKey.format(new Date(order.createdAt)) === thisMonth,
+    (order) => shopMonthKey(order.createdAt) === thisMonth,
   );
   const sumOf = (orders: typeof mySales) =>
     orders.reduce((total, order) => total + (order.totalAmount ?? 0), 0);
@@ -120,9 +103,9 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                 className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 text-sm"
               >
                 <span className="text-[#5d574f]">
-                  {dayKey.format(new Date(order.createdAt))}
+                  {shopDayKey(order.createdAt)}
                   {" · "}
-                  {timeOfDay.format(new Date(order.createdAt))}
+                  {formatShopTime(order.createdAt)}
                   {" · "}
                   <span className="text-[#201d17]">
                     {order.customerName ?? "Walk-in"}

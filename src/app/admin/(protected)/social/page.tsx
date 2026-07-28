@@ -3,6 +3,7 @@ import {
   regenerateSocialDraftAction,
   updateSocialDraftStatusAction,
 } from "@/app/admin/actions";
+import { formatShopDateTime } from "@/lib/datetime";
 import { getSocialBrandContext } from "@/lib/social/brand";
 import { requirePermission } from "@/lib/staff-auth";
 import { readSocialContent, type SocialPostStatus } from "@/lib/social/store";
@@ -18,13 +19,6 @@ type SocialPageProps = {
     error?: string;
   }>;
 };
-
-function formatDateTime(value: string) {
-  return new Intl.DateTimeFormat("en-MY", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
 
 function getStatusClasses(status: SocialPostStatus) {
   switch (status) {
@@ -194,7 +188,7 @@ export default async function AdminSocialPage({ searchParams }: SocialPageProps)
                   {latestDraft.platform}
                 </span>
                 <span className="rounded-full border border-black/8 bg-white px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#6a6258]">
-                  {formatDateTime(latestDraft.createdAt)}
+                  {formatShopDateTime(latestDraft.createdAt)}
                 </span>
               </div>
 
@@ -304,7 +298,7 @@ export default async function AdminSocialPage({ searchParams }: SocialPageProps)
                       {draft.platform}
                     </span>
                     <span className="rounded-full border border-black/8 bg-white px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#6a6258]">
-                      {formatDateTime(draft.scheduledFor)}
+                      {formatShopDateTime(draft.scheduledFor)}
                     </span>
                     {campaign ? (
                       <span className="text-sm text-[#8d7a5c]">{campaign.title}</span>

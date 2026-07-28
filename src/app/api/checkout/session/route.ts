@@ -205,6 +205,7 @@ export async function POST(request: Request) {
         courierShipmentId: null,
         shippingLabelGeneratedAt: null,
         discountPercent: null,
+        receiptNumber: null,
         lines: lineItems.map((l) => ({
           slug: l.slug,
           description: l.name,

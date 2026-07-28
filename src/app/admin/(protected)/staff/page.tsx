@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { requireAdminActor } from "@/lib/staff-auth";
 import { isStaffStoreConfigured, listStaff } from "@/lib/staff";
-import { ASSIGNABLE_PAGES } from "@/lib/staff-permissions";
+import { getRole } from "@/lib/staff-permissions";
+import { setStaffStatusAction } from "@/app/admin/actions";
 
 type StaffPageProps = {
   searchParams: Promise<{ error?: string }>;
@@ -23,6 +24,9 @@ export default async function StaffListPage({ searchParams }: StaffPageProps) {
   }
 
   const staff = await listStaff();
+  // Applications waiting on a decision come first — an account nobody has
+  // looked at is the one thing on this page that is actually blocking someone.
+  const pending = staff.filter((member) => member.status === "pending");
 
   return (
     <div>
@@ -53,6 +57,53 @@ export default async function StaffListPage({ searchParams }: StaffPageProps) {
         </p>
       ) : null}
 
+      {pending.length > 0 ? (
+        <section className="mt-6 rounded-[1.25rem] border border-[#d4b16c] bg-[#faf1df] p-5">
+          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#8b5e1d]">
+            Waiting for approval ({pending.length})
+          </p>
+          <p className="mt-1 text-sm text-[#8b5e1d]">
+            These accounts exist but cannot log in. Open one to choose what type
+            of staff they are before you approve it.
+          </p>
+          <ul className="mt-4 space-y-2">
+            {pending.map((member) => (
+              <li
+                key={member.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-[1rem] bg-white px-4 py-3"
+              >
+                <span className="text-sm text-[#201d17]">
+                  <span className="font-semibold">{member.fullName}</span>
+                  <span className="text-[#8d7a5c]"> · @{member.username}</span>
+                  <span className="text-[#8d7a5c]">
+                    {" · asking to join as "}
+                    {getRole(member.role).label}
+                  </span>
+                </span>
+                <span className="flex gap-2">
+                  <Link
+                    href={`/admin/staff/${member.id}`}
+                    className="inline-flex h-9 items-center rounded-full border border-black/10 px-4 text-xs font-semibold text-[#201d17] transition hover:bg-[#f7f2ea]"
+                  >
+                    Review
+                  </Link>
+                  <form action={setStaffStatusAction}>
+                    <input type="hidden" name="id" value={member.id} />
+                    <input type="hidden" name="status" value="suspended" />
+                    <button
+                      type="submit"
+                      className="inline-flex h-9 items-center rounded-full border border-[#e6b4b4] px-4 text-xs font-semibold text-[#9b3d32] transition hover:bg-[#fff0ef]"
+                    >
+                      Reject
+                    </button>
+                  </form>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       <div className="mt-6 overflow-hidden rounded-[1.25rem] border border-black/8 bg-white">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-left text-sm">
@@ -74,21 +125,24 @@ export default async function StaffListPage({ searchParams }: StaffPageProps) {
                   </td>
                   <td className="px-4 py-3 text-[#5d574f]">{member.username}</td>
                   <td className="px-4 py-3 text-[#5d574f]">
-                    {member.permissions.length === 0
-                      ? "No pages"
-                      : member.permissions.length === ASSIGNABLE_PAGES.length
-                        ? "All pages"
-                        : `${member.permissions.length} pages`}
+                    {getRole(member.role).label}
+                    {member.shopLocation ? (
+                      <span className="block text-xs text-[#8d7a5c]">
+                        {member.shopLocation}
+                      </span>
+                    ) : null}
                   </td>
                   <td className="px-4 py-3">
                     <span
                       className={`inline-flex rounded-full px-2.5 py-0.5 text-[0.66rem] font-semibold uppercase tracking-[0.12em] ${
-                        member.isActive
+                        member.status === "active"
                           ? "bg-[#e9f7ee] text-[#256542]"
-                          : "bg-[#fff0ef] text-[#9b3d32]"
+                          : member.status === "pending"
+                            ? "bg-[#faf1df] text-[#8b5e1d]"
+                            : "bg-[#fff0ef] text-[#9b3d32]"
                       }`}
                     >
-                      {member.isActive ? "Active" : "Disabled"}
+                      {member.status}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">

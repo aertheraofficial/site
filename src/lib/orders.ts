@@ -1,6 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import type Stripe from "stripe";
+import { shopDateStamp } from "@/lib/datetime";
 import { ALL_LOCATIONS, ONLINE_LOCATION } from "@/lib/product-stock";
 import { getOrderStoragePath } from "@/lib/store-config";
 import {
@@ -83,6 +84,13 @@ export type StoredOrder = {
    * `totalAmount` is what the customer actually paid.
    */
   discountPercent: number | null;
+  /**
+   * The receipt number as issued, dated by the Malaysian shop day. Assigned once
+   * in `upsertOrder` and never recomputed, so a printed or emailed receipt keeps
+   * matching the admin record forever. Null on orders stored before this field
+   * existed; `getReceiptNumber` derives those the old way.
+   */
+  receiptNumber: string | null;
   lines: StoredOrderLine[];
 };
 
@@ -104,6 +112,7 @@ type AdminMeta = Pick<
   | "shippingLabelGeneratedAt"
   // Rides in the same JSON blob so counter discounts need no new column.
   | "discountPercent"
+  | "receiptNumber"
 >;
 
 type ShippingAddressRecord = NonNullable<StoredOrder["shippingAddress"]> & {
@@ -226,12 +235,27 @@ function createDefaultAdminMeta(): AdminMeta {
     courierShipmentId: null,
     shippingLabelGeneratedAt: null,
     discountPercent: null,
+    receiptNumber: null,
   };
 }
 
 function normalizeText(value: string | null | undefined) {
   const trimmed = value?.trim();
   return trimmed ? trimmed : null;
+}
+
+/** Last six alphanumerics of the session id — the per-day unique part. */
+export function receiptSuffix(sessionId: string) {
+  return sessionId.replace(/[^A-Za-z0-9]/g, "").slice(-6).toUpperCase() || "000000";
+}
+
+/**
+ * The number stamped on a new receipt, dated by the Malaysian shop day so an
+ * evening sale is not filed under yesterday. Minted once in `upsertOrder`; from
+ * then on the stored value is what every receipt and admin screen shows.
+ */
+export function buildReceiptNumber(createdAt: string, sessionId: string) {
+  return `AE-${shopDateStamp(createdAt)}-${receiptSuffix(sessionId)}`;
 }
 
 function normalizeNumber(value: unknown) {
@@ -313,6 +337,8 @@ function parseAdminMeta(value: unknown): AdminMeta {
         ? normalizeText(source.shippingLabelGeneratedAt)
         : null,
     discountPercent: normalizeDiscountPercent(source.discountPercent),
+    receiptNumber:
+      typeof source.receiptNumber === "string" ? normalizeText(source.receiptNumber) : null,
   };
 }
 
@@ -371,7 +397,8 @@ function embedAdminMeta(
     adminMeta.shippingBatchId ||
     adminMeta.courierShipmentId ||
     adminMeta.shippingLabelGeneratedAt ||
-    adminMeta.discountPercent !== null;
+    adminMeta.discountPercent !== null ||
+    adminMeta.receiptNumber;
 
   if (hasAdminValues) {
     return {
@@ -440,6 +467,7 @@ async function readOrdersFromFile() {
         courierShipmentId: normalizeText(candidate.courierShipmentId),
         shippingLabelGeneratedAt: normalizeText(candidate.shippingLabelGeneratedAt),
         discountPercent: normalizeDiscountPercent(candidate.discountPercent),
+        receiptNumber: normalizeText(candidate.receiptNumber),
       } as StoredOrder;
     });
   } catch {
@@ -469,6 +497,7 @@ function toSupabaseOrderRow(order: StoredOrder): SupabaseOrderRow {
     courierShipmentId: order.courierShipmentId,
     shippingLabelGeneratedAt: order.shippingLabelGeneratedAt,
     discountPercent: order.discountPercent,
+    receiptNumber: order.receiptNumber,
   };
 
   return {
@@ -605,6 +634,9 @@ function mergeOrders(
     // The discount belongs to the sale, not to admin edits — a webhook replay
     // must never wipe what the counter gave.
     discountPercent: incoming.discountPercent ?? existing.discountPercent,
+    // Existing wins: once a number has been printed or emailed it is the
+    // customer's copy, so a later webhook must not renumber the order.
+    receiptNumber: existing.receiptNumber ?? incoming.receiptNumber,
     updatedAt: new Date().toISOString(),
   } satisfies StoredOrder;
 }
@@ -723,6 +755,10 @@ export async function upsertOrder(
   const preserveAdminFields = options?.preserveAdminFields ?? false;
   const normalizedOrder = {
     ...order,
+    // Every write path — Stripe webhook, success page, counter sale — funnels
+    // through here, so this is the one place a receipt number has to be minted.
+    receiptNumber:
+      order.receiptNumber ?? buildReceiptNumber(order.createdAt, order.sessionId),
     updatedAt: new Date().toISOString(),
   };
 

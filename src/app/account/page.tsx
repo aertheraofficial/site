@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getServerUser } from "@/lib/supabase-server";
 import { getOrdersByCustomerId, type StoredOrder } from "@/lib/orders";
+import { formatShopLongDate } from "@/lib/datetime";
 import { formatMoney } from "@/lib/money";
 
 export const metadata = { title: "My Account" };
@@ -163,11 +164,7 @@ export default async function AccountPage({ searchParams }: PageProps) {
               </div>
 
               <p className="mt-3 text-[0.72rem] text-[#a09282]">
-                {new Date(order.createdAt).toLocaleDateString("en-MY", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}
+                {formatShopLongDate(order.createdAt)}
                 {order.trackingNumber && (
                   <span className="ml-3">
                     Tracking:{" "}

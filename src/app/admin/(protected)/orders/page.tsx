@@ -1,9 +1,14 @@
 import Link from "next/link";
 import { generateDhlShipmentBatchAction } from "@/app/admin/actions";
+import { formatShopDateTime } from "@/lib/datetime";
 import { isDhlEcommerceConfigured } from "@/lib/dhl-ecommerce";
 import { formatMoney } from "@/lib/money";
 import { ALL_LOCATIONS, ONLINE_LOCATION, getLocationName } from "@/lib/product-stock";
-import { requirePermission } from "@/lib/staff-auth";
+import {
+  getActorScope,
+  requirePermission,
+  scopeAllowsOrder,
+} from "@/lib/staff-auth";
 import {
   type FulfillmentStatus,
   type FulfillmentType,
@@ -53,13 +58,6 @@ function isFulfillmentStatus(value: string | undefined): value is FulfillmentSta
 
 function isFulfillmentType(value: string | undefined): value is FulfillmentType {
   return value === "delivery" || value === "pickup" || value === "in-store";
-}
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("en-MY", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
 }
 
 function buildOrdersHref(
@@ -172,7 +170,7 @@ function getDhlSelectionState(order: StoredOrder) {
 export default async function AdminOrdersPage({
   searchParams,
 }: OrdersPageProps) {
-  await requirePermission("orders");
+  const actor = await requirePermission("orders");
   const { q, status, type, shop, error, shipmentError } = await searchParams;
   const query = q?.trim() ?? "";
   const normalizedQuery = query.toLowerCase();
@@ -181,7 +179,10 @@ export default async function AdminOrdersPage({
   const activeShop = SHOP_FILTERS.some((filter) => filter.value === shop)
     ? (shop as string)
     : "all";
-  const orders = await readOrders();
+  // Scope before anything else: a cashier or a supervisor must never be able to
+  // reach another person's sales, whatever filters they then apply.
+  const scope = getActorScope(actor);
+  const orders = (await readOrders()).filter((order) => scopeAllowsOrder(scope, order));
   const dhlConfigured = isDhlEcommerceConfigured();
   const returnTo = buildOrdersHref(activeStatus, query, activeType, activeShop);
 
@@ -553,7 +554,7 @@ export default async function AdminOrdersPage({
                               Ordered
                             </p>
                             <p className="mt-2 text-sm leading-6 text-[#201d17]">
-                              {formatDate(order.createdAt)}
+                              {formatShopDateTime(order.createdAt)}
                             </p>
                           </div>
                           <div>

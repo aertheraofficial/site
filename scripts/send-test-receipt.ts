@@ -66,6 +66,7 @@ function buildSample(to: string): StoredOrder {
     courierShipmentId: null,
     shippingLabelGeneratedAt: null,
     discountPercent: null,
+    receiptNumber: null,
     lines: [
       {
         slug: "reed-diffuser-lemongrass-malaya-230ml",

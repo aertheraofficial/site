@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { siteInfo } from "@/data/site";
+import { formatShopDateTime } from "@/lib/datetime";
 import { formatMoney } from "@/lib/money";
 import { getOrderBySessionId } from "@/lib/orders";
 import { getReceiptNumber } from "@/lib/receipt";
@@ -23,10 +24,7 @@ export default async function ReceiptPage({ params }: PageProps) {
   }
 
   const receiptNo = getReceiptNumber(order);
-  const date = new Date(order.createdAt).toLocaleString("en-MY", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
+  const date = formatShopDateTime(order.createdAt);
 
   return (
     <main className="mx-auto max-w-md px-5 py-10 text-[#201d17]">

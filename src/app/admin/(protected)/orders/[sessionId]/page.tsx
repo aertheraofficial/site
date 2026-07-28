@@ -1,7 +1,12 @@
 import Link from "next/link";
-import { requirePermission } from "@/lib/staff-auth";
+import {
+  getActorScope,
+  requirePermission,
+  scopeAllowsOrder,
+} from "@/lib/staff-auth";
 import { notFound } from "next/navigation";
 import { updateOrderManagementAction } from "@/app/admin/actions";
+import { formatShopDateTime } from "@/lib/datetime";
 import { formatMoney } from "@/lib/money";
 import { getOrderBySessionId } from "@/lib/orders";
 
@@ -9,13 +14,6 @@ type OrderDetailPageProps = {
   params: Promise<{ sessionId: string }>;
   searchParams: Promise<{ saved?: string }>;
 };
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("en-MY", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
 
 function statusClasses(status: string) {
   switch (status) {
@@ -34,11 +32,13 @@ export default async function AdminOrderDetailPage({
   params,
   searchParams,
 }: OrderDetailPageProps) {
-  await requirePermission("orders");
+  const actor = await requirePermission("orders");
   const [{ sessionId }, { saved }] = await Promise.all([params, searchParams]);
   const order = await getOrderBySessionId(sessionId);
 
-  if (!order) {
+  // Out of scope reads as "no such order" on purpose: confirming it exists
+  // would leak that another shop or colleague made a sale.
+  if (!order || !scopeAllowsOrder(getActorScope(actor), order)) {
     notFound();
   }
 
@@ -67,7 +67,7 @@ export default async function AdminOrderDetailPage({
             {order.customerName ?? order.customerEmail ?? "Guest checkout"}
           </h2>
           <p className="mt-2 text-sm leading-7 text-[#5d574f]">
-            {order.customerEmail ?? "Guest checkout"} · {formatDate(order.createdAt)}
+            {order.customerEmail ?? "Guest checkout"} · {formatShopDateTime(order.createdAt)}
           </p>
         </div>
 
@@ -108,7 +108,7 @@ export default async function AdminOrderDetailPage({
                   Ordered
                 </p>
                 <p className="mt-2 text-sm leading-6 text-[#201d17]">
-                  {formatDate(order.createdAt)}
+                  {formatShopDateTime(order.createdAt)}
                 </p>
               </article>
               <article>
@@ -126,7 +126,7 @@ export default async function AdminOrderDetailPage({
                   Fulfilled at
                 </p>
                 <p className="mt-2 text-sm leading-6 text-[#201d17]">
-                  {order.fulfilledAt ? formatDate(order.fulfilledAt) : "Not yet fulfilled"}
+                  {order.fulfilledAt ? formatShopDateTime(order.fulfilledAt) : "Not yet fulfilled"}
                 </p>
               </article>
             </div>
@@ -377,7 +377,7 @@ export default async function AdminOrderDetailPage({
                   <p>
                     DHL batch saved
                     {order.shippingLabelGeneratedAt
-                      ? ` on ${formatDate(order.shippingLabelGeneratedAt)}`
+                      ? ` on ${formatShopDateTime(order.shippingLabelGeneratedAt)}`
                       : ""}.
                   </p>
                   <div className="mt-3 flex flex-wrap gap-3">

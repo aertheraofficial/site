@@ -1,8 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { createPayslipAction, updateStaffAction } from "@/app/admin/actions";
+import {
+  createPayslipAction,
+  setStaffStatusAction,
+  updateStaffAction,
+} from "@/app/admin/actions";
 import { requireAdminActor } from "@/lib/staff-auth";
 import { getStaffById, listPayslipsForStaff } from "@/lib/staff";
+import { formatShopDateTime, shopYearMonth } from "@/lib/datetime";
+import { getRole } from "@/lib/staff-permissions";
 import { formatMoney } from "@/lib/money";
 import { formatPeriod } from "@/lib/payroll";
 import { StaffForm } from "../staff-form";
@@ -33,9 +39,9 @@ export default async function StaffDetailPage({
   const payslips = await listPayslipsForStaff(id);
   const message = error ? (ERROR_MESSAGES[error] ?? error) : null;
 
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth() + 1;
+  // Shop time, not server time: on the 1st before 8am the server clock is
+  // still in the month that just closed, which would default the payslip to it.
+  const { year: currentYear, month: currentMonth } = shopYearMonth();
 
   return (
     <div>
@@ -59,6 +65,71 @@ export default async function StaffDetailPage({
           {message}
         </p>
       ) : null}
+
+      {/*
+        Approval is its own button, not a side effect of Save. Editing someone's
+        phone number and granting them access to the shop's sales are different
+        decisions and should take different clicks.
+      */}
+      <section
+        className={`mt-8 rounded-[1.25rem] border p-5 ${
+          staff.status === "active"
+            ? "border-black/8 bg-white"
+            : "border-[#d4b16c] bg-[#faf1df]"
+        }`}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#8d7a5c]">
+              Account status
+            </p>
+            <p className="mt-1 text-sm text-[#201d17]">
+              {staff.status === "active"
+                ? "Approved — this account can log in."
+                : staff.status === "pending"
+                  ? "Waiting for your approval. It cannot log in yet."
+                  : "Suspended. It cannot log in."}
+              {staff.approvedBy ? (
+                <span className="block text-xs text-[#8d7a5c]">
+                  Approved by {staff.approvedBy}
+                  {staff.approvedAt ? ` · ${formatShopDateTime(staff.approvedAt)}` : ""}
+                </span>
+              ) : null}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            {staff.status === "active" ? (
+              <form action={setStaffStatusAction}>
+                <input type="hidden" name="id" value={staff.id} />
+                <input type="hidden" name="status" value="suspended" />
+                <button
+                  type="submit"
+                  className="inline-flex h-10 items-center rounded-full border border-[#e6b4b4] px-5 text-xs font-semibold text-[#9b3d32] transition hover:bg-[#fff0ef]"
+                >
+                  Suspend access
+                </button>
+              </form>
+            ) : (
+              <form action={setStaffStatusAction}>
+                <input type="hidden" name="id" value={staff.id} />
+                <input type="hidden" name="status" value="active" />
+                <button
+                  type="submit"
+                  className="inline-flex h-10 items-center rounded-full bg-[#201d17] px-5 text-xs font-semibold text-white transition hover:bg-[#2e2a22]"
+                >
+                  Approve as {getRole(staff.role).label}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+        {staff.status !== "active" ? (
+          <p className="mt-3 text-xs leading-5 text-[#8b5e1d]">
+            Check the type of staff below first — approving grants whatever that
+            role allows.
+          </p>
+        ) : null}
+      </section>
 
       <section className="mt-8">
         <h3 className="font-display text-[1.4rem] tracking-[-0.03em] text-[#201d17]">
