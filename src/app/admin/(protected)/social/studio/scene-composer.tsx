@@ -138,109 +138,116 @@ export function SceneComposer({ products }: { products: StudioProduct[] }) {
           </div>
 
           {/*
-            Drag and drop, with the file input kept as the real control so the
-            keyboard and screen-reader path is the same one everyone else uses.
+            The two ways to choose a product sit side by side from lg up.
+            Stacked they pushed every setting below the fold, which is the
+            one part of this screen staff touch on every single scene.
           */}
-          <div
-            onDrop={onDrop}
-            onDragOver={(event) => {
-              event.preventDefault();
-              setDragging(true);
-            }}
-            onDragLeave={() => setDragging(false)}
-            className={`rounded-[1.5rem] border-2 border-dashed p-6 text-center transition ${
-              dragging ? "border-[#b38a59] bg-[#f7f2ea]" : "border-black/12 bg-[#fcfaf6]"
-            }`}
-          >
-            {preview ? (
-              <>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={preview}
-                  alt="The product photo you chose"
-                  className="mx-auto max-h-44 rounded-[1rem] object-contain"
-                />
-                <p className="mt-3 truncate text-xs text-[#8d7a5c]">{file?.name}</p>
-              </>
-            ) : (
-              <p className="text-sm leading-6 text-[#5d574f]">
-                Pick a product below, or drag a photo here.
-                <span className="mt-1 block text-xs text-[#8d7a5c]">
-                  JPG, PNG or WebP — up to {MAX_MB} MB
-                </span>
-              </p>
-            )}
+          <div className="grid gap-5 lg:grid-cols-2">
+            {/*
+              Drag and drop, with the file input kept as the real control so the
+              keyboard and screen-reader path is the same one everyone else uses.
+            */}
+            <div
+              onDrop={onDrop}
+              onDragOver={(event) => {
+                event.preventDefault();
+                setDragging(true);
+              }}
+              onDragLeave={() => setDragging(false)}
+              className={`rounded-[1.5rem] border-2 border-dashed p-6 text-center transition ${
+                dragging ? "border-[#b38a59] bg-[#f7f2ea]" : "border-black/12 bg-[#fcfaf6]"
+              }`}
+            >
+              {preview ? (
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={preview}
+                    alt="The product photo you chose"
+                    className="mx-auto max-h-44 rounded-[1rem] object-contain"
+                  />
+                  <p className="mt-3 truncate text-xs text-[#8d7a5c]">{file?.name}</p>
+                </>
+              ) : (
+                <p className="text-sm leading-6 text-[#5d574f]">
+                  Pick a product below, or drag a photo here.
+                  <span className="mt-1 block text-xs text-[#8d7a5c]">
+                    JPG, PNG or WebP — up to {MAX_MB} MB
+                  </span>
+                </p>
+              )}
 
-            <label htmlFor="studio-image" className="sr-only">
-              Product photo
-            </label>
-            <input
-              id="studio-image"
-              ref={fileRef}
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              onChange={(event) => pick(event.target.files?.[0] ?? null)}
-              className="mt-4 w-full rounded-[1.25rem] border border-black/8 bg-white px-4 py-3 text-sm text-[#201d17] file:mr-3 file:rounded-full file:border-0 file:bg-[#201d17] file:px-4 file:py-1.5 file:text-xs file:font-semibold file:uppercase file:tracking-wide file:text-white"
-            />
-          </div>
-
-          {/*
-            The shop already has a photo of everything it sells, so the common
-            case is choosing one — uploading is for a shot that is not in the
-            catalog yet. Whichever is touched last clears the other, so the
-            action never has to guess which one was meant.
-          */}
-          {products.length > 0 ? (
-            <div>
-              <p className={labelClass}>Or use a product you already sell</p>
-              {products.length > 8 ? (
-                <input
-                  type="search"
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search products"
-                  className="mt-2 w-full rounded-[1.25rem] border border-black/8 bg-white px-4 py-2.5 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59]"
-                />
-              ) : null}
-              <div className="mt-3 grid max-h-64 grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3">
-                {products
-                  .filter((product) =>
-                    product.name.toLowerCase().includes(query.trim().toLowerCase()),
-                  )
-                  .slice(0, 60)
-                  .map((product) => {
-                    const isActive = slug === product.slug;
-                    return (
-                      <button
-                        key={product.slug}
-                        type="button"
-                        onClick={() => pickProduct(product)}
-                        className={`flex items-center gap-2 rounded-[1rem] border p-2 text-left transition ${
-                          isActive
-                            ? "border-[#201d17] bg-[#f7f2ea]"
-                            : "border-black/8 bg-white hover:bg-[#faf6ef]"
-                        }`}
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={product.image}
-                          alt=""
-                          className="h-10 w-10 shrink-0 rounded-lg object-cover"
-                        />
-                        <span className="min-w-0">
-                          <span className="block truncate text-xs font-medium text-[#201d17]">
-                            {product.name}
-                          </span>
-                          <span className="block truncate text-[0.68rem] text-[#8d7a5c]">
-                            {product.size}
-                          </span>
-                        </span>
-                      </button>
-                    );
-                  })}
-              </div>
+              <label htmlFor="studio-image" className="sr-only">
+                Product photo
+              </label>
+              <input
+                id="studio-image"
+                ref={fileRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={(event) => pick(event.target.files?.[0] ?? null)}
+                className="mt-4 w-full rounded-[1.25rem] border border-black/8 bg-white px-4 py-3 text-sm text-[#201d17] file:mr-3 file:rounded-full file:border-0 file:bg-[#201d17] file:px-4 file:py-1.5 file:text-xs file:font-semibold file:uppercase file:tracking-wide file:text-white"
+              />
             </div>
-          ) : null}
+
+            {/*
+              The shop already has a photo of everything it sells, so the common
+              case is choosing one — uploading is for a shot that is not in the
+              catalog yet. Whichever is touched last clears the other, so the
+              action never has to guess which one was meant.
+            */}
+            {products.length > 0 ? (
+              <div>
+                <p className={labelClass}>Or use a product you already sell</p>
+                {products.length > 8 ? (
+                  <input
+                    type="search"
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder="Search products"
+                    className="mt-2 w-full rounded-[1.25rem] border border-black/8 bg-white px-4 py-2.5 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59]"
+                  />
+                ) : null}
+                <div className="mt-3 grid max-h-52 grid-cols-2 gap-2 overflow-y-auto">
+                  {products
+                    .filter((product) =>
+                      product.name.toLowerCase().includes(query.trim().toLowerCase()),
+                    )
+                    .slice(0, 60)
+                    .map((product) => {
+                      const isActive = slug === product.slug;
+                      return (
+                        <button
+                          key={product.slug}
+                          type="button"
+                          onClick={() => pickProduct(product)}
+                          className={`flex items-center gap-2 rounded-[1rem] border p-2 text-left transition ${
+                            isActive
+                              ? "border-[#201d17] bg-[#f7f2ea]"
+                              : "border-black/8 bg-white hover:bg-[#faf6ef]"
+                          }`}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={product.image}
+                            alt=""
+                            className="h-10 w-10 shrink-0 rounded-lg object-cover"
+                          />
+                          <span className="min-w-0">
+                            <span className="block truncate text-xs font-medium text-[#201d17]">
+                              {product.name}
+                            </span>
+                            <span className="block truncate text-[0.68rem] text-[#8d7a5c]">
+                              {product.size}
+                            </span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+            ) : null}
+          </div>
 
           {/*
             Two columns from sm up. Stacked, the choices ran far past the
