@@ -9,6 +9,7 @@ import {
 } from "@/lib/social/scene-presets";
 import { generateSceneAction, type SceneActionResult } from "./actions";
 import { SceneCaptions } from "./scene-captions";
+import { SceneVideo } from "./scene-video";
 
 const labelClass =
   "text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#8d7a5c]";
@@ -57,6 +58,9 @@ export function SceneComposer({ products }: { products: StudioProduct[] }) {
   const [modelText, setModelText] = useState("");
   const [notes, setNotes] = useState("");
   const [dragging, setDragging] = useState(false);
+  // Bumped on every run so the video panel remounts with a new scene rather than
+  // carrying the previous clip's job across.
+  const [runId, setRunId] = useState(0);
   const [pending, startTransition] = useTransition();
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -114,6 +118,7 @@ export function SceneComposer({ products }: { products: StudioProduct[] }) {
     formData.append("modelText", modelText);
 
     setResult(null);
+    setRunId((value) => value + 1);
     startTransition(async () => {
       setResult(await generateSceneAction(formData));
     });
@@ -121,7 +126,7 @@ export function SceneComposer({ products }: { products: StudioProduct[] }) {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
         <div className="h-fit space-y-5 rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_20px_60px_rgba(32,29,23,0.05)] sm:p-7">
           <div>
             <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[#8d7a5c]">
@@ -237,99 +242,106 @@ export function SceneComposer({ products }: { products: StudioProduct[] }) {
             </div>
           ) : null}
 
-          <fieldset>
-            <legend className={labelClass}>Output size</legend>
-            <div className="mt-3 flex gap-3">
-              {ORIENTATIONS.map((value) => {
-                const meta = ORIENTATION_META[value];
-                const isActive = orientation === value;
-                return (
+          {/*
+            Two columns from sm up. Stacked, the choices ran far past the
+            generated image beside them, so the picture — the thing being
+            judged — sat alone at the top of a long scroll.
+          */}
+          <div className="grid gap-5 sm:grid-cols-2">
+            <fieldset>
+              <legend className={labelClass}>Output size</legend>
+              <div className="mt-3 flex gap-3">
+                {ORIENTATIONS.map((value) => {
+                  const meta = ORIENTATION_META[value];
+                  const isActive = orientation === value;
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setOrientation(value)}
+                      aria-pressed={isActive}
+                      className={`flex flex-1 flex-col items-center gap-2 rounded-[1.25rem] border px-3 py-4 transition ${
+                        isActive
+                          ? "border-[#201d17] bg-[#faf7f1]"
+                          : "border-black/8 hover:border-black/20"
+                      }`}
+                    >
+                      <span
+                        aria-hidden="true"
+                        style={{ width: meta.w, height: meta.h }}
+                        className={`rounded ${isActive ? "bg-[#201d17]" : "bg-[#ded4c4]"}`}
+                      />
+                      <span className="text-xs font-semibold text-[#201d17]">
+                        {meta.label}
+                      </span>
+                      <span className="text-[0.66rem] text-[#8d7a5c]">{meta.ratio}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
+
+            <PresetChoice
+              legend="Setting"
+              presets={LOCATION_PRESETS}
+              selected={locationKey}
+              onSelect={setLocationKey}
+              custom={locationText}
+              onCustom={setLocationText}
+              placeholder="Or describe your own setting"
+            />
+
+            {/*
+              The model is described, not generated separately and pasted in: a
+              person made on their own carries their own light and scale, and
+              merging them means redrawing the product — which is what garbles the
+              label. Every preset keeps them beside the product, never holding it.
+            */}
+            <PresetChoice
+              legend="Model"
+              presets={MODEL_PRESETS}
+              selected={modelKey}
+              onSelect={setModelKey}
+              custom={modelText}
+              onCustom={setModelText}
+              placeholder="Or describe your own model"
+              hint="A model stands or sits beside the product. Nobody holds it — a hand across the bottle makes the label come back wrong."
+            />
+
+            <fieldset>
+              <legend className={labelClass}>Style</legend>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {STYLES.map((option) => (
                   <button
-                    key={value}
+                    key={option}
                     type="button"
-                    onClick={() => setOrientation(value)}
-                    aria-pressed={isActive}
-                    className={`flex flex-1 flex-col items-center gap-2 rounded-[1.25rem] border px-3 py-4 transition ${
-                      isActive
-                        ? "border-[#201d17] bg-[#faf7f1]"
-                        : "border-black/8 hover:border-black/20"
+                    onClick={() => setStyle(option)}
+                    aria-pressed={style === option}
+                    className={`min-h-9 rounded-full border px-4 text-xs font-semibold transition ${
+                      style === option
+                        ? "border-[#201d17] bg-[#201d17] text-white"
+                        : "border-black/8 bg-[#f7f2ea] text-[#201d17] hover:bg-white"
                     }`}
                   >
-                    <span
-                      aria-hidden="true"
-                      style={{ width: meta.w, height: meta.h }}
-                      className={`rounded ${isActive ? "bg-[#201d17]" : "bg-[#ded4c4]"}`}
-                    />
-                    <span className="text-xs font-semibold text-[#201d17]">
-                      {meta.label}
-                    </span>
-                    <span className="text-[0.66rem] text-[#8d7a5c]">{meta.ratio}</span>
+                    {option}
                   </button>
-                );
-              })}
+                ))}
+              </div>
+            </fieldset>
+
+            <div className="sm:col-span-2">
+              <label htmlFor="studio-notes" className={labelClass}>
+                Anything to add
+              </label>
+              <textarea
+                id="studio-notes"
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
+                rows={3}
+                placeholder="e.g. beach setting, sea blue tones, late afternoon light…"
+                className="mt-2 w-full rounded-[1.25rem] border border-black/8 bg-[#f7f2ea] px-4 py-3 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59] focus:bg-white"
+              />
             </div>
-          </fieldset>
-
-          <PresetChoice
-            legend="Setting"
-            presets={LOCATION_PRESETS}
-            selected={locationKey}
-            onSelect={setLocationKey}
-            custom={locationText}
-            onCustom={setLocationText}
-            placeholder="Or describe your own setting"
-          />
-
-          {/*
-            The model is described, not generated separately and pasted in: a
-            person made on their own carries their own light and scale, and
-            merging them means redrawing the product — which is what garbles the
-            label. Every preset keeps them beside the product, never holding it.
-          */}
-          <PresetChoice
-            legend="Model"
-            presets={MODEL_PRESETS}
-            selected={modelKey}
-            onSelect={setModelKey}
-            custom={modelText}
-            onCustom={setModelText}
-            placeholder="Or describe your own model"
-            hint="A model stands or sits beside the product. Nobody holds it — a hand across the bottle makes the label come back wrong."
-          />
-
-          <fieldset>
-            <legend className={labelClass}>Style</legend>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {STYLES.map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => setStyle(option)}
-                  aria-pressed={style === option}
-                  className={`min-h-9 rounded-full border px-4 text-xs font-semibold transition ${
-                    style === option
-                      ? "border-[#201d17] bg-[#201d17] text-white"
-                      : "border-black/8 bg-[#f7f2ea] text-[#201d17] hover:bg-white"
-                  }`}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-
-          <div>
-            <label htmlFor="studio-notes" className={labelClass}>
-              Anything to add
-            </label>
-            <textarea
-              id="studio-notes"
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-              rows={3}
-              placeholder="e.g. beach setting, sea blue tones, late afternoon light…"
-              className="mt-2 w-full rounded-[1.25rem] border border-black/8 bg-[#f7f2ea] px-4 py-3 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59] focus:bg-white"
-            />
           </div>
 
           <div className="flex flex-wrap gap-3">
@@ -452,6 +464,16 @@ export function SceneComposer({ products }: { products: StudioProduct[] }) {
           ) : null}
         </div>
       </div>
+
+      {result?.ok ? (
+        <SceneVideo
+          key={runId}
+          analysis={result.analysis}
+          scenePrompt={result.scenePrompt}
+          imageUrl={result.imageUrl}
+          orientation={result.orientation}
+        />
+      ) : null}
 
       {result?.ok ? (
         <SceneCaptions analysis={result.analysis} scenePrompt={result.scenePrompt} />
