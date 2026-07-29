@@ -2,6 +2,11 @@
 
 import { useRef, useState, useTransition } from "react";
 import { ORIENTATIONS, type Orientation } from "@/lib/social/orientation";
+import {
+  LOCATION_PRESETS,
+  MODEL_PRESETS,
+  type ScenePreset,
+} from "@/lib/social/scene-presets";
 import { generateSceneAction, type SceneActionResult } from "./actions";
 import { SceneCaptions } from "./scene-captions";
 
@@ -46,6 +51,10 @@ export function SceneComposer({ products }: { products: StudioProduct[] }) {
   const [query, setQuery] = useState("");
   const [orientation, setOrientation] = useState<Orientation>("square");
   const [style, setStyle] = useState(STYLES[0]);
+  const [locationKey, setLocationKey] = useState(LOCATION_PRESETS[0].key);
+  const [locationText, setLocationText] = useState("");
+  const [modelKey, setModelKey] = useState(MODEL_PRESETS[0].key);
+  const [modelText, setModelText] = useState("");
   const [notes, setNotes] = useState("");
   const [dragging, setDragging] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -83,6 +92,10 @@ export function SceneComposer({ products }: { products: StudioProduct[] }) {
     setQuery("");
     setNotes("");
     setStyle(STYLES[0]);
+    setLocationKey(LOCATION_PRESETS[0].key);
+    setLocationText("");
+    setModelKey(MODEL_PRESETS[0].key);
+    setModelText("");
     setOrientation("square");
     if (fileRef.current) fileRef.current.value = "";
   }
@@ -95,6 +108,10 @@ export function SceneComposer({ products }: { products: StudioProduct[] }) {
     formData.append("orientation", orientation);
     formData.append("style", style);
     formData.append("notes", notes);
+    formData.append("locationKey", locationKey);
+    formData.append("locationText", locationText);
+    formData.append("modelKey", modelKey);
+    formData.append("modelText", modelText);
 
     setResult(null);
     startTransition(async () => {
@@ -252,6 +269,33 @@ export function SceneComposer({ products }: { products: StudioProduct[] }) {
               })}
             </div>
           </fieldset>
+
+          <PresetChoice
+            legend="Setting"
+            presets={LOCATION_PRESETS}
+            selected={locationKey}
+            onSelect={setLocationKey}
+            custom={locationText}
+            onCustom={setLocationText}
+            placeholder="Or describe your own setting"
+          />
+
+          {/*
+            The model is described, not generated separately and pasted in: a
+            person made on their own carries their own light and scale, and
+            merging them means redrawing the product — which is what garbles the
+            label. Every preset keeps them beside the product, never holding it.
+          */}
+          <PresetChoice
+            legend="Model"
+            presets={MODEL_PRESETS}
+            selected={modelKey}
+            onSelect={setModelKey}
+            custom={modelText}
+            onCustom={setModelText}
+            placeholder="Or describe your own model"
+            hint="A model stands or sits beside the product. Nobody holds it — a hand across the bottle makes the label come back wrong."
+          />
 
           <fieldset>
             <legend className={labelClass}>Style</legend>
@@ -413,5 +457,61 @@ export function SceneComposer({ products }: { products: StudioProduct[] }) {
         <SceneCaptions analysis={result.analysis} scenePrompt={result.scenePrompt} />
       ) : null}
     </div>
+  );
+}
+
+function PresetChoice({
+  legend,
+  presets,
+  selected,
+  onSelect,
+  custom,
+  onCustom,
+  placeholder,
+  hint,
+}: {
+  legend: string;
+  presets: ScenePreset[];
+  selected: string;
+  onSelect: (key: string) => void;
+  custom: string;
+  onCustom: (value: string) => void;
+  placeholder: string;
+  hint?: string;
+}) {
+  return (
+    <fieldset>
+      <legend className={labelClass}>{legend}</legend>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {presets.map((preset) => (
+          <button
+            key={preset.key}
+            type="button"
+            onClick={() => onSelect(preset.key)}
+            aria-pressed={selected === preset.key}
+            className={`min-h-9 rounded-full border px-4 text-xs font-semibold transition ${
+              selected === preset.key
+                ? "border-[#201d17] bg-[#201d17] text-white"
+                : "border-black/8 bg-[#f7f2ea] text-[#201d17] hover:bg-white"
+            }`}
+          >
+            {preset.label}
+          </button>
+        ))}
+      </div>
+      <input
+        type="text"
+        value={custom}
+        onChange={(event) => onCustom(event.target.value)}
+        placeholder={placeholder}
+        className="mt-3 w-full rounded-[1.25rem] border border-black/8 bg-white px-4 py-2.5 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59]"
+      />
+      {custom.trim() ? (
+        <p className="mt-1.5 text-xs text-[#8d7a5c]">
+          Your description is used instead of the choice above.
+        </p>
+      ) : null}
+      {hint ? <p className="mt-1.5 text-xs text-[#8d7a5c]">{hint}</p> : null}
+    </fieldset>
   );
 }

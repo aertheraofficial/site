@@ -43,6 +43,37 @@ function normalizeHashtag(value: unknown): string | null {
   return cleaned ? `#${cleaned}` : null;
 }
 
+/**
+ * Pull a trailing block of hashtags off the caption.
+ *
+ * The model is asked for the caption and the hashtags as separate fields, and
+ * it usually also tacks the hashtags onto the end of the caption anyway. Left
+ * alone they show twice on screen, and "Copy caption + hashtags" pastes them
+ * twice. Only a trailing run is taken — a hashtag used mid-sentence is part of
+ * the writing and stays put.
+ */
+function splitTrailingHashtags(caption: string) {
+  const lines = caption.split("\n");
+  const trailing: string[] = [];
+
+  while (lines.length > 0) {
+    const line = lines[lines.length - 1].trim();
+    if (!line) {
+      lines.pop();
+      continue;
+    }
+    // A line that is nothing but hashtags.
+    if (/^#[\w]+(\s+#[\w]+)*$/.test(line)) {
+      trailing.unshift(...line.split(/\s+/));
+      lines.pop();
+      continue;
+    }
+    break;
+  }
+
+  return { text: lines.join("\n").trimEnd(), trailing };
+}
+
 function asStringArray(value: unknown, limit: number): string[] {
   return Array.isArray(value)
     ? value.filter((item): item is string => typeof item === "string").slice(0, limit)
@@ -84,26 +115,46 @@ ${PLATFORM_RULES[platform]}
 
 LANGUAGE: write the caption in ${language}. Hashtags in English.
 
+Do NOT put hashtags inside the caption — they belong only in the hashtags
+field, and repeating them shows the same tags twice on the post.
+
 Reply with a JSON object with exactly these fields:
 {
-  "caption": "the full caption text including emojis",
+  "caption": "the caption text including emojis, with no hashtags",
   "hashtags": ["tag1", "tag2"],
   "tips": ["why this caption works for ${platform}", "the best time to post this on ${platform}"]
 }`;
 
   const raw = await kimiJson<RawCaption>({ system, prompt });
 
-  const caption = typeof raw.caption === "string" ? raw.caption.trim() : "";
-  if (!caption) {
+  const rawCaption = typeof raw.caption === "string" ? raw.caption.trim() : "";
+  if (!rawCaption) {
     throw new Error(`Kimi did not return a ${platform} caption.`);
   }
+
+  // Asking nicely is not enough — the model still appends them often, so the
+  // duplicate is removed here rather than trusted away.
+  const { text: caption, trailing } = splitTrailingHashtags(rawCaption);
+  const declared = Array.isArray(raw.hashtags)
+    ? raw.hashtags.map(normalizeHashtag).filter((t): t is string => Boolean(t))
+    : [];
+  const fromCaption = trailing
+    .map(normalizeHashtag)
+    .filter((t): t is string => Boolean(t));
+
+  // Case-insensitive: #LemongrassMalaya and #lemongrassmalaya are one tag.
+  const seen = new Set<string>();
+  const hashtags = [...declared, ...fromCaption].filter((tag) => {
+    const key = tag.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 
   return {
     platform,
     caption,
-    hashtags: Array.isArray(raw.hashtags)
-      ? raw.hashtags.map(normalizeHashtag).filter((t): t is string => Boolean(t))
-      : [],
+    hashtags,
     tips: asStringArray(raw.tips, 4),
     charCount: caption.length,
   };

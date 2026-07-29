@@ -116,11 +116,15 @@ async function writeScenePrompt({
   orientation,
   style,
   notes,
+  location,
+  model,
 }: {
   analysis: ProductAnalysis;
   orientation: Orientation;
   style: string;
   notes: string;
+  location: string;
+  model: string;
 }): Promise<string> {
   const brand = getSocialBrandContext();
 
@@ -130,6 +134,8 @@ async function writeScenePrompt({
     prompt: `Product details: ${JSON.stringify(analysis)}
 Orientation: ${orientation} (${ASPECT_RATIO[orientation]})
 Style preference: ${style || "elegant, professional, minimalist"}
+Setting: ${location || "choose one that suits the product"}
+Model: ${model || "no people in this shot"}
 Additional notes: ${notes || "none"}
 Brand: ${brand.brandName}
 
@@ -143,9 +149,14 @@ Hard rules:
 - The product keeps its exact shape, label design and printed text. Do not
   redesign, relabel, translate or re-word anything on it.
 - Add realistic contact shadows and reflections that match the lighting.
-- Surrounding subjects must be safe: natural elements, ingredients, flowers,
-  fabric, stone, wood, marble, plants. No people, faces, hands or body parts
-  unless the additional notes ask for them.
+- Build the scene in the setting given above.
+- Surrounding props must be safe: natural elements, ingredients, flowers,
+  fabric, stone, wood, marble, plants.
+- If a model is described, place them BESIDE the product. They must never hold,
+  touch, or reach over it, and nothing may cover the label — a hand across the
+  bottle forces the label to be redrawn and the printed text comes back wrong.
+  The product stays on its own surface, fully visible.
+- If no model is described, include no people, faces, hands or body parts.
 
 Under 150 words. Reply with the instruction only, no preamble.`,
   });
@@ -158,15 +169,28 @@ export async function generateProductScene({
   orientation,
   style,
   notes,
+  location = "",
+  model = "",
 }: {
   productImage: Buffer;
   mimeType: string;
   orientation: Orientation;
   style: string;
   notes: string;
+  /** Written setting, from a preset or typed by hand. */
+  location?: string;
+  /** Written model description. Empty means no people in the shot. */
+  model?: string;
 }): Promise<SceneResult> {
   const analysis = await analyseProduct(productImage, mimeType);
-  const scenePrompt = await writeScenePrompt({ analysis, orientation, style, notes });
+  const scenePrompt = await writeScenePrompt({
+    analysis,
+    orientation,
+    style,
+    notes,
+    location,
+    model,
+  });
   const image = await generateSceneImage({
     productImage,
     mimeType,

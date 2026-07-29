@@ -6,6 +6,7 @@ import { requirePermission } from "@/lib/staff-auth";
 import { getProductBySlugWithStock } from "@/lib/product-stock";
 import { isKimiConfigured } from "@/lib/social/kimi";
 import { isOrientation } from "@/lib/social/orientation";
+import { describeScene } from "@/lib/social/scene-presets";
 import { isCaptionPlatform } from "@/lib/social/platform-rules";
 import {
   generateCaptionForPlatform,
@@ -196,12 +197,21 @@ export async function generateSceneAction(
         }
       : await loadCatalogPhoto(productSlug);
 
+    const { location, model } = describeScene({
+      locationKey: String(formData.get("locationKey") ?? ""),
+      locationText: String(formData.get("locationText") ?? ""),
+      modelKey: String(formData.get("modelKey") ?? ""),
+      modelText: String(formData.get("modelText") ?? ""),
+    });
+
     const { analysis, scenePrompt, image } = await generateProductScene({
       productImage: source.productImage,
       mimeType: source.mimeType,
       orientation: orientationValue,
       style: String(formData.get("style") ?? "").trim(),
       notes: String(formData.get("notes") ?? "").trim(),
+      location,
+      model,
     });
 
     return {
