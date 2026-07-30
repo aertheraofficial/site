@@ -100,11 +100,21 @@ export async function generateSceneImage({
   mimeType,
   scenePrompt,
   orientation,
+  reference,
 }: {
   productImage: Buffer;
   mimeType: string;
   scenePrompt: string;
   orientation: Orientation;
+  /**
+   * A second image to match, used when this shot belongs to a sequence.
+   *
+   * Shots generated independently come back with different people in them — a
+   * man's hands opening the jar, a woman's finger in the next shot. Words alone
+   * cannot hold a person steady across separate generations; an earlier frame
+   * from the same sequence can.
+   */
+  reference?: { data: Buffer; mimeType: string };
 }): Promise<SceneImage> {
   const apiKey = getGeminiApiKey();
   if (!apiKey) {
@@ -129,6 +139,17 @@ export async function generateSceneImage({
             mime_type: mimeType,
             data: productImage.toString("base64"),
           },
+          // Order matters: the product stays first so it reads as the thing being
+          // placed, and the reference second as something to match.
+          ...(reference
+            ? [
+                {
+                  type: "image",
+                  mime_type: reference.mimeType,
+                  data: reference.data.toString("base64"),
+                },
+              ]
+            : []),
         ],
         response_format: {
           type: "image",

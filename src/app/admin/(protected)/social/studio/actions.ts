@@ -5,7 +5,7 @@ import path from "path";
 import { requirePermission } from "@/lib/staff-auth";
 import { getProductBySlugWithStock } from "@/lib/product-stock";
 import { isKimiConfigured } from "@/lib/social/kimi";
-import { isOrientation } from "@/lib/social/orientation";
+import { isOrientation, type Orientation } from "@/lib/social/orientation";
 import { describeScene } from "@/lib/social/scene-presets";
 import { isCaptionPlatform } from "@/lib/social/platform-rules";
 import {
@@ -31,6 +31,13 @@ export type SceneActionResult =
       /** data: URL, ready for <img> and for a download link. */
       imageUrl: string;
       fileName: string;
+      /**
+       * The shape this image was actually made at. Carried back rather than read
+       * from the picker: staff can change the picker after generating, and the
+       * video step needs the shape of the frame it is animating, not the one
+       * currently selected.
+       */
+      orientation: Orientation;
     }
   | { ok: false; error: string };
 
@@ -222,6 +229,7 @@ export async function generateSceneAction(
       fileName: `${slugifyForFile(analysis.productName)}-${orientationValue}.${
         image.mimeType === "image/jpeg" ? "jpg" : "png"
       }`,
+      orientation: orientationValue,
     };
   } catch (error) {
     return {

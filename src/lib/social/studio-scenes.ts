@@ -70,8 +70,14 @@ function asString(value: unknown, fallback = ""): string {
   return typeof value === "string" ? value.trim() : fallback;
 }
 
-/** Step 1 — Kimi reads the photo, including the wording printed on the label. */
-async function analyseProduct(
+/**
+ * Step 1 — Kimi reads the photo, including the wording printed on the label.
+ *
+ * Exported because the shot-list planner needs the same read: what the five
+ * stages mean depends on what the product is, and running a second vision pass
+ * to learn what this one already knows would cost a call for the same answer.
+ */
+export async function analyseProduct(
   productImage: Buffer,
   mimeType: string,
 ): Promise<ProductAnalysis> {

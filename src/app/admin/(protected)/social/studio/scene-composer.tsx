@@ -404,16 +404,23 @@ export function SceneComposer({ products }: { products: StudioProduct[] }) {
                 />
                 {/*
                   Observed, not theoretical: a 230ml diffuser came back reading
-                  220ml. Large type — brand, product name — survives; the small
-                  print does not, and no prompt wording fixes that reliably. A
-                  wrong volume on a public post is a claim about the product,
-                  so this warning sits next to the download button rather than
-                  somewhere it can be scrolled past.
+                  220ml. But the risk tracks how much of the frame the label
+                  occupies, not the model. A hero shot — product large, straight
+                  on, nothing in front of it — came back twice with the whole
+                  ingredient list correct, down to "60ML 2.12 FL. OZ."; the same
+                  label small inside a busy room is where it turns to mush.
+                  Saying which case is risky beats crying wolf on every image,
+                  because a warning that fires every time stops being read. A
+                  wrong volume on a public post is still a claim about the
+                  product, so it sits next to the download button either way.
                 */}
                 <p className="border-t border-[#e7d3a8] bg-[#fbf4e6] px-5 py-3 text-sm leading-6 text-[#8b5e1d]">
                   <strong className="font-semibold">Check the label before posting.</strong>{" "}
-                  AI redraws small print and can change the volume, weight or
-                  ingredient list. Compare it against the real bottle.
+                  Small print in a busy scene is where this slips — a volume or an
+                  ingredient can come back wrong. Compare it against the real
+                  bottle. If the printing has to be readable, shoot the product
+                  large and straight on with nothing in front of it; at that size
+                  it holds.
                 </p>
                 <div className="flex flex-wrap items-center justify-between gap-3 p-5">
                   <div className="min-w-0">

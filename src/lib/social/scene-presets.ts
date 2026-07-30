@@ -56,6 +56,18 @@ export const LOCATION_PRESETS: ScenePreset[] = [
     prompt:
       "a clean kitchen shelf with ceramic bowls and dried herbs, soft even daylight",
   },
+  /**
+   * The framing a Demo clip needs, and the only one where a hand may touch the
+   * product. Everything here works to push the label out of the crop: an extreme
+   * macro on the open jar mouth, shot from above, lid set aside. With no printed
+   * text in frame there is nothing for a finger to garble.
+   */
+  {
+    key: "macro-open-jar",
+    label: "Macro — open jar",
+    prompt:
+      "an extreme macro crop shot from a high three-quarter angle, so close that the open jar mouth and the smooth surface of the product fill most of the frame and the label sits BELOW the bottom edge of the crop and is not visible at all; the lid resting beside it on a warm wooden surface, soft directional window light from the left, shallow depth of field, a few blurred lemongrass stalks far behind",
+  },
 ];
 
 /**

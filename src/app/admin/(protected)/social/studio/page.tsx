@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { requirePermission } from "@/lib/staff-auth";
 import { describeStudioSetup } from "@/lib/social/studio-scenes";
 import { getProductsWithStock } from "@/lib/product-stock";
-import { SceneComposer } from "./scene-composer";
+import { StudioWorkspace } from "./studio-workspace";
 
 export const metadata: Metadata = { title: "Social Studio" };
 
@@ -55,7 +55,7 @@ export default async function SocialStudioPage() {
           </ul>
         </div>
       ) : (
-        <SceneComposer products={products} />
+        <StudioWorkspace products={products} />
       )}
     </div>
   );
