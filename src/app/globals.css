@@ -1,4 +1,20 @@
 @import "tailwindcss";
+
+/* Belt and braces with the viewport export in layout.tsx: some Android
+   browsers read the CSS property rather than the meta tag. */
+:root {
+  color-scheme: light;
+}
+
+/* A single wide element used to scroll the whole page sideways on a phone.
+   Wide content (tables, the QR) scrolls inside its own container instead.
+   `clip`, not `hidden`: `hidden` makes the root a scroll container, which
+   silently breaks every `position: sticky` on the site. */
+html,
+body {
+  max-width: 100%;
+  overflow-x: clip;
+}
 @plugin "@tailwindcss/typography";
 
 :root {

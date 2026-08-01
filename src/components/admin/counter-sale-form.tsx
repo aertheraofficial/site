@@ -577,7 +577,7 @@ export function CounterSaleForm({ products, location, locationName }: CounterSal
                   alt="Aerthera DuitNow QR"
                   width={320}
                   height={520}
-                  className="h-auto w-[240px] rounded-[1rem]"
+                  className="h-auto w-full max-w-[240px] rounded-[1rem]"
                   priority
                 />
               </div>

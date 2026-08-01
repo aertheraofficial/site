@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
 import { AuthProvider } from "@/components/auth-context";
 import { CartProvider } from "@/components/cart-context";
@@ -19,6 +19,19 @@ const body = Plus_Jakarta_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
 });
+
+/**
+ * The site is a light design with no dark variant. Without this, Chrome on
+ * Android applies its Auto Dark Theme and inverts the page itself — which is
+ * why the counter's input fields came out as unreadable dark boxes on Android
+ * while iOS Safari, which does not force-darken, looked correct.
+ *
+ * Declaring the scheme tells the browser the page has already made its choice.
+ */
+export const viewport: Viewport = {
+  colorScheme: "light",
+  themeColor: "#faf7f1",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
