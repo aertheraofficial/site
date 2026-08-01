@@ -447,11 +447,15 @@ export function CounterSaleForm({ products, location, locationName }: CounterSal
 
         <div className="mt-5 space-y-3">
           <div className="relative" ref={memberBoxRef}>
+            <label htmlFor="counter-member-search" className="mb-1.5 block text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#8d7a5c]">
+              Find existing customer
+            </label>
             <input
+              id="counter-member-search"
               type="search"
               value={memberQuery}
               onChange={(e) => setMemberQuery(e.target.value)}
-              placeholder="Find member by name or phone"
+              placeholder="Name, phone or email"
               className="w-full rounded-[1.25rem] border border-black/8 bg-[#f7f2ea] px-4 py-2.5 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59] focus:bg-white"
             />
             {memberResults.length > 0 ? (
@@ -488,27 +492,45 @@ export function CounterSaleForm({ products, location, locationName }: CounterSal
             ) : null}
           </div>
 
-          <input
-            type="text"
-            value={customerName}
-            onChange={(e) => setCustomerName(e.target.value)}
-            placeholder="Customer name (optional)"
-            className="w-full rounded-[1.25rem] border border-black/8 bg-[#f7f2ea] px-4 py-2.5 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59] focus:bg-white"
-          />
-          <input
-            type="tel"
-            value={customerPhone}
-            onChange={(e) => setCustomerPhone(e.target.value)}
-            placeholder="Phone (optional)"
-            className="w-full rounded-[1.25rem] border border-black/8 bg-[#f7f2ea] px-4 py-2.5 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59] focus:bg-white"
-          />
-          <input
-            type="email"
-            value={customerEmail}
-            onChange={(e) => setCustomerEmail(e.target.value)}
-            placeholder="Email (for receipt)"
-            className="w-full rounded-[1.25rem] border border-black/8 bg-[#f7f2ea] px-4 py-2.5 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59] focus:bg-white"
-          />
+          <div>
+            <label htmlFor="counter-customer-name" className="mb-1.5 block text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#8d7a5c]">
+              Customer name
+            </label>
+            <input
+              id="counter-customer-name"
+              type="text"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              placeholder="e.g. Siti Aminah"
+              className="w-full rounded-[1.25rem] border border-black/8 bg-[#f7f2ea] px-4 py-2.5 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59] focus:bg-white"
+            />
+          </div>
+          <div>
+            <label htmlFor="counter-customer-phone" className="mb-1.5 block text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#8d7a5c]">
+              Phone
+            </label>
+            <input
+              id="counter-customer-phone"
+              type="tel"
+              value={customerPhone}
+              onChange={(e) => setCustomerPhone(e.target.value)}
+              placeholder="e.g. 0173159643"
+              className="w-full rounded-[1.25rem] border border-black/8 bg-[#f7f2ea] px-4 py-2.5 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59] focus:bg-white"
+            />
+          </div>
+          <div>
+            <label htmlFor="counter-customer-email" className="mb-1.5 block text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#8d7a5c]">
+              Email
+            </label>
+            <input
+              id="counter-customer-email"
+              type="email"
+              value={customerEmail}
+              onChange={(e) => setCustomerEmail(e.target.value)}
+              placeholder="Receipt is emailed here"
+              className="w-full rounded-[1.25rem] border border-black/8 bg-[#f7f2ea] px-4 py-2.5 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59] focus:bg-white"
+            />
+          </div>
 
           <div>
             <p className="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#8d7a5c]">
