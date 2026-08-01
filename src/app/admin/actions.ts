@@ -67,6 +67,7 @@ import { createMember } from "@/lib/members";
 import { searchCustomerBook, type CustomerMatch } from "@/lib/customers";
 import { buildWhatsAppShareUrl } from "@/lib/receipt";
 import { sendReceiptEmail, type ReceiptEmailResult } from "@/lib/receipt-email";
+import { sendStockAlertEmail } from "@/lib/stock-alert-email";
 import { getPublicSiteUrl } from "@/lib/store-config";
 import {
   isStaffSelfRegistrationEnabled,
@@ -334,7 +335,7 @@ export async function quickDecrementStockAction(formData: FormData) {
 }
 
 export async function markProductPreorderAction(formData: FormData) {
-  await requirePermission("stock", "/admin/stock");
+  const actor = await requirePermission("stock", "/admin/stock");
 
   const slug = getRequiredSlug(formData);
   const location = getRequiredLocation(formData);
@@ -349,8 +350,27 @@ export async function markProductPreorderAction(formData: FormData) {
     );
   }
 
+  // Pressing Pre-order is the restock signal, whatever the level was — staff use
+  // it to say "we need more of this" even when stock has not run low yet.
+  const product = await getProductBySlugWithStock(slug);
+  const mailed = await sendStockAlertEmail({
+    reason: "preorder-requested",
+    slug,
+    productName: product?.name ?? slug,
+    locationId: location,
+    locationName: getLocationName(location),
+    quantity: null,
+    requestedBy: actor.type === "admin" ? actor.name : actor.staff.fullName,
+  });
+
   revalidateStockPaths(slug);
-  redirect(`${stockReturnPath(location)}&saved=1`);
+  // `preorder` opens the follow-up dialog, which offers to send the same request
+  // on WhatsApp — the email is automatic, the WhatsApp copy is a deliberate tap.
+  redirect(
+    `${stockReturnPath(location)}&saved=1&preorder=${encodeURIComponent(slug)}&mailed=${
+      mailed ? "1" : "0"
+    }`,
+  );
 }
 
 export async function createAdminProductAction(formData: FormData) {
@@ -440,7 +460,19 @@ export async function updateProductAction(formData: FormData) {
     );
   }
 
-  const fields: ProductOverride = { name, categoryLabel, size, price };
+  // Sent as empty strings when cleared, which must mean "fall back to the
+  // catalog copy" — writing "" would blank the product page instead.
+  const excerpt = String(formData.get("excerpt") ?? "").trim() || null;
+  const description = String(formData.get("description") ?? "").trim() || null;
+
+  const fields: ProductOverride = {
+    name,
+    categoryLabel,
+    size,
+    price,
+    excerpt,
+    description,
+  };
   try {
     if (imageFile instanceof File && imageFile.size > 0) {
       fields.imageUrl = await uploadProductImage(imageFile);

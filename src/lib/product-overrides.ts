@@ -11,6 +11,10 @@ export type ProductOverride = {
   price?: number | null;
   imageUrl?: string | null;
   availability?: Product["availability"] | null;
+  /** One line on product cards. */
+  excerpt?: string | null;
+  /** The full copy on the product page — what is in it, how to use it. */
+  description?: string | null;
 };
 
 type OverrideRow = {
@@ -22,6 +26,8 @@ type OverrideRow = {
   price: number | null;
   image_url: string | null;
   availability: Product["availability"] | null;
+  excerpt: string | null;
+  description: string | null;
 };
 
 export async function getProductOverrides(): Promise<Map<string, ProductOverride>> {
@@ -30,7 +36,9 @@ export async function getProductOverrides(): Promise<Map<string, ProductOverride
   try {
     const { data, error } = await getSupabaseAdmin()
       .from("product_overrides")
-      .select("slug, name, short_name, category_label, size, price, image_url, availability");
+      .select(
+        "slug, name, short_name, category_label, size, price, image_url, availability, excerpt, description",
+      );
     if (error) return new Map();
 
     return new Map(
@@ -44,6 +52,8 @@ export async function getProductOverrides(): Promise<Map<string, ProductOverride
           price: row.price === null ? null : Number(row.price),
           imageUrl: row.image_url,
           availability: row.availability,
+          excerpt: row.excerpt,
+          description: row.description,
         },
       ]),
     );
@@ -61,6 +71,8 @@ export function applyProductOverride(product: Product, override: ProductOverride
   if (override.size) next.size = override.size;
   if (typeof override.price === "number") next.price = override.price;
   if (override.availability) next.availability = override.availability;
+  if (override.excerpt) next.excerpt = override.excerpt;
+  if (override.description) next.description = override.description;
   if (override.imageUrl) {
     next.image = override.imageUrl;
     next.gallery = [override.imageUrl];
@@ -93,6 +105,8 @@ export async function setProductOverride(slug: string, fields: ProductOverride) 
   if (fields.price !== undefined) row.price = fields.price;
   if (fields.imageUrl !== undefined) row.image_url = fields.imageUrl;
   if (fields.availability !== undefined) row.availability = fields.availability;
+  if (fields.excerpt !== undefined) row.excerpt = fields.excerpt;
+  if (fields.description !== undefined) row.description = fields.description;
 
   const { error } = await getSupabaseAdmin()
     .from("product_overrides")

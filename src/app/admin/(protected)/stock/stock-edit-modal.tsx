@@ -15,6 +15,8 @@ type StockEditModalProps = {
     size: string;
     price: number;
     image: string;
+    excerpt: string;
+    description: string;
   };
   categories: string[];
   /** Where to return after saving (keeps the current Manage Stock filters). */
@@ -129,6 +131,46 @@ export function StockEditModal({ product, categories, returnTo }: StockEditModal
                   min={0}
                   step="0.01"
                   defaultValue={product.price}
+                  className={inputClass}
+                />
+              </div>
+
+              {/*
+                The same two fields Add Product has. Without them the copy that
+                explains what is in a product could be set once, at creation,
+                and never corrected — and for catalog products shipped in code,
+                never set from the admin at all.
+              */}
+              <div>
+                <label
+                  htmlFor="edit-excerpt"
+                  className="mb-1.5 block text-[0.8rem] font-medium text-[#201d17]"
+                >
+                  Short description
+                </label>
+                <input
+                  id="edit-excerpt"
+                  type="text"
+                  name="excerpt"
+                  defaultValue={product.excerpt}
+                  placeholder="One line shown on product cards"
+                  className={inputClass}
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="edit-description"
+                  className="mb-1.5 block text-[0.8rem] font-medium text-[#201d17]"
+                >
+                  Full description
+                </label>
+                <textarea
+                  id="edit-description"
+                  name="description"
+                  rows={4}
+                  defaultValue={product.description}
+                  placeholder="What is in it, how to use it — shown on the product page"
                   className={inputClass}
                 />
               </div>

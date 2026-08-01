@@ -7,12 +7,19 @@ import {
 import {
   ALL_LOCATIONS,
   ONLINE_LOCATION,
+  getLocationName,
   getProductsWithStockAtLocation,
   isLocationId,
 } from "@/lib/product-stock";
 import type { Product } from "@/data/products";
 import { PREORDER_THRESHOLD } from "@/lib/product-availability";
+import { buildWhatsAppShareUrl } from "@/lib/receipt";
+import {
+  buildRestockMessage,
+  getStockAlertWhatsAppPhone,
+} from "@/lib/stock-alert-email";
 import { StockEditModal } from "./stock-edit-modal";
+import { PreorderRequestModal } from "./preorder-request-modal";
 import { requirePermission } from "@/lib/staff-auth";
 
 type StockPageProps = {
@@ -23,6 +30,10 @@ type StockPageProps = {
     type?: string | string[];
     saved?: string;
     error?: string;
+    /** Slug just marked pre-order — opens the WhatsApp follow-up dialog. */
+    preorder?: string;
+    /** "1" when the restock alert email was accepted. */
+    mailed?: string;
   }>;
 };
 
@@ -96,8 +107,9 @@ function buildLocationHref(
 }
 
 export default async function ManageStockPage({ searchParams }: StockPageProps) {
-  await requirePermission("stock");
-  const { q, status, location, type, saved, error } = await searchParams;
+  const actor = await requirePermission("stock");
+  const { q, status, location, type, saved, error, preorder, mailed } =
+    await searchParams;
   const query = q?.trim() ?? "";
   const normalizedQuery = query.toLowerCase();
   const activeLocation = isLocationId(location) ? location : ONLINE_LOCATION;
@@ -118,6 +130,23 @@ export default async function ManageStockPage({ searchParams }: StockPageProps) 
   }));
 
   const totalCount = withState.length;
+
+  // Follow-up dialog for the product just marked pre-order. Resolved here rather
+  // than passed through the URL so the message always reflects the live name.
+  const preorderProduct = preorder
+    ? (products.find((product) => product.slug === preorder) ?? null)
+    : null;
+  const preorderLocationName = getLocationName(activeLocation);
+  const preorderWhatsAppUrl = preorderProduct
+    ? buildWhatsAppShareUrl(
+        getStockAlertWhatsAppPhone(),
+        buildRestockMessage({
+          productName: preorderProduct.name,
+          locationName: preorderLocationName,
+          requestedBy: actor.type === "admin" ? actor.name : actor.staff.fullName,
+        }),
+      )
+    : null;
   const lowStockCount = withState.filter((p) => p.state === "low-stock").length;
   const soldOutCount = withState.filter((p) => p.state === "sold-out").length;
   const preorderCount = withState.filter((p) => p.state === "pre-order").length;
@@ -315,6 +344,21 @@ export default async function ManageStockPage({ searchParams }: StockPageProps) 
             ))}
           </section>
 
+          {preorderProduct ? (
+            <PreorderRequestModal
+              productName={preorderProduct.name}
+              locationName={preorderLocationName}
+              whatsAppUrl={preorderWhatsAppUrl}
+              emailSent={mailed === "1"}
+              returnTo={buildLocationHref(
+                activeLocation,
+                query,
+                activeStatuses,
+                activeTypes,
+              )}
+            />
+          ) : null}
+
           {saved ? (
             <p className="rounded-[1.25rem] border border-[#8cc8a4] bg-[#e9f7ee] px-4 py-3 text-sm leading-6 text-[#256542]">
               Stock updated.
@@ -413,6 +457,8 @@ export default async function ManageStockPage({ searchParams }: StockPageProps) 
                                   size: product.size,
                                   price: product.price,
                                   image: product.image,
+                                  excerpt: product.excerpt,
+                                  description: product.description,
                                 }}
                                 categories={allTypes}
                                 returnTo={buildLocationHref(
