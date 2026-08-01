@@ -92,6 +92,20 @@ ${
   on, the whole label sharp and readable, no hand anywhere near it.`
     : `- This frame is the moment BEFORE the action happens, not during it. Leave
   room for the movement to occur.`
+}${
+  /*
+   * Said twice on purpose — the planner is asked for this too. Cropping the
+   * label out of an Open shot took the jar with it: what came back was a hand
+   * resting on a black lid standing on the table, and the motion director then
+   * correctly reported that nothing in the frame could be opened.
+   */
+  shot.stage === "open"
+    ? `
+- The container and its lid are both in frame together, the lid still on the rim
+  or barely lifted off it. Keeping the printed panel out of the crop means
+  cutting below it — the glass rim and the top of the body stay in shot. A lid
+  alone on a surface has nothing left to open.`
+    : ""
 }
 
 Under 150 words. Reply with the instruction only, no preamble.`,

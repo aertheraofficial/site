@@ -20,19 +20,31 @@ import { VIDEO_ASPECT_RATIO, type VideoDuration } from "@/lib/social/video-optio
 const GEMINI_API_ROOT = "https://generativelanguage.googleapis.com/v1beta";
 
 /**
- * Cheapest tier, deliberately.
+ * Cheapest tier, and now the only one that runs without a second key turned.
  *
  * The full model does follow a brief better — measured on the same still,
  * `veo-3.1-fast-generate-preview` let the subject turn to the lens and smile
  * halfway through a brief that held her gaze away, while the full one held it.
- * But it costs eight times as much per second, and the question staff are
- * answering right now is whether a clip suits the product at all, which a 720p
- * Lite render answers just as well.
+ * That is why the default was raised to the full model for an afternoon of
+ * iteration on 2026-07-29, and it is the most expensive mistake this file has
+ * caused: sixteen times the Lite price, about RM 13 a clip, for roughly four
+ * hours of exploratory renders whose only question was whether a composition
+ * worked. Around RM 95 of a RM 100 balance went that way, and the owner found out
+ * from the bill.
  *
- * Set GEMINI_VIDEO_MODEL to `veo-3.1-fast-generate-preview` or
- * `veo-3.1-generate-preview` for a final take worth posting.
+ * So the tier is no longer a default that a later edit can quietly raise. Lite
+ * is what runs. Anything dearer needs GEMINI_VIDEO_ALLOW_PAID_TIER=true set
+ * alongside GEMINI_VIDEO_MODEL, which is a deliberate act by whoever is paying —
+ * per posted clip, not per experiment.
  */
 const DEFAULT_VIDEO_MODEL = "veo-3.1-lite-generate-preview";
+
+/** Roughly what each tier costs for one 8-second clip, for the log line below. */
+const TIER_RINGGIT: Record<string, string> = {
+  "veo-3.1-lite-generate-preview": "RM 2",
+  "veo-3.1-fast-generate-preview": "RM 4",
+  "veo-3.1-generate-preview": "RM 13",
+};
 
 /**
  * 720p unless someone asks otherwise, because it is the cheapest thing Veo will
@@ -46,7 +58,8 @@ const DEFAULT_VIDEO_MODEL = "veo-3.1-lite-generate-preview";
  */
 function resolutionFor(durationSeconds: VideoDuration) {
   const wanted = process.env.GEMINI_VIDEO_RESOLUTION?.trim();
-  if (wanted && wanted !== "720p" && durationSeconds === "8") {
+  const allowed = process.env.GEMINI_VIDEO_ALLOW_PAID_TIER?.trim() === "true";
+  if (allowed && wanted && wanted !== "720p" && durationSeconds === "8") {
     return wanted;
   }
   return "720p";
@@ -69,7 +82,23 @@ export function isGeminiVideoConfigured() {
 }
 
 export function getGeminiVideoModel() {
-  return process.env.GEMINI_VIDEO_MODEL?.trim() || DEFAULT_VIDEO_MODEL;
+  const asked = process.env.GEMINI_VIDEO_MODEL?.trim();
+  if (!asked || asked === DEFAULT_VIDEO_MODEL) return DEFAULT_VIDEO_MODEL;
+
+  // Ignored rather than obeyed, and said out loud. A silent downgrade would have
+  // someone believe they were rendering a final take at full quality.
+  if (process.env.GEMINI_VIDEO_ALLOW_PAID_TIER?.trim() !== "true") {
+    console.warn(
+      `GEMINI_VIDEO_MODEL is set to ${asked} (about ${
+        TIER_RINGGIT[asked] ?? "much more"
+      } per 8s clip) but GEMINI_VIDEO_ALLOW_PAID_TIER is not "true". Rendering on ${DEFAULT_VIDEO_MODEL} instead, about ${
+        TIER_RINGGIT[DEFAULT_VIDEO_MODEL]
+      }.`,
+    );
+    return DEFAULT_VIDEO_MODEL;
+  }
+
+  return asked;
 }
 
 export class GeminiVideoError extends Error {}

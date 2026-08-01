@@ -38,13 +38,20 @@ export const VIDEO_ASPECT_RATIO: Record<Orientation, "16:9" | "9:16"> = {
 /**
  * What the clip is for, which decides how much is allowed to happen in it.
  *
- * The two need opposite rules. An ambience clip protects the label by keeping
- * every hand away from the product — and a shot where nothing touches the
- * product cannot demonstrate it. A demo needs the opposite: fingers in the balm,
- * a scoop, a mark left behind. That is safe only when the label is outside the
- * crop, because a hand across printed text is what garbles it.
+ * The three need contradictory rules. An ambience clip protects the label by
+ * keeping every hand away from the product — and a shot where nothing touches
+ * the product cannot demonstrate it. A demo needs the opposite: fingers in the
+ * balm, a scoop, a mark left behind. That is safe only when the label is outside
+ * the crop, because a hand across printed text is what garbles it.
+ *
+ * `open` exists because the first two could not describe it between them. Asked
+ * for a lid twisting off under the demo rules — which call for a scoop and state
+ * that the container does not move — Kimi resolved the contradiction by
+ * directing nothing to happen at all: "the lid and jar hold perfectly still".
+ * The clip that came back was a hand resting on a closed jar. Here the product
+ * itself is what moves, and only its lid.
  */
-export const SHOT_TYPES = ["ambience", "demo"] as const;
+export const SHOT_TYPES = ["ambience", "demo", "open"] as const;
 
 export type ShotType = (typeof SHOT_TYPES)[number];
 
@@ -67,5 +74,10 @@ export const SHOT_TYPE_META: Record<
     label: "Demo",
     blurb: "A finger scoops the product",
     hint: "For a close macro shot with the label out of frame. A finger presses in, scoops, and lifts away leaving a mark. Do not use it on a shot where the label is readable — a hand across printed text comes back garbled.",
+  },
+  open: {
+    label: "Open",
+    blurb: "A hand lifts the lid away",
+    hint: "For the shot that starts a sequence: a hand turns the lid and lifts it clear, and the product is left open. Also needs the label out of the crop. Use Demo instead if the lid is already off.",
   },
 };

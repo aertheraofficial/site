@@ -199,7 +199,7 @@ export function SceneVideo({
           */}
           <fieldset>
             <legend className={labelClass}>What the clip is for</legend>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <div className="mt-3 grid gap-2 sm:grid-cols-3">
               {SHOT_TYPES.map((value) => {
                 const meta = SHOT_TYPE_META[value];
                 const isActive = shotType === value;
@@ -229,10 +229,11 @@ export function SceneVideo({
             <p className="mt-2 text-xs leading-5 text-[#8d7a5c]">
               {SHOT_TYPE_META[shotType].hint}
             </p>
-            {shotType === "demo" ? (
+            {/* Both hand modes carry the same risk, so both get the warning. */}
+            {shotType !== "ambience" ? (
               <p className="mt-2 rounded-[1rem] border border-[#e7d3a8] bg-[#fbf4e6] px-4 py-2.5 text-xs leading-5 text-[#8b5e1d]">
                 Generate the scene with the <strong>Macro — open jar</strong>{" "}
-                setting first. On any shot where the label is readable, a finger
+                setting first. On any shot where the label is readable, a hand
                 across it will rewrite the printed text.
               </p>
             ) : null}
@@ -282,7 +283,9 @@ export function SceneVideo({
               placeholder={
                 shotType === "demo"
                   ? "e.g. the finger scoops from the near edge and lifts out to the right…"
-                  : "e.g. she lets out a slow breath and settles back into the chair…"
+                  : shotType === "open"
+                    ? "e.g. the lid turns off and is set down to the left of the jar…"
+                    : "e.g. she lets out a slow breath and settles back into the chair…"
               }
               className="mt-2 w-full rounded-[1.25rem] border border-black/8 bg-[#f7f2ea] px-4 py-3 text-sm text-[#201d17] outline-none transition focus:border-[#b38a59] focus:bg-white disabled:opacity-60"
             />

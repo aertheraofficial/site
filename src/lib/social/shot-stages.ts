@@ -63,7 +63,9 @@ export const STAGE_META: Record<
     purpose:
       "The container is opened. Scent starts when something is opened, and the sound of it carries the whole shot.",
     medium: "video",
-    shotType: "demo",
+    // Not `demo`: those rules forbid the container moving, which is the entire
+    // action here. See the note on SHOT_TYPES.
+    shotType: "open",
     seconds: "4",
   },
   touch: {

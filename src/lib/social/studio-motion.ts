@@ -163,6 +163,35 @@ const DEMO_RULES = `- Someone's index finger presses into the product, draws one
 - Nothing in the background moves.`;
 
 /**
+ * The Open rules. Every clause that names the lid contradicts DEMO_RULES, which
+ * is why this is a separate mode rather than a paragraph added to that one.
+ *
+ * The shape is borrowed from the demo findings that still hold — one action that
+ * finishes, then a held frame — but the thing that moves is the product, so the
+ * two failure modes are different. Left looser, the model returns the lid: it
+ * fills the clip by unscrewing and screwing back on. And a lid lifted straight
+ * up out of frame reads as a jump cut, so it has to be set down and stay down.
+ */
+const OPEN_RULES = `- A hand turns the lid anticlockwise and lifts it clear of the jar. This is the
+  point of the clip — it must actually happen.
+- The lid comes off ONCE and never goes back on. Say this plainly, or the model
+  fills the time by closing it again and the clip reads as a loop.
+- The lid ends up set down beside the jar, or out of frame low and to one side,
+  and stays there. It does not hover, and it does not rise straight up out of
+  shot.
+- What is left is the open jar with the product surface visible. Name that
+  surface as what the last part of the clip holds on.
+- The jar body itself stays where it is: it does not slide, tip, lift or rotate
+  while the lid is turned. Only the lid and the hand move.
+- The last part of the clip is a held, motionless shot of the open jar.
+- Hands are photoreal: one hand, natural skin, short natural nail, an unhurried
+  human speed. No second hand enters.
+- If any printed text is visible in this frame, the hand stays clear of it and
+  never passes over it. Text under a hand comes back rewritten.
+- Camera is a static shot on a tripod. No movement, no zoom, no drift.
+- Nothing in the background moves.`;
+
+/**
  * Step 4 — Kimi turns the still into a shot list of one.
  *
  * The finished scene is attached, not just described. Writing the brief from the
@@ -200,7 +229,9 @@ export async function writeMotionPrompt({
   const modeRules =
     shotType === "demo"
       ? DEMO_RULES
-      : `- Every movement must trace back to something in "couldMove".
+      : shotType === "open"
+        ? OPEN_RULES
+        : `- Every movement must trace back to something in "couldMove".
 - Prefer one small human action with a reason behind it — a breath let out, a
   slow blink, settling back into the chair — over things drifting in general.
   Aimless ambient motion is the main reason a clip reads as generated.
@@ -222,11 +253,45 @@ export async function writeMotionPrompt({
 - Air moves barely or not at all. A gust that lifts hair once and disappears is
   worse than perfect stillness.`;
 
+  /**
+   * The one rule an Open shot has to be let out of. "If the container is closed
+   * it stays closed" is what keeps every other mode honest — it is also a flat
+   * refusal of the only thing this shot does, and Kimi obeys the hard rules over
+   * the mode rules when they disagree.
+   */
+  const closedRule =
+    shotType === "open"
+      ? "The lid in this frame is the one thing that may change: it comes off. Everything else you direct must already be visible."
+      : "If the container is closed it stays closed.";
+
+  /**
+   * The reading is the outer limit of what may be directed, and on an Open shot
+   * one of its own facts is the obstacle: asked what would look false if it
+   * moved, Kimi answers "the lid" — correctly, for every other shot. Left in
+   * `mustHold` it outranks the mode rules, and the brief comes back with the lid
+   * held still on a clip whose only job is taking it off.
+   */
+  const LID = /\b(lid|cap|cover|top)\b/i;
+  const readingForBrief =
+    shotType === "open"
+      ? {
+          ...reading,
+          mustHold: reading.mustHold.filter((entry) => !LID.test(entry)),
+        }
+      : reading;
+
+  const enters =
+    shotType === "demo"
+      ? " — the one exception is the hand doing the scoop, which may enter"
+      : shotType === "open"
+        ? " — the one exception is the hand opening the lid, which may enter, and the lid, which may leave"
+        : ". If nobody is holding anything, nothing is picked up";
+
   return kimiChat({
     system:
-      shotType === "demo"
-        ? "You are a motion director writing a brief for an image-to-video model. The still already exists and is attached; you describe the single hand action that happens in it and nothing else. You are strict about physical plausibility, and about the action finishing rather than repeating."
-        : "You are a motion director writing a brief for an image-to-video model. The still already exists and is attached; you only describe what moves in it. You are strict about physical plausibility — a clip that shows something that could not happen is worse than a clip that barely moves.",
+      shotType === "ambience"
+        ? "You are a motion director writing a brief for an image-to-video model. The still already exists and is attached; you only describe what moves in it. You are strict about physical plausibility — a clip that shows something that could not happen is worse than a clip that barely moves."
+        : "You are a motion director writing a brief for an image-to-video model. The still already exists and is attached; you describe the single hand action that happens in it and nothing else. You are strict about physical plausibility, and about the action finishing rather than repeating.",
     image: { data: sceneImage, mimeType },
     prompt: `Product details: ${described}
 The attached still was made from this art direction: ${scenePrompt}
@@ -235,20 +300,15 @@ Additional notes: ${notes || "none"}
 
 You already read this frame. These are the facts you reported, and they are the
 outer limit of what you may direct:
-${JSON.stringify(reading, null, 2)}
+${JSON.stringify(readingForBrief, null, 2)}
 ${correction ? `\n${correction}\n` : ""}
 Look at the attached still. Write one motion brief for animating THAT EXACT
 FRAME. Describe only what moves. Anything you do not mention holds still, which
 is the point.
 
 Hard rules:
-- Direct only what you can actually see and what your reading above records. If
-  the container is closed it stays closed. If an object is not in the frame, it
-  cannot enter it${
-    shotType === "demo"
-      ? " — the one exception is the hand doing the scoop, which may enter"
-      : ". If nobody is holding anything, nothing is picked up"
-  }.
+- Direct only what you can actually see and what your reading above records.
+  ${closedRule} If an object is not in the frame, it cannot enter it${enters}.
 - Nothing emits steam, vapour, smoke or mist unless your reading lists something
   under "emitters". An empty list means nothing in this frame gives anything off,
   and scent cannot be seen in any case.
