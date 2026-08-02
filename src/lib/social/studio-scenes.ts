@@ -158,10 +158,15 @@ Hard rules:
 - Build the scene in the setting given above.
 - Surrounding props must be safe: natural elements, ingredients, flowers,
   fabric, stone, wood, marble, plants.
-- If a model is described, place them BESIDE the product. They must never hold,
-  touch, or reach over it, and nothing may cover the label — a hand across the
-  bottle forces the label to be redrawn and the printed text comes back wrong.
-  The product stays on its own surface, fully visible.
+- If a model is described, the PRODUCT is the foreground hero and the person goes
+  BEHIND it: the product front-on and large, filling roughly a third of the frame
+  height, its label sharp and fully readable; the person further back on the same
+  surface, clearly visible but softly out of focus. They must never hold, touch or
+  reach over it, and nothing may cover the label.
+  Composed the other way round — the person large and the product small on a
+  table — the printed text comes back as garbled nonsense every time. A label that
+  occupies few pixels gets redrawn rather than copied, and the size of the product
+  in frame is what decides this, not whether a hand is near it.
 - A person in the scene is dry, fully clothed and OUT of any water. Water — a
   bath, a pool, a spa, reflections on wet stone — is scenery beside or behind
   them, never something they are in or entering. No swimwear, no towels, no bare
