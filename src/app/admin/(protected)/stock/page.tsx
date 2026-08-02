@@ -174,24 +174,28 @@ export default async function ManageStockPage({ searchParams }: StockPageProps) 
       value: totalCount,
       caption: "Total products in the catalog.",
       tone: "neutral" as const,
+      status: null,
     },
     {
       label: `Low Stock (≤ ${LOW_STOCK_THRESHOLD})`,
       value: lowStockCount,
       caption: "Reorder or restock soon.",
       tone: "amber" as const,
+      status: "low-stock",
     },
     {
       label: "Sold Out",
       value: soldOutCount,
       caption: "Blocked from purchase right now.",
       tone: "red" as const,
+      status: "sold-out",
     },
     {
       label: "Pre-order",
       value: preorderCount,
       caption: "Not tracked by exact quantity.",
       tone: "neutral" as const,
+      status: "pre-order",
     },
   ];
 
@@ -328,20 +332,42 @@ export default async function ManageStockPage({ searchParams }: StockPageProps) 
         <div className="space-y-8">
           {/* Summary cards */}
           <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {summaryCards.map((card) => (
-              <article
-                key={card.label}
-                className={`rounded-[1.5rem] border p-6 ${cardToneClasses[card.tone]}`}
-              >
-                <p className="text-[0.66rem] font-semibold uppercase tracking-[0.22em] opacity-80">
-                  {card.label}
-                </p>
-                <p className="mt-3 font-display text-[2.7rem] leading-none tracking-[-0.05em]">
-                  {card.value}
-                </p>
-                <p className="mt-2 text-sm leading-6 opacity-80">{card.caption}</p>
-              </article>
-            ))}
+            {/*
+              Each card is the filter it counts. Reading "10 low stock" and then
+              hunting for those ten in a list of 41 was the step being asked for
+              every time. Products clears the status filter rather than adding
+              one, and the search box and type filters are carried through so a
+              card narrows what is on screen instead of resetting it.
+            */}
+            {summaryCards.map((card) => {
+              const isActive = card.status
+                ? activeStatuses.includes(card.status)
+                : activeStatuses.length === 0;
+
+              return (
+                <Link
+                  key={card.label}
+                  href={buildLocationHref(
+                    activeLocation,
+                    query,
+                    card.status ? [card.status] : [],
+                    activeTypes,
+                  )}
+                  aria-current={isActive ? "true" : undefined}
+                  className={`block rounded-[1.5rem] border p-6 transition hover:shadow-[0_14px_36px_rgba(32,29,23,0.10)] ${
+                    cardToneClasses[card.tone]
+                  } ${isActive ? "ring-2 ring-[#201d17] ring-offset-2" : ""}`}
+                >
+                  <p className="text-[0.66rem] font-semibold uppercase tracking-[0.22em] opacity-80">
+                    {card.label}
+                  </p>
+                  <p className="mt-3 font-display text-[2.7rem] leading-none tracking-[-0.05em]">
+                    {card.value}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 opacity-80">{card.caption}</p>
+                </Link>
+              );
+            })}
           </section>
 
           {preorderProduct ? (
