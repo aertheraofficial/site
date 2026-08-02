@@ -17,8 +17,14 @@ export const VIDEO_DURATIONS = ["4", "6", "8"] as const;
 
 export type VideoDuration = (typeof VIDEO_DURATIONS)[number];
 
-/** Longest clip: more room for a hook before the viewer scrolls. */
-export const DEFAULT_VIDEO_DURATION: VideoDuration = "8";
+/**
+ * Four seconds, matching every stage of a sequence.
+ *
+ * The old default was 8 for "more room for a hook", but nothing in the shot
+ * stages asks for that long and a Veo clip is priced by the second — an 8s
+ * default quietly billed double for footage that gets cut down anyway.
+ */
+export const DEFAULT_VIDEO_DURATION: VideoDuration = "4";
 
 export function isVideoDuration(value: unknown): value is VideoDuration {
   return VIDEO_DURATIONS.includes(value as VideoDuration);

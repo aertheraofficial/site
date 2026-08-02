@@ -415,8 +415,15 @@ export function SequenceComposer({ products }: { products: StudioProduct[] }) {
             </div>
           </section>
 
-          <div className="space-y-4">
-            {SHOT_STAGES.map((stage) => {
+          {/*
+            A storyboard, not a stack. The point of a sequence is the arc, and an
+            arc read one full-width card at a time is not an arc — by the third
+            scroll nobody remembers how it opened. Five portrait frames across
+            the desktop width fit one screen, so the story is legible at a glance.
+            The long text moves into per-card disclosures to buy that room.
+          */}
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+            {SHOT_STAGES.map((stage, index) => {
               const shot = planned.find((entry) => entry.stage === stage);
               if (!shot) return null;
               const meta = STAGE_META[stage];
@@ -428,47 +435,41 @@ export function SequenceComposer({ products }: { products: StudioProduct[] }) {
               return (
                 <article
                   key={stage}
-                  className={`overflow-hidden rounded-[1.75rem] border bg-white ${
+                  className={`flex flex-col overflow-hidden rounded-[1.5rem] border bg-white ${
                     unusable || isDropped ? "border-dashed border-black/12" : "border-black/8"
                   }`}
                 >
-                  <div className="flex flex-wrap items-start justify-between gap-4 p-5">
+                  <div className="flex items-start justify-between gap-2 p-4">
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-[#201d17]">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {/* The ordinal is the arc: it reads 1..5 left to right. */}
+                        <span className="tabular-nums text-[0.68rem] font-semibold text-[#8d7a5c]">
+                          {index + 1}
+                        </span>
+                        <span className="truncate text-sm font-semibold text-[#201d17]">
                           {meta.label}
                         </span>
                         {stage === anchorStage ? (
-                          <span className="rounded-full bg-[#f7f2ea] px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-[#8d7a5c]">
+                          <span className="rounded-full bg-[#f7f2ea] px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-[#8d7a5c]">
                             Anchor
                           </span>
                         ) : null}
                         {meta.medium === "still" ? (
-                          <span className="rounded-full bg-[#f7f2ea] px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-[#8d7a5c]">
+                          <span className="rounded-full bg-[#f7f2ea] px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-[#8d7a5c]">
                             Still
                           </span>
                         ) : null}
                       </div>
-                      <p className="mt-1 max-w-xl text-sm leading-6 text-[#5d574f]">
-                        {shot.reason}
-                      </p>
                       {!unusable ? (
-                        <dl className="mt-3 space-y-1 text-sm leading-6 text-[#5d574f]">
-                          <div className="flex gap-2">
-                            <dt className={`${labelClass} shrink-0 pt-1`}>Action</dt>
-                            <dd>{shot.action}</dd>
-                          </div>
-                          <div className="flex gap-2">
-                            <dt className={`${labelClass} shrink-0 pt-1`}>Sound</dt>
-                            <dd>{shot.sound}</dd>
-                          </div>
-                        </dl>
+                        <p className="mt-1.5 line-clamp-3 text-[0.78rem] leading-5 text-[#5d574f]">
+                          {shot.action}
+                        </p>
                       ) : null}
                     </div>
 
                     {unusable ? (
-                      <span className="rounded-full border border-black/10 px-3 py-1 text-[0.66rem] font-semibold uppercase tracking-[0.16em] text-[#8d7a5c]">
-                        Not for this product
+                      <span className="shrink-0 rounded-full border border-black/10 px-2 py-1 text-[0.58rem] font-semibold uppercase tracking-[0.12em] text-[#8d7a5c]">
+                        N/A
                       </span>
                     ) : (
                       <button
@@ -481,15 +482,25 @@ export function SequenceComposer({ products }: { products: StudioProduct[] }) {
                             return next;
                           })
                         }
-                        className="rounded-full border border-black/10 px-4 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#201d17] transition hover:bg-[#f7f2ea]"
+                        className="shrink-0 rounded-full border border-black/10 px-3 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-[#201d17] transition hover:bg-[#f7f2ea]"
                       >
-                        {isDropped ? "Put back" : "Drop"}
+                        {isDropped ? "Undo" : "Drop"}
                       </button>
                     )}
                   </div>
 
+                  {!unusable ? (
+                    <details className="border-t border-black/8 px-4 py-2">
+                      <summary className={`${labelClass} cursor-pointer`}>Why &amp; sound</summary>
+                      <p className="mt-2 text-[0.78rem] leading-5 text-[#5d574f]">{shot.reason}</p>
+                      <p className="mt-2 text-[0.78rem] leading-5 text-[#5d574f]">
+                        <span className={labelClass}>Sound</span> {shot.sound}
+                      </p>
+                    </details>
+                  ) : null}
+
                   {still && !isDropped ? (
-                    <div className="grid gap-4 border-t border-black/8 p-5 sm:grid-cols-[minmax(0,220px)_minmax(0,1fr)]">
+                    <div className="flex flex-col gap-3 border-t border-black/8 p-4">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={still.imageUrl}
@@ -497,21 +508,23 @@ export function SequenceComposer({ products }: { products: StudioProduct[] }) {
                         className="w-full rounded-[1rem]"
                       />
                       <div className="space-y-3">
-                        <div className="flex flex-wrap gap-2">
+                        {/* Stacked, not wrapped: at a fifth of the width a
+                            wrapping row leaves one orphan button per card. */}
+                        <div className="grid gap-2">
                           <button
                             type="button"
                             onClick={() => reshoot(stage)}
                             disabled={shooting !== null}
-                            className="min-h-10 rounded-full border border-black/10 px-4 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#201d17] transition hover:bg-[#f7f2ea] disabled:opacity-40"
+                            className="min-h-9 rounded-full border border-black/10 px-3 text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-[#201d17] transition hover:bg-[#f7f2ea] disabled:opacity-40"
                           >
-                            {shooting === stage ? "Reshooting…" : "Reshoot frame"}
+                            {shooting === stage ? "Reshooting…" : "Reshoot"}
                           </button>
 
                           {meta.medium === "still" ? (
                             <a
                               href={still.imageUrl}
                               download={`${stage}.png`}
-                              className="inline-flex min-h-10 items-center rounded-full bg-[#201d17] px-4 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-white transition hover:opacity-92"
+                              className="inline-flex min-h-9 items-center justify-center rounded-full bg-[#201d17] px-3 text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-white transition hover:opacity-92"
                             >
                               Download
                             </a>
@@ -520,19 +533,19 @@ export function SequenceComposer({ products }: { products: StudioProduct[] }) {
                               type="button"
                               onClick={() => renderClip(shot)}
                               disabled={clip.phase === "working"}
-                              className="min-h-10 rounded-full bg-[#201d17] px-4 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-white transition hover:opacity-92 disabled:opacity-40"
+                              className="min-h-9 rounded-full bg-[#201d17] px-3 text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-white transition hover:opacity-92 disabled:opacity-40"
                             >
                               {clip.phase === "working"
                                 ? "Rendering…"
                                 : clip.phase === "ready"
-                                  ? "Render again"
-                                  : "Render clip"}
+                                  ? "Again"
+                                  : `Render ${meta.seconds}s`}
                             </button>
                           )}
                         </div>
 
                         {clip.phase === "error" ? (
-                          <p className="rounded-[1rem] border border-[#e6b4b4] bg-[#fff0ef] px-3 py-2 text-sm leading-6 text-[#9b3d32]">
+                          <p className="rounded-[1rem] border border-[#e6b4b4] bg-[#fff0ef] px-3 py-2 text-[0.75rem] leading-5 text-[#9b3d32]">
                             {clip.error}
                           </p>
                         ) : null}
@@ -552,7 +565,7 @@ export function SequenceComposer({ products }: { products: StudioProduct[] }) {
                                 clip.operation,
                               )}&name=${stage}`}
                               download={`${stage}.mp4`}
-                              className="inline-flex min-h-10 items-center rounded-full bg-[#201d17] px-4 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-white transition hover:opacity-92"
+                              className="inline-flex min-h-9 w-full items-center justify-center rounded-full bg-[#201d17] px-3 text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-white transition hover:opacity-92"
                             >
                               Download clip
                             </a>
@@ -564,7 +577,7 @@ export function SequenceComposer({ products }: { products: StudioProduct[] }) {
                             <summary className={`${labelClass} cursor-pointer`}>
                               Motion brief
                             </summary>
-                            <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#5d574f]">
+                            <p className="mt-2 whitespace-pre-wrap text-[0.75rem] leading-5 text-[#5d574f]">
                               {clip.motionPrompt}
                             </p>
                           </details>
