@@ -293,7 +293,7 @@ export function SequenceComposer({ products }: { products: StudioProduct[] }) {
         <p className="mt-3 max-w-2xl text-sm leading-7 text-[#5d574f]">
           A scent cannot be filmed, only what it does — touch, the mark it leaves,
           and the body&rsquo;s answer, in that order. Kimi works out what those
-          five stages mean for this product and drops the ones it cannot film
+          seven stages mean for this product and drops the ones it cannot film
           honestly. Planning is text only and costs almost nothing; look at it
           before shooting anything.
         </p>
@@ -418,11 +418,11 @@ export function SequenceComposer({ products }: { products: StudioProduct[] }) {
           {/*
             A storyboard, not a stack. The point of a sequence is the arc, and an
             arc read one full-width card at a time is not an arc — by the third
-            scroll nobody remembers how it opened. Five portrait frames across
+            scroll nobody remembers how it opened. Seven portrait frames across
             the desktop width fit one screen, so the story is legible at a glance.
             The long text moves into per-card disclosures to buy that room.
           */}
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="grid items-start gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
             {SHOT_STAGES.map((stage, index) => {
               const shot = planned.find((entry) => entry.stage === stage);
               if (!shot) return null;
@@ -461,7 +461,7 @@ export function SequenceComposer({ products }: { products: StudioProduct[] }) {
                         ) : null}
                       </div>
                       {!unusable ? (
-                        <p className="mt-1.5 line-clamp-3 text-[0.78rem] leading-5 text-[#5d574f]">
+                        <p className="mt-1.5 line-clamp-4 text-[0.72rem] leading-4 text-[#5d574f]">
                           {shot.action}
                         </p>
                       ) : null}

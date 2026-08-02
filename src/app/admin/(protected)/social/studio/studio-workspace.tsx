@@ -24,7 +24,7 @@ const MODES: Array<{ key: Mode; label: string; blurb: string }> = [
   {
     key: "sequence",
     label: "Sequence",
-    blurb: "A planned five-stage ad for one product",
+    blurb: "A planned seven-stage ad for one product",
   },
 ];
 

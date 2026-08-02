@@ -11,16 +11,16 @@ import type { ProductAnalysis } from "@/lib/social/studio-scenes";
 /**
  * Plan a whole sequence from one product, rather than one clip at a time.
  *
- * The five stages are derived per product, not looked up in a table. The catalog
+ * The seven stages are derived per product, not looked up in a table. The catalog
  * runs to forty-odd products and grows; a hardcoded map would mean a code change
  * every time the shop adds a scent. Step 1 of the scene pipeline already reads
  * the product and reports its type, so the planner works from what is known
  * rather than from what someone remembered to write down.
  *
  * A stage is allowed to come back unused, and that is the point. Nobody touches
- * a reed diffuser — forcing five shots out of one would have the planner invent
- * a hand pressing into it, which is the same failure as vapour off a closed jar,
- * one layer up. A short honest sequence beats a full dishonest one.
+ * a reed diffuser — forcing a full set of shots out of one would have the planner
+ * invent a hand pressing into it, which is the same failure as vapour off a
+ * closed jar, one layer up. A short honest sequence beats a full dishonest one.
  */
 
 export type PlannedShot = {
@@ -65,16 +65,33 @@ function isShotStage(value: unknown): value is ShotStage {
 
 const PRINCIPLE = `A scent cannot be filmed. Only what it does can be filmed, and
 that is touch, the mark it leaves, and the body's answer to it — in that order.
+Before any of that, the film has to say who this is and why they reached for the
+jar, or the answer has nothing to answer.
 
-The sequence has five stages:
+The sequence has seven stages:
 
 ${SHOT_STAGES.map(
   (stage) => `- ${stage} (${STAGE_META[stage].label}): ${STAGE_META[stage].purpose}`,
 ).join("\n")}
 
 Rules that hold for every product:
-- Sensation before emotion. The reaction shot comes after the texture, never
-  before. A calm face shown first is acting; shown afterwards it is a result.
+- Situation, then sensation, then emotion. The world and the need say why the
+  product is reached for; the reaction resolves the need that was shown, and it
+  comes after the texture, never before. A calm face shown first is acting;
+  shown after the tension and the texture it is a result.
+- The need is a state of the body, not a mood: a shoulder rolled, a hand at the
+  back of the neck, a jaw held. Never a sad or crying face. Tension is something
+  a balm can answer; sadness is not, and claiming otherwise is a lie about the
+  product.
+- The reaction must answer the need specifically. If the need showed a tight
+  neck, the reaction shows that same neck let go — same person, same clothes,
+  same room, same hour. Two unrelated shots do not make an arc.
+- No product in the world or need shots. Those two are the moment before;
+  putting the jar in frame there spends the reveal early and turns a situation
+  into an advert.
+- The world and need stages are the only ones allowed to show the room. If a
+  product has no honest need — nobody aches for a reed diffuser — say so and
+  drop them, exactly as with any other stage.
 - Every shot leaves evidence. A groove in a balm, a sheen on skin, a bruised
   lemongrass stalk. If the world looks the same after the shot as before it, the
   shot is decoration — say so and drop it.
@@ -122,7 +139,7 @@ Reply with a JSON object:
   "surface": "the surface and room every shot happens on, described once — the material, the light and its direction, the time of day",
   "shots": [
     {
-      "stage": "open" | "touch" | "trace" | "reaction" | "product",
+      "stage": "world" | "need" | "open" | "touch" | "trace" | "reaction" | "product",
       "applies": true or false,
       "reason": "why this stage works for this product, or why it cannot",
       "framing": "art direction for the still this shot is animated from — the crop, the angle, what is in frame, and what is NOT in frame. Do not describe the person or the room here; those are in cast and surface and are added automatically. For any shot where a hand touches the product, the framing MUST put the label outside the crop, because a hand across printed text makes the text come back garbled. But cropping the label out must never crop the product out: whatever the hand acts on has to be in frame and recognisable as itself. For a jar, keep the glass rim and the top of the body in shot and put only the printed panel below the bottom edge. For the open stage the lid and the container it comes off must both be in frame together — a frame holding a lid alone has nothing left to open. Empty string when applies is false.",
@@ -132,7 +149,7 @@ Reply with a JSON object:
   ]
 }
 
-Include all five stages in the array, in order, marking the ones that do not fit
+Include all seven stages in the array, in order, marking the ones that do not fit
 with "applies": false.`,
     image: { data: productImage, mimeType },
   });
