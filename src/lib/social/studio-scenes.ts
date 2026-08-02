@@ -162,6 +162,11 @@ Hard rules:
   touch, or reach over it, and nothing may cover the label — a hand across the
   bottle forces the label to be redrawn and the printed text comes back wrong.
   The product stays on its own surface, fully visible.
+- A person in the scene is dry, fully clothed and OUT of any water. Water — a
+  bath, a pool, a spa, reflections on wet stone — is scenery beside or behind
+  them, never something they are in or entering. No swimwear, no towels, no bare
+  torsos, no wet hair. A setting that contains water does not invite anyone into
+  it.
 - If no model is described, include no people, faces, hands or body parts.
 
 Under 150 words. Reply with the instruction only, no preamble.`,

@@ -20,6 +20,23 @@ const GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/intera
 /** Flash tier: fast and cheap enough to regenerate a scene a few times. */
 const DEFAULT_IMAGE_MODEL = "gemini-3.1-flash-image";
 
+/**
+ * Prepended to every scene request so the output is a photograph.
+ *
+ * Stated as camera facts rather than as the adjective "photorealistic": naming
+ * a sensor, a lens and real skin texture constrains the render far harder than
+ * a style word the model can satisfy with a glossy illustration.
+ */
+const REALISM_ANCHOR = `This is a photograph, not an illustration.
+
+Shot on a full-frame camera with a fast prime lens: true-to-life colour, natural
+depth of field, visible skin pores and fine hairs, real fabric weave, real
+imperfections in wood and stone. Lighting behaves physically — soft falloff,
+honest shadows, no glow that has no source.
+
+Never produce a 3D render, CGI, digital painting, illustration, anime, cartoon,
+airbrushed or plastic-looking result. Skin is never smoothed to a matte surface.`;
+
 /** Image work is slow; well past a normal request but short of hanging. */
 const GEMINI_TIMEOUT_MS = 120_000;
 
@@ -133,6 +150,12 @@ export async function generateSceneImage({
       body: JSON.stringify({
         model: getGeminiImageModel(),
         input: [
+          // Anchored here, not in the brief. "photorealistic" was only ever a
+          // word in the instruction *to Kimi*; whether it survived into Kimi's
+          // 150-word output was luck, and when it did not the model drifted to
+          // illustration. Every caller — standalone scenes and sequence stills
+          // alike — renders through this function, so one anchor covers them.
+          { type: "text", text: REALISM_ANCHOR },
           { type: "text", text: scenePrompt },
           {
             type: "image",
