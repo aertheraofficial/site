@@ -70,6 +70,11 @@ alter table public.product_stock enable row level security;
 revoke all on public.product_stock from anon, authenticated;
 
 -- Atomic decrement used by the "Sold 1" quick action and post-order stock sync.
+--
+-- Pre-order rows (quantity is null) are deliberately skipped. They are untracked
+-- on purpose — markProductPreorder() writes quantity = null — so there is nothing
+-- to subtract from. Treating null as 0 would clamp them to 0 and flip availability
+-- to 'Sold Out' on the very first paid order, killing the pre-order listing.
 create or replace function public.decrement_product_stock(
   p_slug     text,
   p_amount   integer,
@@ -81,15 +86,16 @@ set search_path = public
 as $$
 begin
   update public.product_stock
-     set quantity     = greatest(0, coalesce(quantity, 0) - p_amount),
+     set quantity     = greatest(0, quantity - p_amount),
          availability = case
-                          when greatest(0, coalesce(quantity, 0) - p_amount) > 0
+                          when greatest(0, quantity - p_amount) > 0
                             then 'In stock'
                           else 'Sold Out'
                         end,
          updated_at   = timezone('utc', now())
    where slug = p_slug
-     and location = p_location;
+     and location = p_location
+     and quantity is not null;
 end;
 $$;
 

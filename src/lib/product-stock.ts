@@ -1,10 +1,16 @@
 import { products, type Product } from "@/data/products";
 import { getAdminProductBySlug, getAdminProducts } from "@/lib/admin-products";
+import { PREORDER_THRESHOLD } from "@/lib/product-availability";
 import {
   applyProductOverride,
   applyProductOverrides,
   getProductOverrides,
 } from "@/lib/product-overrides";
+import {
+  isStockAlertConfigured,
+  sendStockAlertEmail,
+  type StockAlertReason,
+} from "@/lib/stock-alert-email";
 import { getSupabaseAdmin, isSupabaseOrderStoreConfigured } from "@/lib/supabase-admin";
 
 export const ONLINE_LOCATION = "online";
@@ -193,7 +199,10 @@ export async function markProductPreorder(slug: string, location: string) {
   }
 }
 
-/** Fast mall-counter decrement at a location — atomic, never goes below 0. Amount defaults to 1 ("Sold 1"). */
+/**
+ * Fast mall-counter decrement at a location — atomic, never goes below 0. Amount
+ * defaults to 1 ("Sold 1"). No-ops on pre-order rows, which are untracked by design.
+ */
 export async function quickDecrementStock(slug: string, location: string, amount = 1) {
   if (!isSupabaseOrderStoreConfigured()) {
     throw new Error("Supabase is not configured — cannot update stock.");
@@ -210,7 +219,11 @@ export async function quickDecrementStock(slug: string, location: string, amount
   }
 }
 
-/** Called after a paid order to decrement stock for every tracked line item at a location. Never throws — logs and continues. */
+/**
+ * Called after a paid order to decrement stock for every tracked line item at a
+ * location. Pre-order lines are skipped — they stay purchasable after the sale.
+ * Never throws — logs and continues.
+ */
 export async function decrementStockForOrderLines(
   lines: Array<{ slug: string | null; quantity: number }>,
   location: string = ONLINE_LOCATION,
@@ -219,11 +232,24 @@ export async function decrementStockForOrderLines(
     return;
   }
 
+  const sellableLines = lines.filter(
+    (line): line is { slug: string; quantity: number } =>
+      Boolean(line.slug) && line.quantity > 0,
+  );
+
+  if (sellableLines.length === 0) {
+    return;
+  }
+
+  const slugs = sellableLines.map((line) => line.slug);
+  // Snapshot before the writes. Alerting needs the crossing, not the current
+  // level — without the "before" every later sale of an already-low product
+  // would re-send the same warning.
+  const before = await getQuantitiesForSlugs(slugs, location);
+
   const supabase = getSupabaseAdmin();
 
-  for (const line of lines) {
-    if (!line.slug || line.quantity <= 0) continue;
-
+  for (const line of sellableLines) {
     try {
       const { error } = await supabase.rpc("decrement_product_stock", {
         p_slug: line.slug,
@@ -237,5 +263,61 @@ export async function decrementStockForOrderLines(
     } catch (error) {
       console.error(`Stock decrement failed for ${line.slug}:`, error);
     }
+  }
+
+  await alertOnStockCrossings(slugs, before, location);
+}
+
+/**
+ * Emails a restock alert for each product that crossed a threshold on this order.
+ * Only the crossing sends mail, so a product sitting at 3 units stays quiet until
+ * it hits 0. Untracked pre-order rows never cross — they have no quantity.
+ *
+ * Fail-soft: this runs inside a paid-order callback, where throwing would make
+ * the payment provider redeliver and re-run the decrement above.
+ */
+async function alertOnStockCrossings(
+  slugs: string[],
+  before: Map<string, number | null>,
+  location: string,
+) {
+  if (!isStockAlertConfigured()) {
+    return;
+  }
+
+  try {
+    const after = await getQuantitiesForSlugs(slugs, location);
+    const locationName = getLocationName(location);
+
+    for (const slug of new Set(slugs)) {
+      const was = before.get(slug);
+      const now = after.get(slug);
+
+      if (typeof was !== "number" || typeof now !== "number" || now >= was) {
+        continue;
+      }
+
+      const reason: StockAlertReason | null =
+        now === 0
+          ? "sold-out"
+          : was > PREORDER_THRESHOLD && now <= PREORDER_THRESHOLD
+            ? "low-stock"
+            : null;
+
+      if (!reason) continue;
+
+      const product = await getProductBySlugWithStock(slug);
+
+      await sendStockAlertEmail({
+        reason,
+        slug,
+        productName: product?.name ?? slug,
+        locationId: location,
+        locationName,
+        quantity: now,
+      });
+    }
+  } catch (error) {
+    console.error("Stock alert check failed:", error);
   }
 }
