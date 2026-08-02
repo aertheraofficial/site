@@ -5,6 +5,8 @@
  */
 
 export type PageKey =
+  | "dashboard"
+  | "sales"
   | "orders"
   | "counter-sale"
   | "customers"
@@ -24,6 +26,18 @@ export type AdminPage = {
 };
 
 export const ADMIN_PAGES: AdminPage[] = [
+  {
+    key: "dashboard",
+    label: "Sales Dashboard",
+    href: "/admin/dashboard",
+    group: "Overview",
+  },
+  {
+    key: "sales",
+    label: "Daily Cash-up",
+    href: "/admin/sales",
+    group: "Overview",
+  },
   { key: "orders", label: "Orders", href: "/admin/orders", group: "Fulfillment" },
   {
     key: "counter-sale",

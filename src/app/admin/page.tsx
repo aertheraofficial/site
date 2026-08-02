@@ -7,7 +7,7 @@ export default async function AdminIndexPage() {
   if (!actor) redirect("/admin/login");
 
   if (actor.type === "admin") {
-    redirect("/admin/orders");
+    redirect("/admin/dashboard");
   }
 
   // Staff: send them to their first allowed page, else their profile.
