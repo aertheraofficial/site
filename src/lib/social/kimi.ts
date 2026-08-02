@@ -37,6 +37,22 @@ export function getKimiModel() {
   return process.env.KIMI_MODEL?.trim() || DEFAULT_KIMI_MODEL;
 }
 
+/**
+ * The model that writes a brief for an image or video model, which is worth
+ * paying more for than a caption is.
+ *
+ * Measured on the video path: a stronger model adds about 13 sen to a clip that
+ * costs RM 2 to render, so the whole upgrade is 6% of the bill — and a single
+ * clip saved from being rebriefed pays for fifteen of them. Kimi is not where
+ * the money goes; Veo is.
+ *
+ * Separate from KIMI_MODEL because captions run far more often, are short, and
+ * are read before they are posted — the fast model is the right answer there.
+ */
+export function getKimiBriefModel() {
+  return process.env.KIMI_BRIEF_MODEL?.trim() || getKimiModel();
+}
+
 export class KimiError extends Error {}
 
 /**
@@ -70,6 +86,16 @@ type KimiChatOptions = {
    * emit.
    */
   json?: boolean;
+  /**
+   * Override the model for this call. Left unset, the account-wide KIMI_MODEL
+   * applies.
+   */
+  model?: string;
+  /**
+   * Override the abort deadline. A brief written by a reasoning model takes
+   * far longer than a caption, and 45s is not enough for it.
+   */
+  timeoutMs?: number;
 };
 
 type KimiResponse = {
@@ -82,6 +108,8 @@ export async function kimiChat({
   prompt,
   image,
   json = false,
+  model,
+  timeoutMs,
 }: KimiChatOptions): Promise<string> {
   const apiKey = getKimiApiKey();
   if (!apiKey) {
@@ -114,7 +142,7 @@ export async function kimiChat({
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: getKimiModel(),
+        model: model || getKimiModel(),
         messages,
         // No `temperature`. kimi-k2.6 rejects anything but 1 outright
         // ("invalid temperature: only 1 is allowed for this model"), and the
@@ -122,7 +150,7 @@ export async function kimiChat({
         // model's own default and keeps this working if KIMI_MODEL changes.
         ...(json ? { response_format: { type: "json_object" } } : {}),
       }),
-      signal: AbortSignal.timeout(KIMI_TIMEOUT_MS),
+      signal: AbortSignal.timeout(timeoutMs ?? KIMI_TIMEOUT_MS),
     });
   } catch (error) {
     // Timeouts and network faults both land here; neither should surface as an

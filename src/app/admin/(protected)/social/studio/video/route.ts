@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import { actorHasPermission, getActor } from "@/lib/staff-auth";
 import { isOperationName, pollSceneVideo } from "@/lib/social/gemini-video";
 import { isOrientation } from "@/lib/social/orientation";
-import { isStudioVideoConfigured, startStudioVideo } from "@/lib/social/studio-motion";
+import {
+  isStudioVideoConfigured,
+  renderStudioVideo,
+  writeStudioBrief,
+} from "@/lib/social/studio-motion";
 import type { ProductAnalysis } from "@/lib/social/studio-scenes";
 import { isShotType, isVideoDuration } from "@/lib/social/video-options";
 
@@ -21,6 +25,13 @@ import { isShotType, isVideoDuration } from "@/lib/social/video-options";
  */
 
 export const runtime = "nodejs";
+
+/**
+ * Writing the brief is up to three calls to a reasoning model, so it needs the
+ * whole budget a function is allowed. Hobby caps this at 60s regardless of what
+ * is asked for; the split into two requests is what makes it fit.
+ */
+export const maxDuration = 60;
 
 /** Our own PNG output, not a phone upload, so the ceiling is generous. */
 const MAX_SCENE_BYTES = 12 * 1024 * 1024;
@@ -101,19 +112,36 @@ export async function POST(request: Request) {
     // A malformed blob is still usable as description text for the brief.
   }
 
+  // Two steps, and which one this is depends on whether a brief came with the
+  // request. Sending an approved brief back skips straight to the render, so
+  // what was read on screen is what Veo is handed — edits included.
+  const approvedBrief = String(formData.get("motionPrompt") ?? "").trim();
+
   try {
-    const { motionPrompt, operation, reading } = await startStudioVideo({
+    if (approvedBrief) {
+      const { operation } = await renderStudioVideo({
+        sceneImage: Buffer.from(await file.arrayBuffer()),
+        mimeType: file.type,
+        motionPrompt: approvedBrief,
+        orientation,
+        durationSeconds: duration,
+      });
+
+      return NextResponse.json({ operation, motionPrompt: approvedBrief });
+    }
+
+    const { motionPrompt, reading } = await writeStudioBrief({
       sceneImage: Buffer.from(await file.arrayBuffer()),
       mimeType: file.type,
       analysis,
       scenePrompt,
-      orientation,
       shotType,
       durationSeconds: duration,
       notes: String(formData.get("notes") ?? "").trim(),
     });
 
-    return NextResponse.json({ operation, motionPrompt, reading });
+    // No `operation`: nothing has been rendered and nothing has been charged.
+    return NextResponse.json({ motionPrompt, reading });
   } catch (error) {
     return NextResponse.json(
       {

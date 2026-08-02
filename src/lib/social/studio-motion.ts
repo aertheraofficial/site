@@ -1,7 +1,19 @@
 import "server-only";
 
 import { isGeminiVideoConfigured, startSceneVideo } from "@/lib/social/gemini-video";
-import { isKimiConfigured, kimiChat, kimiJson } from "@/lib/social/kimi";
+import {
+  getKimiBriefModel,
+  isKimiConfigured,
+  kimiChat,
+  kimiJson,
+} from "@/lib/social/kimi";
+
+/**
+ * A reasoning model takes 20-26s to write one of these, and the brief is two
+ * calls plus a possible rewrite. That never fitted the 45s caption deadline;
+ * it fits now only because rendering moved to its own request.
+ */
+const BRIEF_TIMEOUT_MS = 110_000;
 import type { Orientation } from "@/lib/social/orientation";
 import type { ProductAnalysis } from "@/lib/social/studio-scenes";
 import type { ShotType, VideoDuration } from "@/lib/social/video-options";
@@ -90,6 +102,8 @@ export async function readSceneFrame({
 }): Promise<SceneReading> {
   try {
     const raw = await kimiJson<Record<string, unknown>>({
+      model: getKimiBriefModel(),
+      timeoutMs: BRIEF_TIMEOUT_MS,
       system:
         "You read a photograph and report only what is verifiably in it. You never assume, and you are strict about physical plausibility.",
       prompt: `Look at this photograph. It is about to be animated into a short video, so what matters is what could truthfully move in it.
@@ -288,6 +302,8 @@ export async function writeMotionPrompt({
         : ". If nobody is holding anything, nothing is picked up";
 
   return kimiChat({
+    model: getKimiBriefModel(),
+    timeoutMs: BRIEF_TIMEOUT_MS,
     system:
       shotType === "ambience"
         ? "You are a motion director writing a brief for an image-to-video model. The still already exists and is attached; you only describe what moves in it. You are strict about physical plausibility — a clip that shows something that could not happen is worse than a clip that barely moves."
@@ -340,12 +356,25 @@ Under 120 words. Reply with the brief only, no preamble.`,
  * when the tell staff complained about is a balm that steams: the check is
  * cheap, and Kimi gets one chance to fix it with the contradiction named.
  */
-export async function startStudioVideo({
+/**
+ * Write the brief, and stop there.
+ *
+ * Split from the render because the two together no longer fit one request. The
+ * brief is up to three Kimi calls — read the frame, write, and rewrite if the
+ * writing described vapour the frame cannot produce — and a model strong enough
+ * to be worth briefing with takes 20-26s each. Three of those plus starting Veo
+ * runs past the 60s a Vercel Hobby function gets, so the request would die with
+ * the render never started.
+ *
+ * Stopping here also puts the brief in front of whoever is paying. A render is
+ * RM 2; reading the paragraph that produces it costs nothing, and a brief that
+ * misread the frame is obvious on sight.
+ */
+export async function writeStudioBrief({
   sceneImage,
   mimeType,
   analysis,
   scenePrompt,
-  orientation,
   shotType,
   durationSeconds,
   notes,
@@ -354,11 +383,10 @@ export async function startStudioVideo({
   mimeType: string;
   analysis: ProductAnalysis | string;
   scenePrompt: string;
-  orientation: Orientation;
   shotType: ShotType;
   durationSeconds: VideoDuration;
   notes: string;
-}): Promise<{ motionPrompt: string; operation: string; reading: SceneReading }> {
+}): Promise<{ motionPrompt: string; reading: SceneReading }> {
   const reading = await readSceneFrame({ sceneImage, mimeType });
 
   const write = (correction?: string) =>
@@ -401,6 +429,28 @@ export async function startStudioVideo({
     }
   }
 
+  return { motionPrompt, reading };
+}
+
+/**
+ * Render a brief that has already been written — and, by now, seen.
+ *
+ * Takes the paragraph rather than regenerating it: the whole point of the split
+ * is that what was reviewed is what gets rendered, edits included.
+ */
+export async function renderStudioVideo({
+  sceneImage,
+  mimeType,
+  motionPrompt,
+  orientation,
+  durationSeconds,
+}: {
+  sceneImage: Buffer;
+  mimeType: string;
+  motionPrompt: string;
+  orientation: Orientation;
+  durationSeconds: VideoDuration;
+}): Promise<{ operation: string }> {
   const operation = await startSceneVideo({
     sceneImage,
     mimeType,
@@ -409,5 +459,5 @@ export async function startStudioVideo({
     durationSeconds,
   });
 
-  return { motionPrompt, operation, reading };
+  return { operation };
 }

@@ -30,7 +30,19 @@ function ReadingRow({ label, value }: { label: string; value: string }) {
 /** Veo takes a minute or two; checking faster only burns requests. */
 const POLL_MS = 10_000;
 
-type Phase = "idle" | "starting" | "working" | "ready" | "error";
+/**
+ * `briefing` writes the shot brief; `review` shows it and waits. Nothing is
+ * charged until the render starts, so the pause is the cheapest place to catch
+ * a brief that misread the frame — the render itself is about RM 2.
+ */
+type Phase =
+  | "idle"
+  | "briefing"
+  | "review"
+  | "starting"
+  | "working"
+  | "ready"
+  | "error";
 
 type SceneVideoProps = {
   analysis: ProductAnalysis;
@@ -125,42 +137,71 @@ export function SceneVideo({
     setReading(null);
     setOperation("");
     setWaited(0);
+    setPhase("briefing");
+
+    try {
+      const data = await post();
+      if (!data) return;
+
+      setMotionPrompt(data.motionPrompt ?? "");
+      setReading(data.reading ?? null);
+      setPhase("review");
+    } catch {
+      setError("Could not write the brief.");
+      setPhase("error");
+    }
+  }
+
+  /** Second step: render the brief on screen, edits and all. */
+  async function render() {
+    if (!motionPrompt.trim()) return;
+    setError("");
     setPhase("starting");
 
     try {
-      // The scene only exists as a data: URL in this component, so it is turned
-      // back into bytes here rather than kept on the server between steps.
-      const sceneBlob = await fetch(imageUrl).then((response) => response.blob());
-
-      const formData = new FormData();
-      formData.append("sceneImage", sceneBlob, "scene.png");
-      formData.append("analysis", JSON.stringify(analysis));
-      formData.append("scenePrompt", scenePrompt);
-      formData.append("orientation", orientation);
-      formData.append("shotType", shotType);
-      formData.append("duration", duration);
-      formData.append("notes", notes);
-
-      const response = await fetch("/admin/social/studio/video", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        setError(data?.error ?? "Could not start the clip.");
-        setPhase("error");
-        return;
-      }
+      const data = await post(motionPrompt);
+      if (!data) return;
 
       setOperation(data.operation);
-      setMotionPrompt(data.motionPrompt ?? "");
-      setReading(data.reading ?? null);
       setPhase("working");
     } catch {
       setError("Could not start the clip.");
       setPhase("error");
     }
+  }
+
+  /**
+   * Both steps post the same form; sending an approved brief is what tells the
+   * server to render rather than write. Returns null once the error is shown.
+   */
+  async function post(approvedBrief?: string) {
+    // The scene only exists as a data: URL in this component, so it is turned
+    // back into bytes here rather than kept on the server between steps.
+    const sceneBlob = await fetch(imageUrl).then((response) => response.blob());
+
+    const formData = new FormData();
+    formData.append("sceneImage", sceneBlob, "scene.png");
+    formData.append("analysis", JSON.stringify(analysis));
+    formData.append("scenePrompt", scenePrompt);
+    formData.append("orientation", orientation);
+    formData.append("shotType", shotType);
+    formData.append("duration", duration);
+    formData.append("notes", notes);
+    if (approvedBrief) formData.append("motionPrompt", approvedBrief);
+
+    const response = await fetch("/admin/social/studio/video", {
+      method: "POST",
+      body: formData,
+    });
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      setError(data?.error ?? "Could not reach the studio.");
+      setPhase("error");
+      return null;
+    }
+
+    return data;
   }
 
   const fileName = `${analysis.productName || "scene"}-${duration}s`;
@@ -169,7 +210,10 @@ export function SceneVideo({
         operation,
       )}&name=${encodeURIComponent(fileName)}`
     : "";
-  const busy = phase === "starting" || phase === "working";
+  // Includes `briefing`: the options that shaped the brief must not change
+  // underneath it while it is being written.
+  const busy =
+    phase === "briefing" || phase === "starting" || phase === "working";
 
   return (
     <section className="rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_20px_60px_rgba(32,29,23,0.05)] sm:p-7">
@@ -308,25 +352,85 @@ export function SceneVideo({
                 className="size-4 rounded-full border-2 border-white/35 border-t-white motion-safe:animate-spin"
               />
             ) : null}
-            {phase === "starting"
-              ? "Starting…"
-              : phase === "working"
-                ? "Rendering…"
-                : phase === "ready"
-                  ? "Make another clip"
-                  : "Animate scene"}
+            {phase === "briefing"
+              ? "Writing the brief…"
+              : phase === "starting"
+                ? "Starting…"
+                : phase === "working"
+                  ? "Rendering…"
+                  : phase === "ready"
+                    ? "Make another clip"
+                    : "Write the brief"}
           </button>
 
           <p aria-live="polite" className="min-h-5 text-xs leading-5 text-[#8d7a5c]">
-            {phase === "starting"
-              ? "Kimi is writing the motion brief."
-              : phase === "working"
-                ? `Veo is rendering — usually one to two minutes. ${waited}s so far.`
-                : ""}
+            {phase === "briefing"
+              ? "Kimi is reading the frame and writing the brief. Nothing is charged yet."
+              : phase === "starting"
+                ? "Sending the brief to Veo."
+                : phase === "working"
+                  ? `Veo is rendering — usually one to two minutes. ${waited}s so far.`
+                  : ""}
           </p>
         </div>
 
         <div className="space-y-4">
+          {/*
+            The pause that makes the whole split worth it. Rendering is about
+            RM 2 and writing this paragraph costs under 20 sen, so reading it
+            first is the cheapest place to catch a brief that misread the frame.
+            Editable, because a one-word correction beats rewriting the notes
+            and paying for a second brief.
+          */}
+          {phase === "review" ? (
+            <article className="rounded-[2rem] border border-[#d4b16c] bg-[#faf1df] p-5">
+              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#8b5e1d]">
+                Read this before you spend
+              </p>
+              <p className="mt-1 text-sm leading-6 text-[#8b5e1d]">
+                This is what Veo will be told to do. Change anything that is
+                wrong — rendering costs about RM 2, this does not.
+              </p>
+
+              <label htmlFor="motion-brief" className="sr-only">
+                Motion brief
+              </label>
+              <textarea
+                id="motion-brief"
+                value={motionPrompt}
+                onChange={(event) => setMotionPrompt(event.target.value)}
+                rows={7}
+                className="mt-3 w-full rounded-[1.25rem] border border-black/10 bg-white px-4 py-3 text-sm leading-6 text-[#201d17] outline-none transition focus:border-[#b38a59]"
+              />
+
+              {reading?.emitters?.length === 0 ? (
+                <p className="mt-2 text-xs leading-5 text-[#8b5e1d]">
+                  Nothing in this frame can produce smoke, steam or vapour. A
+                  brief describing any of those will render something that
+                  cannot happen.
+                </p>
+              ) : null}
+
+              <div className="mt-4 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={render}
+                  disabled={!motionPrompt.trim()}
+                  className="inline-flex min-h-11 items-center rounded-full bg-[#201d17] px-6 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-white transition hover:opacity-92 disabled:opacity-40"
+                >
+                  Render this — about RM 2
+                </button>
+                <button
+                  type="button"
+                  onClick={start}
+                  className="inline-flex min-h-11 items-center rounded-full border border-black/12 px-5 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#201d17] transition hover:bg-white"
+                >
+                  Write it again
+                </button>
+              </div>
+            </article>
+          ) : null}
+
           {phase === "error" ? (
             <p className="rounded-[1.25rem] border border-[#e6b4b4] bg-[#fff0ef] px-4 py-3 text-sm leading-6 text-[#9b3d32]">
               {error}
