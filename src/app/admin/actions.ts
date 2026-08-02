@@ -67,6 +67,7 @@ import { createMember } from "@/lib/members";
 import { searchCustomerBook, type CustomerMatch } from "@/lib/customers";
 import { buildWhatsAppShareUrl } from "@/lib/receipt";
 import { sendReceiptEmail, type ReceiptEmailResult } from "@/lib/receipt-email";
+import { normalizePaymentMethod } from "@/lib/reconciliation";
 import { sendStockAlertEmail } from "@/lib/stock-alert-email";
 import { getPublicSiteUrl } from "@/lib/store-config";
 import {
@@ -626,6 +627,7 @@ export async function recordCounterSaleAction(payload: CounterSalePayload) {
       customerEmail,
       customerPhone,
       paymentStatus: "paid",
+      paymentMethod: normalizePaymentMethod(payload.paymentMethod),
       checkoutStatus: "complete",
       currency: "myr",
       subtotalAmount: subtotalCents,

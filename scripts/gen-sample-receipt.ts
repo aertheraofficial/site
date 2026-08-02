@@ -18,6 +18,7 @@ const sample: StoredOrder = {
   customerName: "Nurul Aisyah binti Rahman",
   customerEmail: "nurul.aisyah@example.com",
   customerPhone: "+60 12-345 6789",
+  paymentMethod: "duitnow-qr",
   paymentStatus: "paid",
   checkoutStatus: "complete",
   currency: "myr",

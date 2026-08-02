@@ -34,6 +34,7 @@ function buildSample(to: string): StoredOrder {
     customerName: "Amin Azuwar",
     customerEmail: to,
     customerPhone: "+60 12-345 6789",
+    paymentMethod: "duitnow-qr",
     paymentStatus: "paid",
     checkoutStatus: "complete",
     currency: "myr",

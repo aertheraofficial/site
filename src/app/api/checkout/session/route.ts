@@ -171,6 +171,9 @@ export async function POST(request: Request) {
         customerEmail,
         customerPhone,
         paymentStatus: "pending",
+        // Recorded up front so the daily cash-up can tell a DuitNow transfer
+        // apart from a ToyyibPay settlement without re-reading the gateway.
+        paymentMethod: paymentMethod === "qr" ? "duitnow-qr" : "toyyibpay",
         checkoutStatus: "open",
         currency: "myr",
         subtotalAmount: subtotalCents,

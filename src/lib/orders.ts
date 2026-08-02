@@ -48,6 +48,12 @@ export type StoredOrder = {
   customerEmail: string | null;
   customerPhone: string | null;
   paymentStatus: string | null;
+  /**
+   * How the money arrived — see PAYMENT_METHODS in `@/lib/reconciliation`.
+   * Drives the daily cash-up: cash stays in the drawer, everything else has to
+   * turn up on the bank statement.
+   */
+  paymentMethod: string | null;
   checkoutStatus: string | null;
   currency: string;
   subtotalAmount: number | null;
@@ -147,6 +153,7 @@ type SupabaseOrderRow = {
   customer_email: string | null;
   customer_phone: string | null;
   payment_status: string | null;
+  payment_method: string | null;
   checkout_status: string | null;
   currency: string;
   subtotal_amount: number | null;
@@ -162,32 +169,60 @@ type SupabaseOrderRow = {
 const DEFAULT_FULFILLMENT_STATUS: FulfillmentStatus = "unfulfilled";
 const DEFAULT_FULFILLMENT_TYPE: FulfillmentType = "delivery";
 
-const ORDER_COLUMNS_TAIL =
-  "customer_name, customer_email, customer_phone, payment_status, checkout_status, currency, subtotal_amount, shipping_amount, tax_amount, total_amount, fulfillment_type, shipping_name, shipping_address, order_lines(order_session_id, line_position, product_slug, description, quantity, currency, unit_amount, subtotal_amount, total_amount)";
+const ORDER_HEAD_COLUMNS =
+  "order_id, session_id, payment_intent_id, ordered_at, updated_at, recorded_from, customer_id";
 
-const ORDER_SELECT_COLUMNS = `order_id, session_id, payment_intent_id, ordered_at, updated_at, recorded_from, customer_id, member_id, location, sold_by, sold_by_name, ${ORDER_COLUMNS_TAIL}`;
-
-const ORDER_SELECT_COLUMNS_WITHOUT_COUNTER_FIELDS = `order_id, session_id, payment_intent_id, ordered_at, updated_at, recorded_from, customer_id, ${ORDER_COLUMNS_TAIL}`;
+const ORDER_LINE_COLUMNS =
+  "order_lines(order_session_id, line_position, product_slug, description, quantity, currency, unit_amount, subtotal_amount, total_amount)";
 
 /** Columns added by supabase/add_order_counter_fields.sql. */
 const COUNTER_COLUMNS = ["member_id", "location", "sold_by", "sold_by_name"] as const;
 
+/** Column added by supabase/add_daily_reconciliation.sql. */
+const PAYMENT_METHOD_COLUMN = "payment_method";
+
 /**
  * Deploys run ahead of migrations, so the first query that hits a database
- * without those columns flips this off rather than failing the order.
+ * without those columns flips the flag off rather than failing the order.
  */
 let counterColumnsAvailable = true;
+let paymentMethodAvailable = true;
 
 // Returned as a plain string: letting the Supabase client parse the column list
 // into a result type blows past the TypeScript union limit for this table.
 function orderSelectColumns(): string {
-  return counterColumnsAvailable
-    ? ORDER_SELECT_COLUMNS
-    : ORDER_SELECT_COLUMNS_WITHOUT_COUNTER_FIELDS;
+  return [
+    ORDER_HEAD_COLUMNS,
+    counterColumnsAvailable ? COUNTER_COLUMNS.join(", ") : null,
+    "customer_name, customer_email, customer_phone, payment_status",
+    paymentMethodAvailable ? PAYMENT_METHOD_COLUMN : null,
+    "checkout_status, currency, subtotal_amount, shipping_amount, tax_amount, total_amount",
+    "fulfillment_type, shipping_name, shipping_address",
+    ORDER_LINE_COLUMNS,
+  ]
+    .filter(Boolean)
+    .join(", ");
 }
 
-function isMissingCounterColumn(message: string | undefined) {
-  return Boolean(message && COUNTER_COLUMNS.some((column) => message.includes(column)));
+/**
+ * Turns off whichever optional column group the error names and reports whether
+ * retrying is worth it, so a pre-migration database degrades instead of losing
+ * the write.
+ */
+function degradeOnMissingColumn(message: string | undefined): boolean {
+  if (!message) return false;
+
+  if (counterColumnsAvailable && COUNTER_COLUMNS.some((c) => message.includes(c))) {
+    counterColumnsAvailable = false;
+    return true;
+  }
+
+  if (paymentMethodAvailable && message.includes(PAYMENT_METHOD_COLUMN)) {
+    paymentMethodAvailable = false;
+    return true;
+  }
+
+  return false;
 }
 
 function isFulfillmentType(value: unknown): value is FulfillmentType {
@@ -516,6 +551,7 @@ function toSupabaseOrderRow(order: StoredOrder): SupabaseOrderRow {
     customer_email: order.customerEmail,
     customer_phone: order.customerPhone,
     payment_status: order.paymentStatus,
+    payment_method: order.paymentMethod,
     checkout_status: order.checkoutStatus,
     currency: order.currency,
     subtotal_amount: order.subtotalAmount,
@@ -561,6 +597,7 @@ function fromSupabaseOrderRow(row: SupabaseOrderRow): StoredOrder {
     customerEmail: row.customer_email,
     customerPhone: row.customer_phone,
     paymentStatus: row.payment_status,
+    paymentMethod: row.payment_method ?? null,
     checkoutStatus: row.checkout_status,
     currency: row.currency,
     subtotalAmount: row.subtotal_amount,
@@ -649,8 +686,7 @@ async function readOrdersFromSupabase(): Promise<StoredOrder[]> {
     .order("ordered_at", { ascending: false });
 
   if (error) {
-    if (counterColumnsAvailable && isMissingCounterColumn(error.message)) {
-      counterColumnsAvailable = false;
+    if (degradeOnMissingColumn(error.message)) {
       return readOrdersFromSupabase();
     }
     throw new Error(`Unable to read orders from Supabase: ${error.message}`);
@@ -672,8 +708,7 @@ async function getOrderBySessionIdFromSupabase(
     .maybeSingle();
 
   if (error) {
-    if (counterColumnsAvailable && isMissingCounterColumn(error.message)) {
-      counterColumnsAvailable = false;
+    if (degradeOnMissingColumn(error.message)) {
       return getOrderBySessionIdFromSupabase(sessionId);
     }
     throw new Error(`Unable to load order from Supabase: ${error.message}`);
@@ -698,13 +733,16 @@ async function upsertOrderToSupabase(
     }
   }
 
+  if (!paymentMethodAvailable) {
+    delete (row as Partial<SupabaseOrderRow>)[PAYMENT_METHOD_COLUMN];
+  }
+
   const { error: orderError } = await supabase
     .from("orders")
     .upsert(row, { onConflict: "session_id" });
 
   if (orderError) {
-    if (counterColumnsAvailable && isMissingCounterColumn(orderError.message)) {
-      counterColumnsAvailable = false;
+    if (degradeOnMissingColumn(orderError.message)) {
       return upsertOrderToSupabase(order, preserveAdminFields);
     }
     throw new Error(`Unable to store order in Supabase: ${orderError.message}`);
@@ -824,14 +862,14 @@ export async function getOrdersByCustomerId(customerId: string) {
       const supabase = getSupabaseAdmin();
       const { data, error } = await supabase
         .from("orders")
-        .select(
-          ORDER_SELECT_COLUMNS,
-        )
+        .select(orderSelectColumns())
         .eq("customer_id", customerId)
         .order("ordered_at", { ascending: false });
 
       if (error) throw new Error(error.message);
-      return (data ?? []).map((row) => fromSupabaseOrderRow(row as SupabaseOrderRow));
+      return (data ?? []).map((row) =>
+        fromSupabaseOrderRow(row as unknown as SupabaseOrderRow),
+      );
     } catch {
       return [];
     }
@@ -948,6 +986,7 @@ export async function recordCompletedOrder(params: {
     customerEmail: customer?.email ?? null,
     customerPhone: customer?.phone ?? null,
     paymentStatus: session.payment_status ?? null,
+    paymentMethod: "stripe",
     checkoutStatus: session.status ?? null,
     currency: session.currency ?? "myr",
     subtotalAmount: session.amount_subtotal ?? null,
