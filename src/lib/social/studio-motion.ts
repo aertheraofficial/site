@@ -3,17 +3,29 @@ import "server-only";
 import { isGeminiVideoConfigured, startSceneVideo } from "@/lib/social/gemini-video";
 import {
   getKimiBriefModel,
+  getKimiModel,
   isKimiConfigured,
   kimiChat,
   kimiJson,
 } from "@/lib/social/kimi";
 
 /**
- * A reasoning model takes 20-26s to write one of these, and the brief is two
- * calls plus a possible rewrite. That never fitted the 45s caption deadline;
- * it fits now only because rendering moved to its own request.
+ * A budget for the WHOLE brief, not a per-call timeout.
+ *
+ * The old value was 110s per call, which could never fire: the route runs on a
+ * Vercel function capped at 60s, so three 20-26s reasoning calls ran the request
+ * off the end and the platform killed it. A killed function returns no JSON, so
+ * the client fell through to "Could not reach the studio" — a crash reported as
+ * a shrug.
+ *
+ * 50s leaves headroom under that 60s ceiling for reading the upload and starting
+ * the response. Each call gets whatever is left, and the brief gives up in an
+ * orderly way rather than being cut off mid-sentence.
  */
-const BRIEF_TIMEOUT_MS = 110_000;
+const BRIEF_BUDGET_MS = 50_000;
+
+/** Below this there is no point starting another reasoning call. */
+const MIN_CALL_MS = 12_000;
 import type { Orientation } from "@/lib/social/orientation";
 import type { ProductAnalysis } from "@/lib/social/studio-scenes";
 import type { ShotType, VideoDuration } from "@/lib/social/video-options";
@@ -96,14 +108,16 @@ function asString(value: unknown): string {
 export async function readSceneFrame({
   sceneImage,
   mimeType,
+  timeoutMs = BRIEF_BUDGET_MS,
 }: {
   sceneImage: Buffer;
   mimeType: string;
+  timeoutMs?: number;
 }): Promise<SceneReading> {
   try {
     const raw = await kimiJson<Record<string, unknown>>({
       model: getKimiBriefModel(),
-      timeoutMs: BRIEF_TIMEOUT_MS,
+      timeoutMs,
       system:
         "You read a photograph and report only what is verifiably in it. You never assume, and you are strict about physical plausibility.",
       prompt: `Look at this photograph. It is about to be animated into a short video, so what matters is what could truthfully move in it.
@@ -224,6 +238,7 @@ export async function writeMotionPrompt({
   durationSeconds,
   notes,
   correction = "",
+  timeoutMs = BRIEF_BUDGET_MS,
 }: {
   sceneImage: Buffer;
   mimeType: string;
@@ -235,6 +250,7 @@ export async function writeMotionPrompt({
   notes: string;
   /** Fed back on a second attempt when the first contradicted the reading. */
   correction?: string;
+  timeoutMs?: number;
 }): Promise<string> {
   const described =
     typeof analysis === "string" ? analysis : JSON.stringify(analysis);
@@ -302,8 +318,11 @@ export async function writeMotionPrompt({
         : ". If nobody is holding anything, nothing is picked up";
 
   return kimiChat({
-    model: getKimiBriefModel(),
-    timeoutMs: BRIEF_TIMEOUT_MS,
+    // A correction is repair work, not authorship: it is handed the exact phrase
+    // to remove. The everyday model does that in a fraction of the time, which
+    // is the difference between the third call fitting in the budget and not.
+    model: correction ? getKimiModel() : getKimiBriefModel(),
+    timeoutMs,
     system:
       shotType === "ambience"
         ? "You are a motion director writing a brief for an image-to-video model. The still already exists and is attached; you only describe what moves in it. You are strict about physical plausibility — a clip that shows something that could not happen is worse than a clip that barely moves."
@@ -387,7 +406,17 @@ export async function writeStudioBrief({
   durationSeconds: VideoDuration;
   notes: string;
 }): Promise<{ motionPrompt: string; reading: SceneReading }> {
-  const reading = await readSceneFrame({ sceneImage, mimeType });
+  // One deadline for the whole brief. Each call gets what is left, so a slow
+  // first call shortens the next rather than pushing the request off the end of
+  // the function's life.
+  const deadline = Date.now() + BRIEF_BUDGET_MS;
+  const remaining = () => deadline - Date.now();
+
+  const reading = await readSceneFrame({
+    sceneImage,
+    mimeType,
+    timeoutMs: remaining(),
+  });
 
   const write = (correction?: string) =>
     writeMotionPrompt({
@@ -400,6 +429,7 @@ export async function writeStudioBrief({
       durationSeconds,
       notes,
       correction,
+      timeoutMs: remaining(),
     });
 
   let motionPrompt = await write();
@@ -407,12 +437,17 @@ export async function writeStudioBrief({
   // Only enforced when the frame holds nothing that could emit. With a lit
   // candle or a running diffuser in shot, vapour is the honest thing to show.
   if (reading.emitters.length === 0 && EMISSION.test(motionPrompt)) {
-    motionPrompt = await write(
-      `Your last attempt described "${motionPrompt.match(EMISSION)?.[0]}". Nothing in this frame can produce that — your own reading lists no emitters. Rewrite without it, and without naming it to rule it out.`,
-    );
+    // Ask for a rewrite only if there is budget left for one. Out of time, the
+    // stripping below still runs — that guarantee cannot depend on the clock,
+    // or a slow day would quietly buy a render of vapour off a closed jar.
+    if (remaining() > MIN_CALL_MS) {
+      motionPrompt = await write(
+        `Your last attempt described "${motionPrompt.match(EMISSION)?.[0]}". Nothing in this frame can produce that — your own reading lists no emitters. Rewrite without it, and without naming it to rule it out.`,
+      );
+    }
 
-    // Second attempt still wrong: drop the offending sentences rather than pay
-    // for a render of the thing that was complained about.
+    // Rewrite skipped, or attempted and still wrong: drop the offending
+    // sentences rather than pay for a render of the thing complained about.
     if (EMISSION.test(motionPrompt)) {
       const kept = motionPrompt
         .split(/(?<=[.!?])\s+/)
