@@ -6,14 +6,15 @@
   color-scheme: light;
 }
 
-/* A single wide element used to scroll the whole page sideways on a phone.
-   Wide content (tables, the QR) scrolls inside its own container instead.
-   `clip`, not `hidden`: `hidden` makes the root a scroll container, which
-   silently breaks every `position: sticky` on the site. */
+/* Keep the page itself from being wider than the screen. Deliberately no
+   `overflow-x: clip` here: clipping did stop the sideways scroll, but anything
+   that still overflowed became unreachable rather than scrollable — on a
+   staff phone the counter's Subtotal and Total amounts were cut off the right
+   edge with no way to reach them, which is worse than a page that scrolls.
+   Wide content belongs in its own `overflow-x-auto` container. */
 html,
 body {
   max-width: 100%;
-  overflow-x: clip;
 }
 @plugin "@tailwindcss/typography";
 

@@ -265,7 +265,7 @@ export function CounterSaleForm({ products, location, locationName }: CounterSal
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-      <div className="rounded-[1.75rem] border border-black/8 bg-white p-6">
+      <div className="min-w-0 rounded-[1.75rem] border border-black/8 bg-white p-6">
         <div className="flex items-center justify-between gap-3">
           <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#8d7a5c]">
             Add Product
@@ -381,7 +381,7 @@ export function CounterSaleForm({ products, location, locationName }: CounterSal
         </div>
       </div>
 
-      <div className="h-fit rounded-[1.75rem] border border-black/8 bg-white p-6">
+      <div className="h-fit min-w-0 rounded-[1.75rem] border border-black/8 bg-white p-6">
         <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#8d7a5c]">
           Sale Summary
         </p>
@@ -392,8 +392,8 @@ export function CounterSaleForm({ products, location, locationName }: CounterSal
 
         {discountPercent ? (
           <div className="mt-4 space-y-1.5 text-sm">
-            <div className="flex items-center justify-between">
-              <span className="text-[#6a6258]">Subtotal</span>
+            <div className="flex items-center justify-between gap-3">
+              <span className="min-w-0 text-[#6a6258]">Subtotal</span>
               <span className="text-[#201d17]">{formatMoney(subtotal)}</span>
             </div>
             <div className="flex items-center justify-between">
@@ -416,7 +416,7 @@ export function CounterSaleForm({ products, location, locationName }: CounterSal
           <p className="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#8d7a5c]">
             Discount
           </p>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <button
               type="button"
               onClick={() => setDiscountPercent(null)}
